@@ -8,7 +8,7 @@ if (!isset($_SESSION['user_id'])) {
     header('Location: signin.php');
 };
 
-if(isset($_POST['archive_appointment'])) {
+if (isset($_POST['archive_appointment'])) {
     $appointmentIdDelete = $_POST['appointmentIdDelete'];
     $archive = '1';
 
@@ -51,10 +51,10 @@ if(isset($_POST['archive_appointment'])) {
     <!-- custom Css-->
     <link href="assets/css/custom.min.css" rel="stylesheet" type="text/css" />
     <script>
-    if ( window.history.replaceState ) {
-        window.history.replaceState( null, null, window.location.href );
-    }
-</script>
+        if (window.history.replaceState) {
+            window.history.replaceState(null, null, window.location.href);
+        }
+    </script>
 
 </head>
 
@@ -94,7 +94,10 @@ if(isset($_POST['archive_appointment'])) {
                             <div class="card">
 
                                 <div class="card-body">
-                                    <button class="btn btn-primary">+ New Appointment</button>
+                                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#appointmentModal">
+                                        + Add New Appointment
+                                    </button>
+                                    <?php include "modals/appointment.php" ?>
                                     <!-- Nav tabs -->
                                     <ul class="nav nav-tabs nav-tabs-custom nav-success nav-justified mb-3" role="tablist">
                                         <li class="nav-item">
@@ -470,6 +473,8 @@ if(isset($_POST['archive_appointment'])) {
             });
         });
     </script>
+
+    
 </body>
 
 </html>
