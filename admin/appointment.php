@@ -94,7 +94,7 @@ if (isset($_POST['archive_appointment'])) {
                             <div class="card">
 
                                 <div class="card-body">
-                                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#appointmentModal">
+                                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addAppointmentModal">
                                         + Add New Appointment
                                     </button>
                                     <?php include "modals/appointment.php" ?>
@@ -144,30 +144,54 @@ if (isset($_POST['archive_appointment'])) {
                                                         </thead>
                                                         <tbody class="list">
                                                             <?php
-                                                            $selectAppointment = $pdo->query("SELECT *, appointment.id AS appointment_id, patient.id AS patient_id, services.id AS service_id, patient.firstname AS patient_firstname, patient.lastname AS patient_lastname, doctor.firstname AS doctor_firstname, doctor.lastname AS doctor_lastname FROM appointment INNER JOIN patient ON appointment.patient_id = patient.id INNER JOIN services ON appointment.service_id = services.id LEFT JOIN doctor ON appointment.doctor_id = doctor.employee_id WHERE appointment.is_archive = 0 AND appointment.status = 'Pending' ORDER BY appointment.date_added ASC");
+                                                            $selectAppointment = $pdo->query("
+            SELECT 
+                appointment.id AS appointment_id, 
+                patient.firstname AS patient_firstname, 
+                patient.lastname AS patient_lastname, 
+                doctor.firstname AS doctor_firstname, 
+                doctor.lastname AS doctor_lastname, 
+                services.service, 
+                services.type, 
+                services.cost, 
+                appointment.appointment_time, 
+                appointment.appointment_date, 
+                appointment.doctor_id 
+            FROM appointment 
+            INNER JOIN patient ON appointment.patient_id = patient.id 
+            INNER JOIN services ON appointment.service_id = services.id 
+            LEFT JOIN doctor ON appointment.doctor_id = doctor.employee_id 
+            WHERE appointment.is_archive = 0 AND appointment.status = 'Pending' 
+            ORDER BY appointment.date_added ASC
+        ");
+
                                                             if ($selectAppointment->rowCount() > 0) {
                                                                 while ($row = $selectAppointment->fetch(PDO::FETCH_ASSOC)) {
-                                                                    $time = $row['appointment_time'];
-                                                                    $formatted_time = date("g:i A", strtotime($time));
+                                                                    // Format time and date
+                                                                    $formatted_time = date("g:i A", strtotime($row['appointment_time']));
+                                                                    $formatted_date = date("F j, Y", strtotime($row['appointment_date']));
 
-                                                                    $date = $row['appointment_date'];
-                                                                    $formatted_date = date("F j, Y", strtotime($date));
-
+                                                                    // Combine names
                                                                     $fullnamePatient = $row['patient_firstname'] . " " . $row['patient_lastname'];
-                                                                    $fullnameDoctor = $row['doctor_id'] == NULL ? "N/A" : "Dr. " . $row['doctor_firstname'] . " " . $row['doctor_lastname'];
+                                                                    $fullnameDoctor = $row['doctor_id']
+                                                                        ? "Dr. " . $row['doctor_firstname'] . " " . $row['doctor_lastname']
+                                                                        : "N/A";
 
+                                                                    // Service details
                                                                     $serviceName = $row['service'] . " (" . $row['type'] . ")";
-                                                                    $cost = "₱" . number_format($row['cost'], 2);
-
                                                             ?>
                                                                     <tr>
-                                                                        <td class="time"><?= $formatted_time; ?></td>
-                                                                        <td class="date"><?= $formatted_date; ?></td>
-                                                                        <td class="patient_name"><?= $fullnamePatient; ?></td>
-                                                                        <td class="service"><?= $serviceName; ?></td>
-                                                                        <td class="doctor"><?= $fullnameDoctor; ?></td>
+                                                                        <td class="time"><?= htmlspecialchars($formatted_time); ?></td>
+                                                                        <td class="date"><?= htmlspecialchars($formatted_date); ?></td>
+                                                                        <td class="patient_name"><?= htmlspecialchars($fullnamePatient); ?></td>
+                                                                        <td class="service"><?= htmlspecialchars($serviceName); ?></td>
+                                                                        <td class="doctor"><?= htmlspecialchars($fullnameDoctor); ?></td>
                                                                         <td>
-                                                                            <a href="#" class="btn btn-danger btn-sm archive-btn" data-bs-toggle="modal" data-bs-target="#archiveAppointment" data-appointment-id="<?= $row['appointment_id'] ?>">
+                                                                            <a href="#"
+                                                                                class="btn btn-danger btn-sm archive-btn"
+                                                                                data-bs-toggle="modal"
+                                                                                data-bs-target="#archiveAppointment"
+                                                                                data-appointment-id="<?= htmlspecialchars($row['appointment_id']); ?>">
                                                                                 <i class="ri-delete-bin-fill align-bottom me-2"></i> Archive
                                                                             </a>
                                                                         </td>
@@ -180,9 +204,13 @@ if (isset($_POST['archive_appointment'])) {
                                                                     <td colspan="6">
                                                                         <div class="noresult">
                                                                             <div class="text-center">
-                                                                                <lord-icon src="https://cdn.lordicon.com/msoeawqm.json" trigger="loop" colors="primary:#121331,secondary:#08a88a" style="width:75px;height:75px"></lord-icon>
+                                                                                <lord-icon src="https://cdn.lordicon.com/msoeawqm.json"
+                                                                                    trigger="loop"
+                                                                                    colors="primary:#121331,secondary:#08a88a"
+                                                                                    style="width:75px;height:75px">
+                                                                                </lord-icon>
                                                                                 <h5 class="mt-2">Sorry! No Result Found</h5>
-                                                                                <p class="text-muted mb-0">We've searched in our database but we did not find any data yet!</p>
+                                                                                <p class="text-muted mb-0">We've searched in our database but did not find any data yet!</p>
                                                                             </div>
                                                                         </div>
                                                                     </td>
@@ -192,6 +220,7 @@ if (isset($_POST['archive_appointment'])) {
                                                             ?>
                                                         </tbody>
                                                     </table>
+
                                                 </div>
 
                                                 <div class="d-flex justify-content-end">
@@ -428,6 +457,8 @@ if (isset($_POST['archive_appointment'])) {
     <!-- App js -->
     <script src="assets/js/app.js"></script>
 
+
+
     <script>
         flatpickr("#datePicker");
     </script>
@@ -473,8 +504,13 @@ if (isset($_POST['archive_appointment'])) {
             });
         });
     </script>
+    <script>
+        $(document).ready(function() {
+            $('#addAppointmentModal').modal();
+        });
+    </script>
 
-    
+
 </body>
 
 </html>
