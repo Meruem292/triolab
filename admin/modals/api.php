@@ -1,8 +1,9 @@
-<?php 
+<?php
 session_start();
 include 'db.php';
- 
-if(isset($_POST['add_appointment'])){
+
+// APPORTIONMENT
+if (isset($_POST['add_appointment'])) {
     $patient = $_POST['patient'];
     $service = $_POST['service'];
     $department = $_POST['department'];
@@ -18,7 +19,7 @@ if(isset($_POST['add_appointment'])){
     exit();
 }
 
-
+// DOCTOR
 if (isset($_POST['add_doctor'])) {
     $employee_id = $_POST['employee_id'];
     $firstname = htmlspecialchars($_POST['firstname']);
@@ -115,4 +116,107 @@ if (isset($_POST['archive_doctor'])) {
     header('location: ../doctors.php');
 }
 
-?>
+// PATIENT
+
+if (isset($_POST['add_patient'])) {
+    // Get form data
+    $firstname = htmlspecialchars($_POST['firstname']);
+    $lastname = htmlspecialchars($_POST['lastname']);
+    $email = htmlspecialchars($_POST['email']);
+    $contact = htmlspecialchars($_POST['contact']);
+    $dob = htmlspecialchars($_POST['dob']);
+    $province = htmlspecialchars($_POST['province']);
+    $city = htmlspecialchars($_POST['city']);
+    $barangay = htmlspecialchars($_POST['barangay']);
+    $street = htmlspecialchars($_POST['street']);
+
+    // Check if the email already exists in the database
+    $checkQuery = $pdo->prepare("SELECT * FROM patient WHERE email = :email");
+    $checkQuery->bindParam(':email', $email);
+    $checkQuery->execute();
+
+    if ($checkQuery->rowCount() > 0) {
+        // Entry already exists
+        $_SESSION['message'] = "Patient with this email already exists.";
+        $_SESSION['status'] = "warning";
+    } else {
+        // Insert the new patient information into the database
+        $insertQuery = $pdo->prepare("
+            INSERT INTO patient (firstname, lastname, email, contact, dob, province, city, barangay, street) 
+            VALUES (:firstname, :lastname, :email, :contact, :dob, :province, :city, :barangay, :street)
+        ");
+        $insertQuery->bindParam(':firstname', $firstname);
+        $insertQuery->bindParam(':lastname', $lastname);
+        $insertQuery->bindParam(':email', $email);
+        $insertQuery->bindParam(':contact', $contact);
+        $insertQuery->bindParam(':dob', $dob);
+        $insertQuery->bindParam(':province', $province);
+        $insertQuery->bindParam(':city', $city);
+        $insertQuery->bindParam(':barangay', $barangay);
+        $insertQuery->bindParam(':street', $street);
+
+        if ($insertQuery->execute()) {
+            $_SESSION['message'] = "Patient added successfully.";
+            $_SESSION['status'] = "success";
+        } else {
+            $_SESSION['message'] = "Error inserting patient.";
+            $_SESSION['status'] = "error";
+        }
+    }
+    header('location: ../patients.php');
+}
+
+// Handle the form submission for updating the patient
+// Update patient information
+if (isset($_POST['edit_patient'])) {
+    // Retrieve form values from POST request
+    $patientId = $_POST['patientId'];
+    $firstname = $_POST['firstname'];
+    $lastname = $_POST['lastname'];
+    $email = $_POST['email'];
+    $contact = $_POST['contact'];
+    $dob = $_POST['dob'];
+    $province = $_POST['province'];  // Directly retrieve province
+    $city = $_POST['city'];          // Directly retrieve city
+    $barangay = $_POST['barangay'];  // Directly retrieve barangay
+    $street = $_POST['street'];      // Directly retrieve street
+
+    // Prepare and execute the update query
+    $updateQuery = $pdo->prepare("
+        UPDATE patient SET
+            firstname = :firstname,
+            lastname = :lastname,
+            email = :email,
+            contact = :contact,
+            dob = :dob,
+            province = :province,
+            city = :city,
+            barangay = :barangay,
+            street = :street
+        WHERE id = :patientId
+    ");
+
+    // Bind the parameters
+    $updateQuery->bindParam(':firstname', $firstname);
+    $updateQuery->bindParam(':lastname', $lastname);
+    $updateQuery->bindParam(':email', $email);
+    $updateQuery->bindParam(':contact', $contact);
+    $updateQuery->bindParam(':dob', $dob);
+    $updateQuery->bindParam(':province', $province);
+    $updateQuery->bindParam(':city', $city);
+    $updateQuery->bindParam(':barangay', $barangay);
+    $updateQuery->bindParam(':street', $street);
+    $updateQuery->bindParam(':patientId', $patientId);
+
+    // Execute the query and handle success/error
+    if ($updateQuery->execute()) {
+        $_SESSION['message'] = "Patient updated successfully.";
+        $_SESSION['status'] = "success";
+        header('Location: ../patients.php');
+        exit;
+    } else {
+        $_SESSION['message'] = "Error updating patient.";
+        $_SESSION['status'] = "error";
+    }
+}
+

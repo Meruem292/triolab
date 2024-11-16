@@ -117,8 +117,8 @@ if (isset($_POST['archive_appointment'])) {
                                         <div class="tab-pane active" id="new" role="tabpanel">
                                             <div class="d-flex align-items-center gap-3">
                                                 <div class="d-flex justify-content-sm-start">
-                                                    <div class="search-box ms-2">
-                                                        <input type="text" class="form-control search" placeholder="Search...">
+                                                    <div class="search-box ms-2 mt-3 mb-3">
+                                                        <input type="text" id="searchInput" class="form-control" placeholder="Search for patients..." onkeyup="searchTable()">
                                                         <i class="ri-search-line search-icon"></i>
                                                     </div>
                                                 </div>
@@ -457,6 +457,8 @@ if (isset($_POST['archive_appointment'])) {
     <!-- App js -->
     <script src="assets/js/app.js"></script>
 
+    <script src="assets/js/sweetalert.js"></script>
+
 
 
     <script>
@@ -492,6 +494,21 @@ if (isset($_POST['archive_appointment'])) {
     </script>
 
     <script>
+        flatpickr("#datePicker");
+    </script>
+    <?php if (isset($_SESSION['message']) && isset($_SESSION['status'])) { ?>
+        <script>
+            Swal.fire({
+                text: "<?php echo $_SESSION['message']; ?>",
+                icon: "<?php echo $_SESSION['status']; ?>",
+            });
+        </script>
+    <?php
+        unset($_SESSION['message']);
+        unset($_SESSION['status']);
+    } ?>
+
+    <script>
         // JavaScript to handle populating data in the edit modal
         var editButtons = document.querySelectorAll('.archive-btn');
         editButtons.forEach(function(button) {
@@ -508,6 +525,34 @@ if (isset($_POST['archive_appointment'])) {
         $(document).ready(function() {
             $('#addAppointmentModal').modal();
         });
+    </script>
+    <script>
+        function searchTable() {
+            var input, filter, table, tr, td, i, txtValue;
+            input = document.getElementById("searchInput");
+            filter = input.value.toUpperCase();
+            table = document.getElementById("customerTable");
+            tr = table.getElementsByTagName("tr");
+
+            for (i = 0; i < tr.length; i++) {
+                td = tr[i].getElementsByTagName("td");
+                if (td.length > 0) {
+                    var showRow = false;
+                    for (var j = 0; j < td.length; j++) {
+                        txtValue = td[j].textContent || td[j].innerText;
+                        if (txtValue.toUpperCase().indexOf(filter) > -1) {
+                            showRow = true;
+                            break; // Stop looking at other columns for this row
+                        }
+                    }
+                    if (showRow) {
+                        tr[i].style.display = "";
+                    } else {
+                        tr[i].style.display = "none";
+                    }
+                }
+            }
+        }
     </script>
 
 

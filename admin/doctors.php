@@ -7,7 +7,7 @@ if (!isset($_SESSION['user_id'])) {
     header('Location: signin.php');
     exit();
 }
-$doctor_id = $_SESSION['user_id'];
+$admin_id = $_SESSION['user_id'];
 
 ?>
 
@@ -112,8 +112,8 @@ $doctor_id = $_SESSION['user_id'];
                                         <div class="tab-pane fade show active" id="doctors" role="tabpanel">
                                             <div class="d-flex align-items-center gap-3">
                                                 <div class="d-flex justify-content-sm-start">
-                                                    <div class="search-box ms-2">
-                                                        <input type="text" class="form-control search" placeholder="Search...">
+                                                    <div class="search-box ms-2 mt-3 mb-3">
+                                                        <input type="text" id="searchInput" class="form-control" placeholder="Search for patients..." onkeyup="searchTable()">
                                                         <i class="ri-search-line search-icon"></i>
                                                     </div>
                                                 </div>
@@ -683,6 +683,34 @@ $doctor_id = $_SESSION['user_id'];
                 document.getElementById('editDoctorDepartment').value = departmentId;
             });
         });
+    </script>
+    <script>
+        function searchTable() {
+            var input, filter, table, tr, td, i, txtValue;
+            input = document.getElementById("searchInput");
+            filter = input.value.toUpperCase();
+            table = document.getElementById("customerTable");
+            tr = table.getElementsByTagName("tr");
+
+            for (i = 0; i < tr.length; i++) {
+                td = tr[i].getElementsByTagName("td");
+                if (td.length > 0) {
+                    var showRow = false;
+                    for (var j = 0; j < td.length; j++) {
+                        txtValue = td[j].textContent || td[j].innerText;
+                        if (txtValue.toUpperCase().indexOf(filter) > -1) {
+                            showRow = true;
+                            break; // Stop looking at other columns for this row
+                        }
+                    }
+                    if (showRow) {
+                        tr[i].style.display = "";
+                    } else {
+                        tr[i].style.display = "none";
+                    }
+                }
+            }
+        }
     </script>
 
     <script>
