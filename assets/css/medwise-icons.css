@@ -1,0 +1,365 @@
+@font-face {
+	font-family: 'medwise-icons';
+	src:
+	url('../icons/medwise-iconsbd42.ttf?6q5qz6') format('truetype'),
+	url('../icons/medwise-iconsbd42.woff?6q5qz6') format('woff'),
+	url('../icons/medwise-iconsbd42.svg?6q5qz6#medwise-icons') format('svg');
+	font-weight: normal;
+	font-style: normal;
+	font-display: block;
+}
+
+[class^="mw-"], [class*=" mw-"] {
+	/* use !important to prevent issues with browser extensions that change fonts */
+	font-family: 'medwise-icons' !important;
+	speak: never;
+	font-style: normal;
+	font-weight: normal;
+	font-variant: normal;
+	text-transform: none;
+	line-height: 1;
+
+	/* Better Font Rendering =========== */
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+}
+
+.mw-ambulance:before {
+	content: "\e900";
+}
+.mw-artificial-tooth:before {
+	content: "\e901";
+}
+.mw-baby:before {
+	content: "\e902";
+}
+.mw-baby-ultrasound:before {
+	content: "\e903";
+}
+.mw-bacteria-zoom:before {
+	content: "\e904";
+}
+.mw-bandage:before {
+	content: "\e905";
+}
+.mw-blood-bottle:before {
+	content: "\e906";
+}
+.mw-blood-drop:before {
+	content: "\e907";
+}
+.mw-bone-joint:before {
+	content: "\e908";
+}
+.mw-brain:before {
+	content: "\e909";
+}
+.mw-calendar:before {
+	content: "\e90a";
+}
+.mw-call:before {
+	content: "\e90b";
+}
+.mw-care:before {
+	content: "\e90c";
+}
+.mw-dental-floss:before {
+	content: "\e90d";
+}
+.mw-dental-seat:before {
+	content: "\e90e";
+}
+.mw-dental-tools:before {
+	content: "\e90f";
+}
+.mw-dining:before {
+	content: "\e910";
+}
+.mw-dna:before {
+	content: "\e911";
+}
+.mw-doctor:before {
+	content: "\e912";
+}
+.mw-dog-food:before {
+	content: "\e913";
+}
+.mw-dog-food-bone:before {
+	content: "\e914";
+}
+.mw-dog-house:before {
+	content: "\e915";
+}
+.mw-dropper:before {
+	content: "\e916";
+}
+.mw-dumb-bell:before {
+	content: "\e917";
+}
+.mw-ear:before {
+	content: "\e918";
+}
+.mw-ecg-machine:before {
+	content: "\e919";
+}
+.mw-eye:before {
+	content: "\e91a";
+}
+.mw-female-appointment:before {
+	content: "\e91b";
+}
+.mw-female-fetus:before {
+	content: "\e91c";
+}
+.mw-flask:before {
+	content: "\e91d";
+}
+.mw-foot:before {
+	content: "\e91e";
+}
+.mw-fracture:before {
+	content: "\e91f";
+}
+.mw-fruits:before {
+	content: "\e920";
+}
+.mw-gender:before {
+	content: "\e921";
+}
+.mw-gripper:before {
+	content: "\e922";
+}
+.mw-gymnastic:before {
+	content: "\e923";
+}
+.mw-health-app:before {
+	content: "\e924";
+}
+.mw-healthy-drink:before {
+	content: "\e925";
+}
+.mw-healthy-food:before {
+	content: "\e926";
+}
+.mw-heart:before {
+	content: "\e927";
+}
+.mw-herbal-medicine:before {
+	content: "\e928";
+}
+.mw-herbal-pestle:before {
+	content: "\e929";
+}
+.mw-herbal-pot:before {
+	content: "\e92a";
+}
+.mw-herbal-tablets:before {
+	content: "\e92b";
+}
+.mw-hospital:before {
+	content: "\e92c";
+}
+.mw-hospital-2:before {
+	content: "\e92d";
+}
+.mw-hospital-location:before {
+	content: "\e92e";
+}
+.mw-injection:before {
+	content: "\e92f";
+}
+.mw-injury:before {
+	content: "\e930";
+}
+.mw-insemination:before {
+	content: "\e931";
+}
+.mw-jaw:before {
+	content: "\e932";
+}
+.mw-kidneys:before {
+	content: "\e933";
+}
+.mw-lifering:before {
+	content: "\e934";
+}
+.mw-lungs:before {
+	content: "\e935";
+}
+.mw-magnifier:before {
+	content: "\e936";
+}
+.mw-medical-helper:before {
+	content: "\e937";
+}
+.mw-medical-tag:before {
+	content: "\e938";
+}
+.mw-medicines:before {
+	content: "\e939";
+}
+.mw-microscope:before {
+	content: "\e93a";
+}
+.mw-milk-bottle:before {
+	content: "\e93b";
+}
+.mw-mobile-app:before {
+	content: "\e93c";
+}
+.mw-mother:before {
+	content: "\e93d";
+}
+.mw-mother-baby:before {
+	content: "\e93e";
+}
+.mw-muscle:before {
+	content: "\e93f";
+}
+.mw-nose:before {
+	content: "\e940";
+}
+.mw-nurse:before {
+	content: "\e941";
+}
+.mw-pet-bathtub:before {
+	content: "\e942";
+}
+.mw-pet-bone:before {
+	content: "\e943";
+}
+.mw-pet-bowl:before {
+	content: "\e944";
+}
+.mw-pet-calendar:before {
+	content: "\e945";
+}
+.mw-pet-dermatology:before {
+	content: "\e946";
+}
+.mw-pet-food:before {
+	content: "\e947";
+}
+.mw-pet-food-bowl:before {
+	content: "\e948";
+}
+.mw-pet-paw:before {
+	content: "\e949";
+}
+.mw-pet-paw-plus:before {
+	content: "\e94a";
+}
+.mw-pregnant:before {
+	content: "\e94b";
+}
+.mw-pulse:before {
+	content: "\e94c";
+}
+.mw-report:before {
+	content: "\e94d";
+}
+.mw-scissors:before {
+	content: "\e94e";
+}
+.mw-spectacles:before {
+	content: "\e94f";
+}
+.mw-sperm:before {
+	content: "\e950";
+}
+.mw-sperm-flask:before {
+	content: "\e951";
+}
+.mw-sperm-fuse:before {
+	content: "\e952";
+}
+.mw-star-medal:before {
+	content: "\e953";
+}
+.mw-station-cycle:before {
+	content: "\e954";
+}
+.mw-stethoscope:before {
+	content: "\e955";
+}
+.mw-stomach:before {
+	content: "\e956";
+}
+.mw-stopwatch:before {
+	content: "\e957";
+}
+.mw-stretcher:before {
+	content: "\e958";
+}
+.mw-stroller:before {
+	content: "\e959";
+}
+.mw-supplement:before {
+	content: "\e95a";
+}
+.mw-support-staff:before {
+	content: "\e95b";
+}
+.mw-surgery:before {
+	content: "\e95c";
+}
+.mw-tablets:before {
+	content: "\e95d";
+}
+.mw-teeth-braces:before {
+	content: "\e95e";
+}
+.mw-test-tube:before {
+	content: "\e95f";
+}
+.mw-thermometer:before {
+	content: "\e960";
+}
+.mw-tongue:before {
+	content: "\e961";
+}
+.mw-tooth:before {
+	content: "\e962";
+}
+.mw-toothbrush:before {
+	content: "\e963";
+}
+.mw-toothpaste-tube:before {
+	content: "\e964";
+}
+.mw-treadmill:before {
+	content: "\e965";
+}
+.mw-tube-baby:before {
+	content: "\e966";
+}
+.mw-ultrasound:before {
+	content: "\e967";
+}
+.mw-uterus:before {
+	content: "\e968";
+}
+.mw-virus:before {
+	content: "\e969";
+}
+.mw-waistline:before {
+	content: "\e96a";
+}
+.mw-waist-measure:before {
+	content: "\e96b";
+}
+.mw-wash-basin:before {
+	content: "\e96c";
+}
+.mw-water:before {
+	content: "\e96d";
+}
+.mw-weight-scale:before {
+	content: "\e96e";
+}
+.mw-wheelchair:before {
+	content: "\e96f";
+}
+.mw-yoga:before {
+	content: "\e970";
+}
