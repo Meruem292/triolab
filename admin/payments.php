@@ -67,6 +67,7 @@ $admin_id = $_SESSION['user_id'];
                                 <div class="card-body">
                                     <!-- Button to trigger modal -->
                                     <?php include "modals/add_payment_method.php"; ?>
+                                    <?php include "modals/edit_payment_method.php"; ?>
 
                                     <div class="row mb-2 mt-3">
                                         <div class="col-lg-12">
@@ -76,9 +77,8 @@ $admin_id = $_SESSION['user_id'];
                                                 $table = 'payment_mode';
                                                 $columns = array('id', 'method', 'image_path', 'updated_at');
                                                 $extended_image_path = '../admin/modals/';
-
                                                 // Updated to pass image path prefix and column names correctly
-                                                displayTable($pdo, $table, $columns, ['image_path'], false, $extended_image_path);
+                                                displayTable($pdo, $table, $columns, ['image_path'], true, $extended_image_path,false, ['delete']);
                                                 ?>
                                             </div>
                                         </div>

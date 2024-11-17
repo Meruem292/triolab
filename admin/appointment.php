@@ -8,6 +8,23 @@ if (!isset($_SESSION['user_id'])) {
     header('Location: signin.php');
 };
 
+if (isset($_POST['edit_appointment'])) {
+    $appointmentId = $_POST['appointmentId'];
+    $status = $_POST['appointmentStatus'];
+
+    $stmt = $pdo->prepare('UPDATE appointment SET status = ? WHERE id = ?');
+    if ($stmt->execute([$status, $appointmentId])) {
+        $_SESSION['message'] = "Appointment updated successfully!";
+        $_SESSION['status'] = "success";
+    } else {
+        $_SESSION['message'] = "Error updating appointment.";
+        $_SESSION['status'] = "error";
+    }
+
+    header('Location: ../admin/appointment.php');
+    exit();
+}
+
 if (isset($_POST['archive_appointment'])) {
     $appointmentIdDelete = $_POST['appointmentIdDelete'];
     $archive = '1';
@@ -145,25 +162,27 @@ if (isset($_POST['archive_appointment'])) {
                                                         <tbody class="list">
                                                             <?php
                                                             $selectAppointment = $pdo->query("
-                                                                    SELECT 
-                                                                        appointment.id AS appointment_id, 
-                                                                        patient.firstname AS patient_firstname, 
-                                                                        patient.lastname AS patient_lastname, 
-                                                                        doctor.firstname AS doctor_firstname, 
-                                                                        doctor.lastname AS doctor_lastname, 
-                                                                        services.service, 
-                                                                        services.type, 
-                                                                        services.cost, 
-                                                                        appointment.appointment_time, 
-                                                                        appointment.appointment_date, 
-                                                                        appointment.doctor_id 
-                                                                    FROM appointment 
-                                                                    INNER JOIN patient ON appointment.patient_id = patient.id 
-                                                                    INNER JOIN services ON appointment.service_id = services.id 
-                                                                    LEFT JOIN doctor ON appointment.doctor_id = doctor.employee_id 
-                                                                    WHERE appointment.is_archive = 0 AND appointment.status = 'Pending' 
-                                                                    ORDER BY appointment.date_added ASC
-                                                                ");
+    SELECT 
+        appointment.id AS appointment_id, 
+        patient.firstname AS patient_firstname, 
+        patient.lastname AS patient_lastname, 
+        doctor.firstname AS doctor_firstname, 
+        doctor.lastname AS doctor_lastname, 
+        services.service, 
+        services.type, 
+        services.cost, 
+        appointment.appointment_time, 
+        appointment.appointment_date, 
+        appointment.doctor_id, 
+        appointment.selectedPayment, 
+        appointment.status 
+    FROM appointment 
+    INNER JOIN patient ON appointment.patient_id = patient.id 
+    INNER JOIN services ON appointment.service_id = services.id 
+    LEFT JOIN doctor ON appointment.doctor_id = doctor.employee_id 
+    WHERE appointment.is_archive = 0 AND appointment.status = 'Pending' 
+    ORDER BY appointment.date_added ASC
+");
 
                                                             if ($selectAppointment->rowCount() > 0) {
                                                                 while ($row = $selectAppointment->fetch(PDO::FETCH_ASSOC)) {
@@ -187,10 +206,19 @@ if (isset($_POST['archive_appointment'])) {
                                                                         <td class="service"><?= htmlspecialchars($serviceName); ?></td>
                                                                         <td class="doctor"><?= htmlspecialchars($fullnameDoctor); ?></td>
                                                                         <td>
-                                                                            <a href="#"
-                                                                                class="btn btn-danger btn-sm archive-btn"
-                                                                                data-bs-toggle="modal"
-                                                                                data-bs-target="#archiveAppointment"
+                                                                            <a href="#" class="btn btn-light btn-sm edit-btn" data-bs-toggle="modal" data-bs-target="#editAppointment"
+                                                                                data-appointment-id="<?= htmlspecialchars($row['appointment_id']); ?>"
+                                                                                data-patient-name="<?= htmlspecialchars($fullnamePatient); ?>"
+                                                                                data-doctor-name="<?= htmlspecialchars($fullnameDoctor); ?>"
+                                                                                data-service="<?= htmlspecialchars($row['service']); ?>"
+                                                                                data-cost="<?= htmlspecialchars($row['cost']); ?>"
+                                                                                data-payment-method="<?= htmlspecialchars($row['selectedPayment']); ?>"
+                                                                                data-appointment-date="<?= htmlspecialchars($row['appointment_date']); ?>"
+                                                                                data-appointment-time="<?= htmlspecialchars($row['appointment_time']); ?>"
+                                                                                data-status="<?= htmlspecialchars($row['status']); ?>">
+                                                                                <i class="ri-edit-fill align-bottom me-2 text-muted"></i> Update
+                                                                            </a>
+                                                                            <a href="#" class="btn btn-danger btn-sm archive-btn" data-bs-toggle="modal" data-bs-target="#archiveAppointment"
                                                                                 data-appointment-id="<?= htmlspecialchars($row['appointment_id']); ?>">
                                                                                 <i class="ri-delete-bin-fill align-bottom me-2"></i> Archive
                                                                             </a>
@@ -263,47 +291,72 @@ if (isset($_POST['archive_appointment'])) {
                                                                 <th>Time</th>
                                                                 <th>Date</th>
                                                                 <th>Patient Name</th>
-                                                                <th>Patient Age</th>
+                                                                <th>Service</th>
                                                                 <th>Doctor</th>
-                                                                <th>Fee Status</th>
                                                                 <th>Action</th>
                                                             </tr>
                                                         </thead>
                                                         <tbody class="list">
                                                             <?php
-                                                            $selectAppointment = $pdo->query("SELECT *, appointment.id AS appointment_id, patient.id AS patient_id, services.id AS service_id, patient.firstname AS patient_firstname, patient.lastname AS patient_lastname, doctor.firstname AS doctor_firstname, doctor.lastname AS doctor_lastname FROM appointment INNER JOIN patient ON appointment.patient_id = patient.id INNER JOIN services ON appointment.service_id = services.id LEFT JOIN doctor ON appointment.doctor_id = doctor.employee_id WHERE appointment.is_archive = 0 AND appointment.status = 'Approved' ORDER BY appointment.date_added ASC");
+                                                            $selectAppointment = $pdo->query("
+    SELECT 
+        appointment.id AS appointment_id, 
+        patient.firstname AS patient_firstname, 
+        patient.lastname AS patient_lastname, 
+        doctor.firstname AS doctor_firstname, 
+        doctor.lastname AS doctor_lastname, 
+        services.service, 
+        services.type, 
+        services.cost, 
+        appointment.appointment_time, 
+        appointment.appointment_date, 
+        appointment.doctor_id, 
+        appointment.selectedPayment, 
+        appointment.status 
+    FROM appointment 
+    INNER JOIN patient ON appointment.patient_id = patient.id 
+    INNER JOIN services ON appointment.service_id = services.id 
+    LEFT JOIN doctor ON appointment.doctor_id = doctor.employee_id 
+    WHERE appointment.is_archive = 0 AND appointment.status = 'Completed' 
+    ORDER BY appointment.date_added ASC
+");
+
                                                             if ($selectAppointment->rowCount() > 0) {
                                                                 while ($row = $selectAppointment->fetch(PDO::FETCH_ASSOC)) {
-                                                                    $time = $row['appointment_time'];
-                                                                    $formatted_time = date("g:i A", strtotime($time));
+                                                                    // Format time and date
+                                                                    $formatted_time = date("g:i A", strtotime($row['appointment_time']));
+                                                                    $formatted_date = date("F j, Y", strtotime($row['appointment_date']));
 
-                                                                    $date = $row['appointment_date'];
-                                                                    $formatted_date = date("F j, Y", strtotime($date));
-
+                                                                    // Combine names
                                                                     $fullnamePatient = $row['patient_firstname'] . " " . $row['patient_lastname'];
-                                                                    $fullnameDoctor = $row['doctor_id'] == NULL ? "N/A" : "Dr. " . $row['doctor_firstname'] . " " . $row['doctor_lastname'];
+                                                                    $fullnameDoctor = $row['doctor_id']
+                                                                        ? "Dr. " . $row['doctor_firstname'] . " " . $row['doctor_lastname']
+                                                                        : "N/A";
 
+                                                                    // Service details
                                                                     $serviceName = $row['service'] . " (" . $row['type'] . ")";
-                                                                    $cost = "₱" . number_format($row['cost'], 2);
-
-                                                                    date_default_timezone_set('Asia/Manila');
-                                                                    $birthdate = $row['dob'];
-
-                                                                    // Calculate age
-                                                                    $today = new DateTime("now");
-                                                                    $birthday = new DateTime($birthdate);
-                                                                    $age = $today->diff($birthday)->y;
-
                                                             ?>
                                                                     <tr>
-                                                                        <td class="time"><?= $formatted_time; ?></td>
-                                                                        <td class="date"><?= $formatted_date; ?></td>
-                                                                        <td class="patient_name"><?= $fullnamePatient; ?></td>
-                                                                        <td class="patient_name"><?= $age; ?></td>
-                                                                        <td class="doctor"><?= $fullnameDoctor; ?></td>
-                                                                        <td class="service"><span class="badge <?= $row['paid'] == 'Paid' ? 'bg-primary' : 'bg-danger' ?>"><?= $row['paid'] ?></span></td>
+                                                                        <td class="time"><?= htmlspecialchars($formatted_time); ?></td>
+                                                                        <td class="date"><?= htmlspecialchars($formatted_date); ?></td>
+                                                                        <td class="patient_name"><?= htmlspecialchars($fullnamePatient); ?></td>
+                                                                        <td class="service"><?= htmlspecialchars($serviceName); ?></td>
+                                                                        <td class="doctor"><?= htmlspecialchars($fullnameDoctor); ?></td>
                                                                         <td>
-                                                                            <a href="#" class="btn btn-danger btn-sm archive-btn" data-bs-toggle="modal" data-bs-target="#archiveAppointment" data-appointment-id="<?= $row['appointment_id'] ?>">
+                                                                            <a href="#" class="btn btn-light btn-sm edit-btn" data-bs-toggle="modal" data-bs-target="#editAppointment"
+                                                                                data-appointment-id="<?= htmlspecialchars($row['appointment_id']); ?>"
+                                                                                data-patient-name="<?= htmlspecialchars($fullnamePatient); ?>"
+                                                                                data-doctor-name="<?= htmlspecialchars($fullnameDoctor); ?>"
+                                                                                data-service="<?= htmlspecialchars($row['service']); ?>"
+                                                                                data-cost="<?= htmlspecialchars($row['cost']); ?>"
+                                                                                data-payment-method="<?= htmlspecialchars($row['selectedPayment']); ?>"
+                                                                                data-appointment-date="<?= htmlspecialchars($row['appointment_date']); ?>"
+                                                                                data-appointment-time="<?= htmlspecialchars($row['appointment_time']); ?>"
+                                                                                data-status="<?= htmlspecialchars($row['status']); ?>">
+                                                                                <i class="ri-edit-fill align-bottom me-2 text-muted"></i> Update
+                                                                            </a>
+                                                                            <a href="#" class="btn btn-danger btn-sm archive-btn" data-bs-toggle="modal" data-bs-target="#archiveAppointment"
+                                                                                data-appointment-id="<?= htmlspecialchars($row['appointment_id']); ?>">
                                                                                 <i class="ri-delete-bin-fill align-bottom me-2"></i> Archive
                                                                             </a>
                                                                         </td>
@@ -316,9 +369,13 @@ if (isset($_POST['archive_appointment'])) {
                                                                     <td colspan="6">
                                                                         <div class="noresult">
                                                                             <div class="text-center">
-                                                                                <lord-icon src="https://cdn.lordicon.com/msoeawqm.json" trigger="loop" colors="primary:#121331,secondary:#08a88a" style="width:75px;height:75px"></lord-icon>
+                                                                                <lord-icon src="https://cdn.lordicon.com/msoeawqm.json"
+                                                                                    trigger="loop"
+                                                                                    colors="primary:#121331,secondary:#08a88a"
+                                                                                    style="width:75px;height:75px">
+                                                                                </lord-icon>
                                                                                 <h5 class="mt-2">Sorry! No Result Found</h5>
-                                                                                <p class="text-muted mb-0">We've searched in our database but we did not find any data yet!</p>
+                                                                                <p class="text-muted mb-0">We've searched in our database but did not find any data yet!</p>
                                                                             </div>
                                                                         </div>
                                                                     </td>
@@ -362,7 +419,6 @@ if (isset($_POST['archive_appointment'])) {
         </div>
     </div>
 
-    <!-- UPDATE APPOINTMENT -->
     <div id="editAppointment" class="modal fade" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <form method="POST" class="modal-content">
@@ -399,9 +455,7 @@ if (isset($_POST['archive_appointment'])) {
                         <div class="col-md-12 col-sm-12 mb-3">
                             <label class="form-label">Status <span class="text-danger">*</span></label>
                             <select name="appointmentStatus" id="appointmentStatus" class="form-select" required>
-                                <option value="Pending" selected>Pending</option>
-                                <option value="Approved">Approve</option>
-                                <option value="Declined">Decline</option>
+                                <option value="Pending">Pending</option>
                                 <option value="Completed">Mark as Complete</option>
                             </select>
                         </div>
@@ -466,29 +520,30 @@ if (isset($_POST['archive_appointment'])) {
     </script>
 
     <script>
-        // JavaScript to handle populating data in the edit modal
-        var editButtons = document.querySelectorAll('.edit-btn');
-        editButtons.forEach(function(button) {
-            button.addEventListener('click', function() {
-                var appointmentId = this.getAttribute('data-appointment-id');
-                var appointmentPatient = this.getAttribute('data-appointment-patient');
-                var appointmentDoctor = this.getAttribute('data-appointment-doctor');
-                var appointmentService = this.getAttribute('data-appointment-service');
-                var appointmentCost = this.getAttribute('data-appointment-cost');
-                var appointmentPayment = this.getAttribute('data-appointment-payment');
-                var appointmentDate = this.getAttribute('data-appointment-date');
-                var appointmentTime = this.getAttribute('data-appointment-time');
-                var appointmentStatus = this.getAttribute('data-appointment-status');
+        document.addEventListener('DOMContentLoaded', function() {
+            const editButtons = document.querySelectorAll('.edit-btn');
+            editButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const appointmentId = this.getAttribute('data-appointment-id');
+                    const patientName = this.getAttribute('data-patient-name');
+                    const doctorName = this.getAttribute('data-doctor-name');
+                    const service = this.getAttribute('data-service');
+                    const cost = this.getAttribute('data-cost');
+                    const paymentMethod = this.getAttribute('data-payment-method');
+                    const appointmentDate = this.getAttribute('data-appointment-date');
+                    const appointmentTime = this.getAttribute('data-appointment-time');
+                    const status = this.getAttribute('data-status');
 
-                document.getElementById('appointmentId').value = appointmentId;
-                document.getElementById('appointmentPatient').textContent = appointmentPatient.toUpperCase();
-                document.getElementById('appointmentDoctor').textContent = appointmentDoctor.toUpperCase();
-                document.getElementById('appointmentService').textContent = appointmentService.toUpperCase();
-                document.getElementById('appointmentCost').textContent = appointmentCost.toUpperCase();
-                document.getElementById('appointmentPayment').textContent = appointmentPayment.toUpperCase();
-                document.getElementById('appointmentDate').textContent = appointmentDate.toUpperCase();
-                document.getElementById('appointmentTime').textContent = appointmentTime.toUpperCase();
-                document.getElementById('appointmentStatus').value = appointmentStatus;
+                    document.getElementById('appointmentId').value = appointmentId;
+                    document.getElementById('appointmentPatient').textContent = patientName;
+                    document.getElementById('appointmentDoctor').textContent = doctorName;
+                    document.getElementById('appointmentService').textContent = service;
+                    document.getElementById('appointmentCost').textContent = cost;
+                    document.getElementById('appointmentPayment').textContent = paymentMethod;
+                    document.getElementById('appointmentDate').textContent = appointmentDate;
+                    document.getElementById('appointmentTime').textContent = appointmentTime;
+                    document.getElementById('appointmentStatus').value = status;
+                });
             });
         });
     </script>

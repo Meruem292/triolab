@@ -367,3 +367,76 @@ if (isset($_POST['upload_payment_method'])) {
 
     header("Location: ../payments.php");
 }
+
+// add payment method
+if (isset($_POST['add_payment_method'])) {
+    $method = $_POST['method'];
+    $image = $_FILES['image_path'];
+
+    // Define the target directory for image upload
+    $target_dir = "uploads/payment_methods/";
+    $target_file = $target_dir . basename($image['name']);
+    $imageFileType = strtolower(pathinfo($target_file, PATHINFO_EXTENSION));
+
+    // Check if image file is a valid image or a fake image
+    $check = getimagesize($image['tmp_name']);
+    if ($check === false) {
+        logAction($pdo, 'Add payment method error', 'Invalid image file uploaded for payment method: ' . $method);
+        $_SESSION['message'] = "File is not an image.";
+        $_SESSION['status'] = "error";
+        header("Location: ../payments.php");
+        exit;
+    }
+
+    // Check file size (max 500KB)
+    if ($image['size'] > 500000) {
+        logAction($pdo, 'Add payment method error', 'Image file size too large for payment method: ' . $method);
+        $_SESSION['message'] = "Sorry, your file is too large.";
+        $_SESSION['status'] = "error";
+        header("Location: ../payments.php");
+        exit;
+    }
+
+    // Allow only certain image formats
+    if ($imageFileType != "jpg" && $imageFileType != "jpeg" && $imageFileType != "png") {
+        logAction($pdo, 'Add payment method error', 'Invalid image format uploaded for payment method: ' . $method);
+        $_SESSION['message'] = "Sorry, only JPG, JPEG, PNG files are allowed.";
+        $_SESSION['status'] = "error";
+        header("Location: ../payments.php");
+        exit;
+    }
+
+    // Check if the payment method already exists
+    $checkQuery = $pdo->prepare("SELECT * FROM payment_mode WHERE method = ?");
+    $checkQuery->execute([$method]);
+    if ($checkQuery->rowCount() > 0) {
+        logAction($pdo, 'Add payment method error', 'Payment method already exists: ' . $method);
+        $_SESSION['message'] = "Payment method already exists.";
+        $_SESSION['status'] = "error";
+        header("Location: ../payments.php");
+        exit;
+    }
+
+    // Insert the new payment method into the database
+    $stmt = $pdo->prepare("INSERT INTO payment_mode (method, image_path) VALUES (?, ?)");
+    if ($stmt->execute([$method, $target_file])) {
+        // Move the uploaded image to the target directory
+        if (move_uploaded_file($image['tmp_name'], $target_file)) {
+            logAction($pdo, 'Add payment method', 'Payment method added: ' . $method);
+            $_SESSION['message'] = "Payment method added successfully!";
+            $_SESSION['status'] = "success";
+        } else {
+            logAction($pdo, 'Add payment method error', 'Failed to upload image for payment method: ' . $method);
+            $_SESSION['message'] = "Failed to upload image.";
+            $_SESSION['status'] = "error";
+        }
+    } else {
+        logAction($pdo, 'Add payment method error', 'Failed to add payment method: ' . $method);
+        $_SESSION['message'] = "Failed to add payment method.";
+        $_SESSION['status'] = "error";
+    }
+    header("Location: ../payments.php");
+}
+?>
+
+

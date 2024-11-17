@@ -1,15 +1,16 @@
 <?php
-include "db.php";
 
-function displayTable($pdo, $table, $columns, $displayImageColumns = [], $includeActions = true, $imagePathPrefix = '', $includeArchived = false)
+function displayTable($pdo, $table, $columns, $displayImageColumns = [], $includeActions = true, $imagePathPrefix = '', $includeArchived = false, $actions = [])
 {
-    //HOW TO USE THIS FUNCTION
-    // $table = 'payment_mode';
-    // $columns = array('id', 'method', 'image_path', 'updated_at');
-    // $extended_image_path = '../admin/modals/';
 
-    // // Updated to pass image path prefix and column names correctly
-    // displayTable($pdo, $table, $columns, ['image_path'], false, $extended_image_path);
+    // HOW TO USE
+    // $table = 'your_table_name';
+    // $columns = ['id', 'name', 'created_at'];
+    // $displayImageColumns = ['image_path'];
+    // $actions = ['unarchive', 'archive', 'delete']; // Specify the actions you want to include
+
+    // displayTable($pdo, $table, $columns, $displayImageColumns, true, '', false, $actions);
+
 
     // Check if the table has the 'created_at' and 'is_archive' columns
     $query = $pdo->prepare("DESCRIBE $table");
@@ -64,20 +65,33 @@ function displayTable($pdo, $table, $columns, $displayImageColumns = [], $includ
             }
             if ($includeActions) {
                 echo '<td>
-                        <div style="display: flex; gap: 5px;">
-                            <form method="POST" action="unarchive.php">
+                        <div style="display: flex; gap: 5px;">';
+                foreach ($actions as $action) {
+                    if ($action == 'unarchive') {
+                        echo '<form method="POST" action="unarchive.php">
                                 <input type="hidden" name="id" value="' . htmlspecialchars($row['id']) . '">
                                 <input type="hidden" name="table" value="' . htmlspecialchars($table) . '">
                                 <button class="btn btn-primary btn-sm" type="submit" name="unarchive" value="1">Unarchive</button>
-                            </form>
-                            <form method="post" action="delete.php">
+                              </form>';
+                    } elseif ($action == 'archive') {
+                        echo '<form method="POST" action="archive.php">
                                 <input type="hidden" name="id" value="' . htmlspecialchars($row['id']) . '" />
                                 <input type="hidden" name="table" value="' . htmlspecialchars($table) . '" />
-                                <button type="submit" name="archive" class="btn btn-danger btn-sm" onclick="return confirm(\'Are you sure you want to Delete this log?\')">
+                                <button type="submit" name="archive" class="btn btn-danger btn-sm" onclick="return confirm(\'Are you sure you want to archive this item?\')">
+                                    <i class="fa fa-trash"></i> Archive
+                                </button>
+                              </form>';
+                    } elseif ($action == 'delete') {
+                        echo '<form method="POST" action="delete.php">
+                                <input type="hidden" name="id" value="' . htmlspecialchars($row['id']) . '" />
+                                <input type="hidden" name="table" value="' . htmlspecialchars($table) . '" />
+                                <button type="submit" name="delete" class="btn btn-danger btn-sm" onclick="return confirm(\'Are you sure you want to delete this item?\')">
                                     <i class="fa fa-trash"></i> Delete
                                 </button>
-                            </form>
-                        </div>
+                              </form>';
+                    }
+                }
+                echo '</div>
                       </td>';
             }
             echo '</tr>';

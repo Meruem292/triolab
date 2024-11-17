@@ -60,7 +60,6 @@ $admin_id = $_SESSION['user_id'];
                         </div>
                     </div>
 
-
                     <div class="row">
                         <div class="col-12">
                             <div class="card">
