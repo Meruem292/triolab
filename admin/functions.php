@@ -1,7 +1,7 @@
 <?php
 include "db.php";
 
-function displayTable($pdo, $table, $columns, $displayImageColumns = [], $includeActions = true, $imagePathPrefix = '')
+function displayTable($pdo, $table, $columns, $displayImageColumns = [], $includeActions = true, $imagePathPrefix = '', $includeArchived = false)
 {
     //HOW TO USE THIS FUNCTION
     // $table = 'payment_mode';
@@ -20,15 +20,18 @@ function displayTable($pdo, $table, $columns, $displayImageColumns = [], $includ
     $orderBy = in_array('created_at', $columnsInfo) ? "ORDER BY created_at DESC" : "";
 
     // Check if the 'is_archive' column exists and set the WHERE clause accordingly
-    $whereClause = in_array('is_archive', $columnsInfo) ? "WHERE is_archive = 1" : "";
+    $whereClause = "";
+    if (in_array('is_archive', $columnsInfo)) {
+        $whereClause = $includeArchived ? "WHERE is_archive = 1" : "WHERE is_archive = 0";
+    }
 
     // Query to fetch records from the specified table
     $query = $pdo->prepare("SELECT * FROM $table $whereClause $orderBy");
     $query->execute();
 
-?>
+    ?>
     <div class="search-box ms-2 mt-3 mb-3">
-        <input type="text" id="searchInput" class="form-control" placeholder="Search for patients..." onkeyup="searchTable()">
+        <input type="text" id="searchInput" class="form-control" placeholder="Search for <?php echo $table ?>..." onkeyup="searchTable()">
         <i class="ri-search-line search-icon"></i>
     </div>
     <?php
@@ -54,7 +57,7 @@ function displayTable($pdo, $table, $columns, $displayImageColumns = [], $includ
             echo '<tr>';
             foreach ($columns as $column) {
                 if (in_array($column, $displayImageColumns)) {
-                    echo '<td><img src="' . htmlspecialchars($imagePathPrefix . $row[$column]) . '" alt="Image" style="width: 100px; height: auto;"></td>';
+                    echo '<td><a href="' . htmlspecialchars($imagePathPrefix . $row[$column]) . '" data-lightbox="image-' . htmlspecialchars($row['id']) . '"><img src="' . htmlspecialchars($imagePathPrefix . $row[$column]) . '" alt="Image" style="width: 100px; height: auto;"></a></td>';
                 } else {
                     echo '<td>' . htmlspecialchars($row[$column]) . '</td>';
                 }
@@ -126,6 +129,6 @@ function displayTable($pdo, $table, $columns, $displayImageColumns = [], $includ
             }
         }
     </script>
-<?php
+    <?php
 }
 ?>

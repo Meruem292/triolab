@@ -262,12 +262,12 @@ if (isset($_POST['submit_medical_record'])) {
         $stmt = $pdo->prepare("INSERT INTO medical_records (patient_id, record_date, diagnosis, treatment) VALUES (?, ?, ?, ?)");
         $stmt->execute([$patient_id, $record_date, $diagnosis, $treatment]);
 
-        logAction($pdo, 'submit medical record', 'Medical record added for patient ID: ' . $patient_id);
+        logAction($pdo, 'Submit medical record', 'Medical record added for patient ID: ' . $patient_id);
         $_SESSION['message'] = "Medical record added successfully!";
         $_SESSION['status'] = "success";
         header("Location: ../medical-records.php");
     } catch (PDOException $e) {
-        logAction($pdo, 'submit medical record error', 'Error adding medical record for patient ID: ' . $patient_id . '. Error: ' . $e->getMessage());
+        logAction($pdo, 'Submit medical record error', 'Error adding medical record for patient ID: ' . $patient_id . '. Error: ' . $e->getMessage());
         $_SESSION['message'] = "Error: " . $e->getMessage();
         $_SESSION['status'] = "error";
         header("Location: ../medical-records.php");
@@ -314,7 +314,7 @@ if (isset($_POST['update_medical_record'])) {
         ':medical_id' => $medical_id
     ]);
 
-    logAction($pdo, 'update medical record', 'Medical record updated with ID: ' . $medical_id);
+    logAction($pdo, 'Update medical record', 'Medical record updated with ID: ' . $medical_id);
     $_SESSION['message'] = "Medical record updated successfully!";
     $_SESSION['status'] = "success";
     header("Location: ../medical-records.php");
@@ -337,7 +337,7 @@ if (isset($_POST['upload_payment_method'])) {
             $params[] = $target_file;
         } else {
             // Handle error if image upload failed
-            logAction($pdo, 'upload payment method_error', 'Image upload failed for payment method ID: ' . $method_id);
+            logAction($pdo, 'Upload payment method_error', 'Image upload failed for payment method ID: ' . $method_id);
             $_SESSION['message'] = "Image upload failed.";
             $_SESSION['status'] = "error";
             header("Location: ../payments.php");
@@ -356,11 +356,11 @@ if (isset($_POST['upload_payment_method'])) {
     // Prepare and execute the query
     $stmt = $pdo->prepare($query);
     if ($stmt->execute($params)) {
-        logAction($pdo, 'upload payment method', 'Payment method updated with ID: ' . $method_id);
+        logAction($pdo, 'Upload payment method', 'Payment method updated with ID: ' . $method_id);
         $_SESSION['message'] = "Payment method updated successfully!";
         $_SESSION['status'] = "success";
     } else {
-        logAction($pdo, 'upload payment method error', 'Failed to update payment method with ID: ' . $method_id);
+        logAction($pdo, 'Upload payment method error', 'Failed to update payment method with ID: ' . $method_id);
         $_SESSION['message'] = "Failed to update payment method.";
         $_SESSION['status'] = "error";
     }

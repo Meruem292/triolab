@@ -1,154 +1,132 @@
 <?php
-
 require "db.php";
+
 session_start();
 
+// Check if user is logged in
 if (!isset($_SESSION['user_id'])) {
     header('Location: signin.php');
-    exit();
+    exit;
 }
 
 $admin_id = $_SESSION['user_id'];
-
 ?>
 
 <!doctype html>
 <html lang="en" data-layout="vertical" data-topbar="light" data-sidebar="light" data-sidebar-size="lg" data-sidebar-image="none" data-preloader="disable" data-theme="default" data-theme-colors="green">
 
 <head>
-
     <meta charset="utf-8" />
     <title>Triolab - Online Healthcare Management System</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
     <link rel="shortcut icon" href="assets/images/logo.png" type="image/png">
-
-    <link href="assets/libs/swiper/swiper-bundle.min.css" rel="stylesheet" />
-
-    <!-- Layout config Js -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <script src="assets/js/layout.js"></script>
-    <!-- Bootstrap Css -->
     <link href="assets/css/bootstrap.min.css" rel="stylesheet" type="text/css" />
-    <!-- Icons Css -->
     <link href="assets/css/icons.min.css" rel="stylesheet" type="text/css" />
-    <!-- App Css-->
     <link href="assets/css/app.min.css" rel="stylesheet" type="text/css" />
-    <!-- custom Css-->
     <link href="assets/css/custom.min.css" rel="stylesheet" type="text/css" />
-
+    <link rel="stylesheet" href="assets/css/sweetalert.css">
+    <script>
+        // Prevents reloading on page refresh
+        if (window.history.replaceState) {
+            window.history.replaceState(null, null, window.location.href);
+        }
+    </script>
 </head>
 
 <body style="background-color: #F2FFF1">
 
-    <div class="auth-page-wrapper pt-5">
-        <!-- auth page bg -->
-        <div class="auth-one-bg-position auth-one-bg" id="auth-particles">
-            <div class="bg-overlay"></div>
+    <div id="layout-wrapper">
+        <?php require "header.php"; ?>
+        <?php require "sidebar.php" ?>
+        <?php require "functions.php"; ?>
+        <div class="vertical-overlay"></div>
 
-            <div class="shape">
-                <svg xmlns="http://www.w3.org/2000/svg" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 1440 120">
-                    <path d="M 0,36 C 144,53.6 432,123.2 720,124 C 1008,124.8 1296,56.8 1440,40L1440 140L0 140z"></path>
-                </svg>
-            </div>
-        </div>
-
-        <!-- auth page content -->
-        <div class="auth-page-content">
-            <div class="container">
-                <div class="row">
-                    <div class="col-lg-12">
-                        <div class="text-center mt-sm-5 pt-4 mb-4">
-                            <div class="mb-sm-5 pb-sm-4 pb-5">
-                                <img src="assets/images/comingsoon.png" alt="" height="120" class="move-animation">
-                            </div>
-                            <div class="mb-5">
-                                <h1 class="display-2 coming-soon-text">Coming Soon</h1>
-                            </div>
-                            <div>
-                                <div class="row justify-content-center mt-5">
-                                    <div class="col-lg-8">
-                                        <div id="countdown" class="countdownlist"></div>
-                                    </div>
+        <div class="main-content">
+            <div class="page-content">
+                <div class="container-fluid">
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="page-title-box d-sm-flex align-items-center justify-content-between bg-galaxy-transparent">
+                                <h4 class="mb-sm-0">Payments</h4>
+                                <div class="page-title-right">
+                                    <ol class="breadcrumb m-0">
+                                        <li class="breadcrumb-item"><a href="index.php">Dashboard</a></li>
+                                        <li class="breadcrumb-item active">Payments</li>
+                                    </ol>
                                 </div>
+                            </div>
+                        </div>
+                    </div>
 
-                                <div class="mt-5">
-                                    <h4>Don't worry. We'll be up soon</h4>
-                                    <a href="index.php" class="btn btn-primary mt-3">Go back to Dashboard</a>
+
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-body">
+                                    <!-- Button to trigger modal -->
+
+
+                                    <div class="row mb-2 mt-3">
+                                        <div class="col-lg-12">
+                                            <div class="mb-3">
+                                                <h4>LOGS</h4>   
+                                                <?php
+                                                $table = 'logs';
+                                                $columns = array('id', 'action', 'timestamp', 'details');
+                                                $displayImageColumns = array();
+                                                // Updated to pass image path prefix and column names correctly
+                                                displayTable($pdo, $table, $columns, $displayImageColumns, false, '', false);
+                                                ?>
+                                            </div>
+                                        </div>
+                                    </div><!-- end card-body -->
                                 </div>
-
                             </div>
                         </div>
                     </div>
                 </div>
-                <!-- end row -->
 
+                <?php require "footer.php"; ?>
             </div>
-            <!-- end container -->
         </div>
-        <!-- end auth page content -->
 
-        <!-- footer -->
+        <!-- Button to go to top -->
+        <button onclick="topFunction()" class="btn btn-danger btn-icon" id="back-to-top">
+            <i class="ri-arrow-up-line"></i>
+        </button>
+
+
+        <!-- Bootstrap JS (includes Popper) -->
+
+        <script src="assets/libs/bootstrap/js/bootstrap.bundle.min.js"></script>
+        <script src="assets/libs/simplebar/simplebar.min.js"></script>
+        <script src="assets/libs/node-waves/waves.min.js"></script>
+        <script src="assets/libs/feather-icons/feather.min.js"></script>
+        <script src="assets/js/pages/plugins/lord-icon-2.1.0.js"></script>
+        <script src="assets/js/plugins.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+        <script src="assets/js/pages/listjs.init.js"></script>
+        <script src="assets/js/app.js"></script>
+        <script src="assets/js/sweetalert.js"></script>
+
+
+
+
+        <!-- Show SweetAlert message -->
+        <?php if (isset($_SESSION['message']) && isset($_SESSION['status'])) { ?>
+            <script>
+                Swal.fire({
+                    text: "<?php echo $_SESSION['message']; ?>",
+                    icon: "<?php echo $_SESSION['status']; ?>",
+                });
+            </script>
         <?php
-    require "footer.php";
-        ?>
-        <!-- end Footer -->
-    </div>
-
-    <!-- JAVASCRIPT -->
-    <script src="assets/libs/bootstrap/js/bootstrap.bundle.min.js"></script>
-    <script src="assets/libs/simplebar/simplebar.min.js"></script>
-    <script src="assets/libs/node-waves/waves.min.js"></script>
-    <script src="assets/libs/feather-icons/feather.min.js"></script>
-    <script src="assets/js/pages/plugins/lord-icon-2.1.0.js"></script>
-    <script src="assets/js/plugins.js"></script>
-
-    <!-- Swiper Js -->
-    <script src="assets/libs/swiper/swiper-bundle.min.js"></script>
-
-    <!-- App js -->
-    <script src="assets/js/app.js"></script>
-
-    <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            var now = new Date().getTime();
-            var endDate = new Date("May 30, 2024").getTime();
-            var timeRemaining = endDate - now;
-
-            if (timeRemaining < 0) {
-                // May 30, 2024 has already passed
-                var countdownEndMessage = document.createElement("div");
-                countdownEndMessage.className = "countdown-endtxt";
-                countdownEndMessage.innerHTML = "The countdown has ended!";
-                var countdownElement = document.getElementById("countdown");
-                if (countdownElement) {
-                    countdownElement.innerHTML = ""; // Clear countdown
-                    countdownElement.appendChild(countdownEndMessage);
-                }
-                return;
-            }
-
-            var days = Math.floor(timeRemaining / (1000 * 60 * 60 * 24));
-            var hours = Math.floor((timeRemaining % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-            var minutes = Math.floor((timeRemaining % (1000 * 60 * 60)) / (1000 * 60));
-            var seconds = Math.floor((timeRemaining % (1000 * 60)) / 1000);
-
-            var countdownHtml =
-                '<div class="countdownlist-item"><div class="count-title">Days</div><div class="count-num">' +
-                days +
-                '</div></div><div class="countdownlist-item"><div class="count-title">Hours</div><div class="count-num">' +
-                hours +
-                '</div></div><div class="countdownlist-item"><div class="count-title">Minutes</div><div class="count-num">' +
-                minutes +
-                '</div></div><div class="countdownlist-item"><div class="count-title">Seconds</div><div class="count-num">' +
-                seconds +
-                "</div></div>";
-
-            var countdownElement = document.getElementById("countdown");
-            if (countdownElement) {
-                countdownElement.innerHTML = countdownHtml;
-            }
-        });
-    </script>
+            unset($_SESSION['message']);
+            unset($_SESSION['status']);
+        } ?>
 
 </body>
 

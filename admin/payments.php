@@ -70,7 +70,8 @@ $admin_id = $_SESSION['user_id'];
 
                                     <div class="row mb-2 mt-3">
                                         <div class="col-lg-12">
-                                            <div class="mb-3"> PAYMENT MODES
+                                            <div class="mb-3"> 
+                                                <h4>PAYMENT MODES</h4>
                                                 <?php
                                                 $table = 'payment_mode';
                                                 $columns = array('id', 'method', 'image_path', 'updated_at');
@@ -80,7 +81,6 @@ $admin_id = $_SESSION['user_id'];
                                                 displayTable($pdo, $table, $columns, ['image_path'], false, $extended_image_path);
                                                 ?>
                                             </div>
-
                                         </div>
                                     </div><!-- end card-body -->
                                 </div>
