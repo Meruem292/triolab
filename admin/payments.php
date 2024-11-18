@@ -60,29 +60,60 @@ $admin_id = $_SESSION['user_id'];
                         </div>
                     </div>
 
+                    <!-- Tab Panel -->
+                    <ul class="nav nav-tabs" id="myTab" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="payment-modes-tab" data-bs-toggle="tab" data-bs-target="#payment-modes" type="button" role="tab" aria-controls="payment-modes" aria-selected="true">Payment Modes</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="payment-receipts-tab" data-bs-toggle="tab" data-bs-target="#payment-receipts" type="button" role="tab" aria-controls="payment-receipts" aria-selected="false">Payment Receipts</button>
+                        </li>
+                    </ul>
+
 
                     <div class="row">
                         <div class="col-12">
                             <div class="card">
                                 <div class="card-body">
                                     <!-- Button to trigger modal -->
-                                    <?php include "modals/add_payment_method.php"; ?>
-                                    <?php include "modals/edit_payment_method.php"; ?>
 
-                                    <div class="row mb-2 mt-3">
-                                        <div class="col-lg-12">
-                                            <div class="mb-3"> 
-                                                <h4>PAYMENT MODES</h4>
-                                                <?php
-                                                $table = 'payment_mode';
-                                                $columns = array('id', 'method', 'image_path', 'updated_at');
-                                                $extended_image_path = '../admin/modals/';
-                                                // Updated to pass image path prefix and column names correctly
-                                                displayTable($pdo, $table, $columns, ['image_path'], true, $extended_image_path,false, ['delete']);
-                                                ?>
-                                            </div>
+
+                                    <div class="tab-content" id="myTabContent">
+                                        <div class="tab-pane fade show active" id="payment-modes" role="tabpanel" aria-labelledby="payment-modes-tab">
+                                            <div class="row mb-2 mt-3">
+                                                <div class="col-lg-12">
+                                                    <div class="mb-3">
+                                                        <?php include "modals/add_payment_method.php"; ?>
+                                                        <?php include "modals/edit_payment_method.php"; ?>
+                                                        <h4 class="mt-3">PAYMENT MODES</h4>
+
+                                                        <?php
+                                                        $table = 'payment_mode';
+                                                        $columns = array('id', 'method', 'image_path', 'updated_at');
+                                                        $extended_image_path = '../admin/modals/';
+                                                        // Updated to pass image path prefix and column names correctly
+                                                        displayTable($pdo, $table, $columns, ['image_path'], true, $extended_image_path, false, ['delete']);
+                                                        ?>
+                                                    </div>
+                                                </div>
+                                            </div><!-- end card-body -->
                                         </div>
-                                    </div><!-- end card-body -->
+                                        <div class="tab-pane fade" id="payment-receipts" role="tabpanel" aria-labelledby="payment-receipts-tab">
+                                            <div class="row mb-2 mt-3">
+                                                <div class="col-lg-12">
+                                                    <div class="mb-3">
+                                                        <h4>PAYMENT RECEIPTS</h4>
+                                                        <?php
+                                                        $table = 'payment_receipts';
+                                                        $columns = array('id', 'appointment_id', 'payment_receipt_path', 'date', 'payment_mode_id','amount');
+                                                        // Updated to pass image path prefix and column names correctly
+                                                        displayTable($pdo, $table, $columns, [], true, '', false, []);
+                                                        ?>
+                                                    </div>
+                                                </div>
+                                            </div><!-- end card-body -->
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -100,7 +131,8 @@ $admin_id = $_SESSION['user_id'];
 
 
         <!-- Bootstrap JS (includes Popper) -->
-
+        <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.min.js"></script>
         <script src="assets/libs/bootstrap/js/bootstrap.bundle.min.js"></script>
         <script src="assets/libs/simplebar/simplebar.min.js"></script>
         <script src="assets/libs/node-waves/waves.min.js"></script>

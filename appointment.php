@@ -16,6 +16,8 @@ $selectService = $pdo->prepare("SELECT * FROM services WHERE id = :serviceId");
 $selectService->execute([':serviceId' => $serviceId]);
 $fetchService = $selectService->fetch(PDO::FETCH_ASSOC);
 
+
+
 if (isset($_POST['add_appointment'])) {
     // Retrieve form data
     $selectedDate = $_POST['selectedDate'];
@@ -615,7 +617,7 @@ if (isset($_POST['add_appointment'])) {
                         </ul>
                     </div>
 
-                    <form class="login-box" method="POST">
+                    <form class="login-box" method="POST" id="appointmentForm">
                         <div class="tab-content" id="main_form">
                             <div class="tab-pane active" role="tabpanel" id="step1">
                                 <div class="row">
@@ -637,7 +639,9 @@ if (isset($_POST['add_appointment'])) {
                                                 <div id="timeSlotsContainer">
                                                     <!-- Time slots will be loaded here dynamically -->
                                                     Please select a date first.
+
                                                 </div>
+                                                
                                             </div>
                                         </div>
                                         <div class="card shadow-sm mt-40">
@@ -734,20 +738,21 @@ if (isset($_POST['add_appointment'])) {
                                     <div class="col-md-12">
                                         <div class="form-group">
                                             <label>Choose payment method: <span class="text-danger">*</span></label>
-                                            <div style="display: flex; flex-direction: column; gap: 10px;">
-                                                <div class="d-flex" style="gap: 10px;">
-                                                    <input type="radio" name="selectedPayment" value="gcash">
-                                                    <img src="assets/images/gcash.jpg" style="width: 120px; height: 50px;" alt="">
+
+                                            <?php
+                                            $selectPayment = $pdo->query("SELECT * FROM payment_mode");
+                                            $fetchPayment = $selectPayment->fetchAll(PDO::FETCH_ASSOC);
+
+                                            ?>
+                                            <?php foreach ($fetchPayment as $payment) : ?>
+                                                <div class="form-check">
+                                                    <input type="radio" name="selectedPayment" value="<?= $payment['id'] ?>" required>
+                                                    <label><?= $payment['method'] ?></label>
                                                 </div>
-                                                <div class="d-flex" style="gap: 10px;">
-                                                    <input type="radio" name="selectedPayment" value="maya">
-                                                    <img src="assets/images/maya.jpg" style="width: 120px; height: 50px; object-fit: cover;" alt="">
-                                                </div>
-                                                <div class="d-flex" style="gap: 10px;">
-                                                    <input type="radio" name="selectedPayment" value="cash">
-                                                    <img src="assets/images/cash.jpg" style="width: 120px; height: 50px; object-fit: cover;" alt="">
-                                                </div>
-                                            </div>
+
+                                            <?php endforeach; ?>
+
+
                                         </div>
                                     </div>
                                     <div class="col-md-12">
@@ -795,6 +800,7 @@ if (isset($_POST['add_appointment'])) {
     <script src="assets/js/script.min.js"></script>
     <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js'></script>
 
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             var calendarEl = document.getElementById('calendar');
@@ -813,6 +819,24 @@ if (isset($_POST['add_appointment'])) {
                 }
             });
             calendar.render();
+
+            // Add submit listener for the form
+            var form = document.getElementById("appointmentForm"); // Adjust this to your actual form ID
+            form.addEventListener('submit', function(event) {
+                var selectedSchedule = document.querySelector('input[name="selectedSchedule"]:checked');
+      
+
+                // Check if a time slot is selected and if the select field is valid
+                if (!selectedSchedule) {
+                    event.preventDefault(); // Prevent form submission
+                    Swal.fire({
+                        title: 'Error!',
+                        text: 'Please select a time slot.',
+                        icon: 'error',
+                        confirmButtonText: 'OK'
+                    });
+                }
+            });
         });
 
         function fetchTimeSlots(selectedDate) {
@@ -831,7 +855,7 @@ if (isset($_POST['add_appointment'])) {
                     }
 
                     // Clear the container
-                    timeSlotsContainer.innerHTML = '';
+                    timeSlotsContainer.innerHTML = '<i id="notice" >Note: click to select the slot</i>';
 
                     if (slotsData.length > 0) {
                         // Loop through each slot data and create the HTML elements dynamically
@@ -843,9 +867,9 @@ if (isset($_POST['add_appointment'])) {
                                 slotDiv.classList.add('selected');
                             }
                             slotDiv.innerHTML = `
-                    <input type="radio" name="selectedSchedule" value="${slotData['id']}" ${slotData['selected'] ? 'checked' : ''}>
-                    ${slotData['schedule']} (${slotData['slot']} slots available)
-                `;
+                            <input type="radio" name="selectedSchedule" value="${slotData['id']}" ${slotData['selected'] ? 'checked' : ''}>
+                            ${slotData['schedule']} (${slotData['slot']} slots available)
+                        `;
                             timeSlotsContainer.appendChild(slotDiv);
 
                             // Attach event listener to the newly created slot
@@ -879,6 +903,7 @@ if (isset($_POST['add_appointment'])) {
             xhttp.send();
         }
     </script>
+
 
     <script>
         // ------------step-wizard-------------
