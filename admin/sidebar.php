@@ -53,8 +53,20 @@
                     </a>
                 </li>
                 <li class="nav-item">
+                    <a class="nav-link menu-link" href="department.php">
+                        <i class="ri-building-line"></i> <span data-key="t-department">Department</span>
+                    </a>
+                </li>
+                
+                <li class="nav-item">
                     <a class="nav-link menu-link" href="payments.php">
                         <i class="ri-wallet-line"></i> <span data-key="t-payments">Payments</span>
+                    </a>
+                </li>
+                
+                <li class="nav-item">
+                    <a class="nav-link menu-link" href="logs.php">
+                        <i class="ri-folder-5-line"></i> <span data-key="t-logs">Logs</span>
                     </a>
                 </li>
                 <li class="nav-item">
@@ -63,8 +75,8 @@
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link menu-link" href="logs.php">
-                        <i class="ri-folder-5-line"></i> <span data-key="t-logs">Logs</span>
+                    <a class="nav-link menu-link" href="backup.php">
+                        <i class="ri-database-line"></i> <span data-key="t-database">Backup and Restore</span>
                     </a>
                 </li>
                 <li class="nav-item">
@@ -72,6 +84,7 @@
                         <i class="mdi mdi-logout"></i> <span data-key="t-logout">Logout</span>
                     </a>
                 </li>
+                
             </ul>
         </div>
         <!-- Sidebar -->
