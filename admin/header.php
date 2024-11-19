@@ -1,3 +1,45 @@
+<?php
+
+
+function backupDatabase()
+{
+    global $pdo;
+
+    // Get all tables in the database
+    $query = $pdo->query("SHOW TABLES");
+    $tables = $query->fetchAll(PDO::FETCH_COLUMN);
+
+    // Initialize SQL dump content
+    $sqlDump = "";
+
+    // Loop through each table and generate the SQL dump
+    foreach ($tables as $table) {
+        // Add DROP TABLE IF EXISTS to avoid conflicts
+        $sqlDump .= "DROP TABLE IF EXISTS `$table`;\n";
+        $createTableQuery = $pdo->query("SHOW CREATE TABLE `$table`")->fetch(PDO::FETCH_ASSOC);
+        $sqlDump .= $createTableQuery['Create Table'] . ";\n\n";
+
+        // Get table data
+        $rows = $pdo->query("SELECT * FROM `$table`");
+        while ($row = $rows->fetch(PDO::FETCH_ASSOC)) {
+            $sqlDump .= "INSERT INTO `$table` (" . implode(",", array_keys($row)) . ") VALUES ('" . implode("','", array_map('addslashes', array_values($row))) . "');\n";
+        }
+        $sqlDump .= "\n";
+    }
+
+    // Save the backup file to the backups directory
+    $backupFile = __DIR__ . "/backups/backup_" . date("Ymd_His") . ".sql";
+    if (file_put_contents($backupFile, $sqlDump)) {
+        return true;
+    } else {
+        return false;
+    }
+}
+
+if (isset($_POST['backup'])) {
+    $backupStatus = backupDatabase();
+}
+?>
 <header id="page-topbar">
     <div class="layout-width">
         <div class="navbar-header">
@@ -294,8 +336,15 @@
                     <div class="dropdown-menu dropdown-menu-end">
                         <!-- item-->
                         <h6 class="dropdown-header">Welcome Jane!</h6>
-                        <a class="dropdown-item" href="messages.php"><i class="mdi mdi-message-text-outline text-muted fs-16 align-middle me-1"></i> <span class="align-middle">Messages</span></a>
-                        <a class="dropdown-item" href="backup.php"><i class="ri ri-database-2-line text-muted fs-16 align-middle me-1"></i> <span class="align-middle">Back-up Database</span></a>
+                        <a class="dropdown-item" href="messages.php">
+                            <!-- <i class="mdi mdi-message-text-outline text-muted fs-16 align-middle me-1"></i>  -->
+                            <span class="align-middle">Messages</span></a>
+
+                        <form action="" method="post">
+                            <button class="btn btn-backup" type="submit" name="backup">
+                                <i class="fa fa-database"></i>Back up database
+                            </button>
+                        </form>
                         <div class="dropdown-divider"></div>
                         <a class="dropdown-item" href="logout.php"><i class="mdi mdi-logout text-muted fs-16 align-middle me-1"></i> <span class="align-middle" data-key="t-logout">Logout</span></a>
                     </div>
@@ -304,3 +353,22 @@
         </div>
     </div>
 </header>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        <?php if ($backupStatus): ?>
+            Swal.fire({
+                icon: 'success',
+                title: 'Backup Successful',
+                text: 'The database has been backed up successfully.',
+            });
+        <?php else: ?>
+            Swal.fire({
+                icon: 'error',
+                title: 'Backup Failed',
+                text: 'There was an error backing up the database.',
+            });
+        <?php endif; ?>
+    });
+</script>
