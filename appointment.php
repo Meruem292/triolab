@@ -36,81 +36,56 @@ if (isset($_POST['add_appointment'])) {
     $selectedPayment = $_POST['selectedPayment'];
     $medical = $_POST['medical'];
     $serviceID = $_POST['serviceID'];
+    $receipt = $_FILES['receipt'];// 
+    $amount= $_POST['amount'];
+    $doctor_id = 0;
+    $department_id = 0;
+    $status = "Pending";
+    $paid = 0 ;
     $slot = 1;
+    $date_added = date('Y-m-d H:i:s');
 
-    // Check if appointment already exists
-    $sql_select = $pdo->prepare(
-        "SELECT * FROM appointment 
-        WHERE appointment_date = :selectedDate 
-        AND appointment_slot_id = :selectedSlot 
-        AND appointment_time = :selectedTime"
-    );
-    $sql_select->execute([
-        ':selectedDate' => $selectedDate,
-        ':selectedSlot' => $selectedSlot,
-        ':selectedTime' => $selectedTime
-    ]);
+    try {
+        // Insert appointment data
+        $insertAppointment = $pdo->prepare("
+            INSERT INTO `appointment` 
+            (`service_id`, `patient_id`, `appointment_date`, `appointment_time`,`appointment_slot_id`, `doctor_id`, `department_id`, `selectedPayment`, `medical`, `status`, `paid`, `date_added`) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ");
+        $insertAppointment->execute([$serviceID, $user_id, $selectedDate, $selectedTime,$selectedSlot, $doctor_id, $department_id, $selectedPayment, $medical, $status, $paid, $date_added]);
+        $appointment_id = $pdo->lastInsertId();
 
-    if ($sql_select->rowCount() > 0) {
-        $_SESSION['message'] = "Appointment conflict: An appointment already exists at the selected date, time, and slot.";
+        // Handle receipt upload
+        if ($_FILES['receipt']['error'] === UPLOAD_ERR_OK) {
+            $uploadDir = '../triolab/admin/modals/uploads/payment_receipts/';
+            $fileName = time() . '_' . basename($_FILES['receipt']['name']);
+            $uploadFilePath = $uploadDir . $fileName;
+
+            if (move_uploaded_file($_FILES['receipt']['tmp_name'], $uploadFilePath)) {
+                // Insert payment receipt record
+                $dbReceiptPath = "uploads/payment_receipts/" . $fileName;
+                $insertReceipt = $pdo->prepare("
+                    INSERT INTO `payment_receipts` (`appointment_id`, `payment_receipt_path`, `date`, `payment_mode_id`, `amount`, `status`) 
+                    VALUES (?, ?, ?, ?, ?, ?)
+                ");
+                $insertReceipt->execute([$appointment_id, $dbReceiptPath, $date_added, $selectedPayment, $amount, $status]);
+
+                // Update appointment as paid
+                $updateAppointment = $pdo->prepare("UPDATE `appointment` SET `paid` = 0 WHERE `id` = ?");
+                $updateAppointment->execute([$appointment_id]);
+
+                $_SESSION['message'] = "Appointment booked successfully with payment!";
+                $_SESSION['status'] = "success";
+            } else {
+                throw new Exception("Failed to upload the payment receipt.");
+            }
+        } else {
+            $_SESSION['message'] = "Please upload a valid payment receipt.";
+            $_SESSION['status'] = "error";
+        }
+    } catch (Exception $e) {
+        $_SESSION['message'] = "An error occurred: " . $e->getMessage();
         $_SESSION['status'] = "error";
-    } else {
-        // Update patient details
-        $sql_update_user = $pdo->prepare(
-            "UPDATE patient 
-            SET firstname = :firstname, lastname = :lastname, email = :email, dob = :birthdate, 
-                birthplace = :birthplace, contact = :contactNumber, province = :province, 
-                city = :city, barangay = :barangay, street = :street 
-            WHERE id = :user_id"
-        );
-        $sql_update_user->execute([
-            ':firstname' => $firstname,
-            ':lastname' => $lastname,
-            ':email' => $email,
-            ':birthdate' => $birthdate,
-            ':birthplace' => $birthplace,
-            ':contactNumber' => $contactNumber,
-            ':province' => $province,
-            ':city' => $city,
-            ':barangay' => $barangay,
-            ':street' => $street,
-            ':user_id' => $user_id,
-        ]);
-
-        // Insert data into the appointment table
-        $sql_insert = $pdo->prepare(
-            "INSERT INTO appointment 
-            (service_id, appointment_date, appointment_slot_id, appointment_time, 
-             patient_id, selectedPayment, medical, status, paid, date_added, is_archive) 
-            VALUES 
-            (:serviceID, :selectedDate, :selectedSlot, :selectedTime, :patient_id, 
-             :selectedPayment, :medical, 'pending', 0, NOW(), 0)"
-        );
-        $sql_insert->execute([
-            ':serviceID' => $serviceID,
-            ':selectedDate' => $selectedDate,
-            ':selectedSlot' => $selectedSlot,
-            ':selectedTime' => $selectedTime,
-            ':patient_id' => $user_id,
-            ':selectedPayment' => $selectedPayment,
-            ':medical' => $medical
-        ]);
-
-        // Deduct one slot from the appointment_slots table
-        $sql_update_slot = $pdo->prepare(
-            "UPDATE appointment_slots 
-            SET slot = slot - :slot 
-            WHERE id = :selectedSlot AND date = :selectedDate"
-        );
-        $sql_update_slot->execute([
-            ':slot' => $slot,
-            ':selectedSlot' => $selectedSlot,
-            ':selectedDate' => $selectedDate
-        ]);
-
-        // Success message
-        $_SESSION['message'] = "Your appointment is successful. Please wait for approval.";
-        $_SESSION['status'] = "success";
     }
 }
 
@@ -617,7 +592,7 @@ if (isset($_POST['add_appointment'])) {
                         </ul>
                     </div>
 
-                    <form class="login-box" method="POST" id="appointmentForm">
+                    <form class="login-box" method="POST" id="appointmentForm" enctype="multipart/form-data">
                         <div class="tab-content" id="main_form">
                             <div class="tab-pane active" role="tabpanel" id="step1">
                                 <div class="row">
@@ -641,7 +616,7 @@ if (isset($_POST['add_appointment'])) {
                                                     Please select a date first.
 
                                                 </div>
-                                                
+
                                             </div>
                                         </div>
                                         <div class="card shadow-sm mt-40">
@@ -742,17 +717,29 @@ if (isset($_POST['add_appointment'])) {
                                             <?php
                                             $selectPayment = $pdo->query("SELECT * FROM payment_mode");
                                             $fetchPayment = $selectPayment->fetchAll(PDO::FETCH_ASSOC);
-
                                             ?>
                                             <?php foreach ($fetchPayment as $payment) : ?>
                                                 <div class="form-check">
-                                                    <input type="radio" name="selectedPayment" value="<?= $payment['id'] ?>" required>
+                                                    <input
+                                                        type="radio"
+                                                        name="selectedPayment"
+                                                        value="<?= $payment['id'] ?>"
+                                                        data-method="<?= $payment['method'] ?>"
+                                                        data-image="admin/modals/<?= $payment['image_path'] ?>"
+                                                        required
+                                                        onclick="handlePaymentChange(this)">
                                                     <label><?= $payment['method'] ?></label>
                                                 </div>
-
                                             <?php endforeach; ?>
 
+                                            <div id="paymentDetails" style="display: none; margin-top: 20px;">
+                                                <h4 id="paymentImage"></h4>
 
+                                                <p>Upload your receipt here:</p>
+                                                <input type="file" name="receipt" required>
+                                                <label for="amount">Input amount you have sent.</label>
+                                                <input type="text" name="amount" id="amount">
+                                            </div>
                                         </div>
                                     </div>
                                     <div class="col-md-12">
@@ -761,7 +748,6 @@ if (isset($_POST['add_appointment'])) {
                                             <input class="form-control" required type="text" name="medical" placeholder="Kindly list any existing medical condition that our staff needs to be aware of. Type N/A if none.">
                                         </div>
                                     </div>
-
                                 </div>
                                 <button type="submit" name="add_appointment" class="default-btn next-step">Submit</button>
                             </div>
@@ -801,6 +787,22 @@ if (isset($_POST['add_appointment'])) {
     <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js'></script>
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+        function handlePaymentChange(input) {
+            const method = input.getAttribute('data-method');
+            const imagePath = input.getAttribute('data-image');
+            const paymentDetails = document.getElementById('paymentDetails');
+            const paymentImage = document.getElementById('paymentImage');
+
+            if (method.toLowerCase() !== 'cash') {
+                paymentImage.innerHTML = `<img src="${imagePath}" alt="Payment Method Image" style="max-width: 100px;">`;
+                paymentDetails.style.display = 'block';
+            } else {
+                paymentDetails.style.display = 'none';
+            }
+        }
+    </script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             var calendarEl = document.getElementById('calendar');
@@ -824,7 +826,7 @@ if (isset($_POST['add_appointment'])) {
             var form = document.getElementById("appointmentForm"); // Adjust this to your actual form ID
             form.addEventListener('submit', function(event) {
                 var selectedSchedule = document.querySelector('input[name="selectedSchedule"]:checked');
-      
+
 
                 // Check if a time slot is selected and if the select field is valid
                 if (!selectedSchedule) {

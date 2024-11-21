@@ -27,6 +27,8 @@ $admin_id = $_SESSION['user_id'];
     <link href="assets/css/app.min.css" rel="stylesheet" type="text/css" />
     <link href="assets/css/custom.min.css" rel="stylesheet" type="text/css" />
     <link rel="stylesheet" href="assets/css/sweetalert.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.11.3/css/lightbox.min.css" />
+
     <script>
         // Prevents reloading on page refresh
         if (window.history.replaceState) {
@@ -92,7 +94,7 @@ $admin_id = $_SESSION['user_id'];
                                                         $columns = array('id', 'method', 'image_path', 'updated_at');
                                                         $extended_image_path = '../admin/modals/';
                                                         // Updated to pass image path prefix and column names correctly
-                                                        displayTable($pdo, $table, $columns, ['image_path'], true, $extended_image_path, false, ['delete']);
+                                                        displayTable($pdo, $table, $columns, ['image_path'], false, $extended_image_path, false, ['']);
                                                         ?>
                                                     </div>
                                                 </div>
@@ -105,9 +107,9 @@ $admin_id = $_SESSION['user_id'];
                                                         <h4>PAYMENT RECEIPTS</h4>
                                                         <?php
                                                         $table = 'payment_receipts';
-                                                        $columns = array('id', 'appointment_id', 'payment_receipt_path', 'date', 'payment_mode_id','amount');
+                                                        $columns = array('id', 'appointment_id', 'payment_receipt_path', 'date', 'status', 'amount');
                                                         // Updated to pass image path prefix and column names correctly
-                                                        displayTable($pdo, $table, $columns, [], true, '', false, []);
+                                                        displayTable($pdo, $table, $columns, ['payment_receipt_path'], true, '../admin/modals/', false, ['edit_payment_receipt', 'archive']);
                                                         ?>
                                                     </div>
                                                 </div>
@@ -119,10 +121,11 @@ $admin_id = $_SESSION['user_id'];
                         </div>
                     </div>
                 </div>
-
                 <?php require "footer.php"; ?>
             </div>
         </div>
+
+        
 
         <!-- Button to go to top -->
         <button onclick="topFunction()" class="btn btn-danger btn-icon" id="back-to-top">
@@ -144,6 +147,8 @@ $admin_id = $_SESSION['user_id'];
         <script src="assets/js/pages/listjs.init.js"></script>
         <script src="assets/js/app.js"></script>
         <script src="assets/js/sweetalert.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.11.3/js/lightbox.min.js"></script>
+
 
 
 
