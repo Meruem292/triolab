@@ -299,27 +299,27 @@ if (isset($_POST['archive_appointment'])) {
                                                         <tbody class="list">
                                                             <?php
                                                             $selectAppointment = $pdo->query("
-    SELECT 
-        appointment.id AS appointment_id, 
-        patient.firstname AS patient_firstname, 
-        patient.lastname AS patient_lastname, 
-        doctor.firstname AS doctor_firstname, 
-        doctor.lastname AS doctor_lastname, 
-        services.service, 
-        services.type, 
-        services.cost, 
-        appointment.appointment_time, 
-        appointment.appointment_date, 
-        appointment.doctor_id, 
-        appointment.selectedPayment, 
-        appointment.status 
-    FROM appointment 
-    INNER JOIN patient ON appointment.patient_id = patient.id 
-    INNER JOIN services ON appointment.service_id = services.id 
-    LEFT JOIN doctor ON appointment.doctor_id = doctor.employee_id 
-    WHERE appointment.is_archive = 0 AND appointment.status = 'Completed' 
-    ORDER BY appointment.date_added ASC
-");
+                                                                        SELECT 
+                                                                            appointment.id AS appointment_id, 
+                                                                            patient.firstname AS patient_firstname, 
+                                                                            patient.lastname AS patient_lastname, 
+                                                                            doctor.firstname AS doctor_firstname, 
+                                                                            doctor.lastname AS doctor_lastname, 
+                                                                            services.service, 
+                                                                            services.type, 
+                                                                            services.cost, 
+                                                                            appointment.appointment_time, 
+                                                                            appointment.appointment_date, 
+                                                                            appointment.doctor_id, 
+                                                                            appointment.selectedPayment, 
+                                                                            appointment.status 
+                                                                        FROM appointment 
+                                                                        INNER JOIN patient ON appointment.patient_id = patient.id 
+                                                                        INNER JOIN services ON appointment.service_id = services.id 
+                                                                        LEFT JOIN doctor ON appointment.doctor_id = doctor.employee_id 
+                                                                        WHERE appointment.is_archive = 0 AND appointment.status = 'Completed' 
+                                                                        ORDER BY appointment.date_added ASC
+                                                                    ");
 
                                                             if ($selectAppointment->rowCount() > 0) {
                                                                 while ($row = $selectAppointment->fetch(PDO::FETCH_ASSOC)) {

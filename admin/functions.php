@@ -163,31 +163,32 @@ function handleActionButton($pdo, $action, $row, $table)
 function editFormPayments($pdo)
 {
     // Modal for editing payment
-    echo '<div class="modal fade" id="testModal" tabindex="-1" aria-labelledby="testModalLabel" aria-hidden="true">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="testModalLabel">Edit Payment</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        <form method="POST" action="action.php">
-                            <input type="hidden" id="id" name="id">
-                            <div class="form-group">
-                                <label for="status" class="mt-2">Status</label>
-                                <select name="status" id="status" class="form-control">
-                                    <option value="Pending">Pending</option>
-                                    <option value="Approved">Approved</option>
-                                    <option value="Disapproved">Disapproved</option>
-                                </select>
-                            </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                        <button type="submit" name="update_payment" class="btn btn-primary">Save changes</button>
-                    </div>
-                    </form>
+?><div class="modal fade" id="testModal" tabindex="-1" aria-labelledby="testModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="testModalLabel">Edit Payment</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
+                <div class="modal-body">
+                    <form method="POST" action="action.php">
+                        <input type="hidden" id="id" name="id">
+                        <div class="form-group">
+                            <label for="status" class="mt-2">Status</label>
+                            <select name="status" id="status" class="form-control w-50" style="margin-left: -30%;">
+                                <option value="Pending">Pending</option>
+                                <option value="Approved">Approved</option>
+                                <option value="Disapproved">Disapproved</option>
+                            </select>
+                        </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" name="update_payment" class="btn btn-primary">Save changes</button>
+                </div>
+                </form>
             </div>
-        </div>';
+        </div>
+    </div>
+<?php
 }

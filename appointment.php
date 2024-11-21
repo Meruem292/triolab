@@ -16,8 +16,6 @@ $selectService = $pdo->prepare("SELECT * FROM services WHERE id = :serviceId");
 $selectService->execute([':serviceId' => $serviceId]);
 $fetchService = $selectService->fetch(PDO::FETCH_ASSOC);
 
-
-
 if (isset($_POST['add_appointment'])) {
     // Retrieve form data
     $selectedDate = $_POST['selectedDate'];
@@ -36,12 +34,12 @@ if (isset($_POST['add_appointment'])) {
     $selectedPayment = $_POST['selectedPayment'];
     $medical = $_POST['medical'];
     $serviceID = $_POST['serviceID'];
-    $receipt = $_FILES['receipt'];// 
-    $amount= $_POST['amount'];
+    $receipt = $_FILES['receipt']; // File input for receipt
+    $amount = $_POST['amount'];
     $doctor_id = 0;
     $department_id = 0;
     $status = "Pending";
-    $paid = 0 ;
+    $paid = 0;
     $slot = 1;
     $date_added = date('Y-m-d H:i:s');
 
@@ -49,39 +47,47 @@ if (isset($_POST['add_appointment'])) {
         // Insert appointment data
         $insertAppointment = $pdo->prepare("
             INSERT INTO `appointment` 
-            (`service_id`, `patient_id`, `appointment_date`, `appointment_time`,`appointment_slot_id`, `doctor_id`, `department_id`, `selectedPayment`, `medical`, `status`, `paid`, `date_added`) 
+            (`service_id`, `patient_id`, `appointment_date`, `appointment_time`, `appointment_slot_id`, `doctor_id`, `department_id`, `selectedPayment`, `medical`, `status`, `paid`, `date_added`) 
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ");
-        $insertAppointment->execute([$serviceID, $user_id, $selectedDate, $selectedTime,$selectedSlot, $doctor_id, $department_id, $selectedPayment, $medical, $status, $paid, $date_added]);
+        $insertAppointment->execute([$serviceID, $user_id, $selectedDate, $selectedTime, $selectedSlot, $doctor_id, $department_id, $selectedPayment, $medical, $status, $paid, $date_added]);
         $appointment_id = $pdo->lastInsertId();
 
-        // Handle receipt upload
-        if ($_FILES['receipt']['error'] === UPLOAD_ERR_OK) {
-            $uploadDir = '../triolab/admin/modals/uploads/payment_receipts/';
-            $fileName = time() . '_' . basename($_FILES['receipt']['name']);
-            $uploadFilePath = $uploadDir . $fileName;
+        // If payment is not cash, handle the receipt upload
+        if (strtolower($selectedPayment) !== '3'    ) {
+            if ($_FILES['receipt']['error'] === UPLOAD_ERR_OK) {
+                $uploadDir = '../triolab/admin/modals/uploads/payment_receipts/';
+                $fileName = time() . '_' . basename($_FILES['receipt']['name']);
+                $uploadFilePath = $uploadDir . $fileName;
 
-            if (move_uploaded_file($_FILES['receipt']['tmp_name'], $uploadFilePath)) {
-                // Insert payment receipt record
-                $dbReceiptPath = "uploads/payment_receipts/" . $fileName;
-                $insertReceipt = $pdo->prepare("
-                    INSERT INTO `payment_receipts` (`appointment_id`, `payment_receipt_path`, `date`, `payment_mode_id`, `amount`, `status`) 
-                    VALUES (?, ?, ?, ?, ?, ?)
-                ");
-                $insertReceipt->execute([$appointment_id, $dbReceiptPath, $date_added, $selectedPayment, $amount, $status]);
+                if (move_uploaded_file($_FILES['receipt']['tmp_name'], $uploadFilePath)) {
+                    // Insert payment receipt record
+                    $dbReceiptPath = "uploads/payment_receipts/" . $fileName;
+                    $insertReceipt = $pdo->prepare("
+                        INSERT INTO `payment_receipts` (`appointment_id`, `payment_receipt_path`, `date`, `payment_mode_id`, `amount`, `status`) 
+                        VALUES (?, ?, ?, ?, ?, ?)
+                    ");
+                    $insertReceipt->execute([$appointment_id, $dbReceiptPath, $date_added, $selectedPayment, $amount, $status]);
 
-                // Update appointment as paid
-                $updateAppointment = $pdo->prepare("UPDATE `appointment` SET `paid` = 0 WHERE `id` = ?");
-                $updateAppointment->execute([$appointment_id]);
+                    // Update appointment as paid
+                    $updateAppointment = $pdo->prepare("UPDATE `appointment` SET `paid` = 1 WHERE `id` = ?");
+                    $updateAppointment->execute([$appointment_id]);
 
-                $_SESSION['message'] = "Appointment booked successfully with payment!";
-                $_SESSION['status'] = "success";
+                    $_SESSION['message'] = "Appointment booked successfully with payment!";
+                    $_SESSION['status'] = "success";
+                } else {
+                    throw new Exception("Failed to upload the payment receipt.");
+                }
             } else {
-                throw new Exception("Failed to upload the payment receipt.");
+                throw new Exception("Please upload a valid payment receipt.");
             }
         } else {
-            $_SESSION['message'] = "Please upload a valid payment receipt.";
-            $_SESSION['status'] = "error";
+            // For cash payment, no receipt required, set the appointment as paid
+            $updateAppointment = $pdo->prepare("UPDATE `appointment` SET `paid` = 1 WHERE `id` = ?");
+            $updateAppointment->execute([$appointment_id]);
+
+            $_SESSION['message'] = "Appointment booked successfully with cash payment!";
+            $_SESSION['status'] = "success";
         }
     } catch (Exception $e) {
         $_SESSION['message'] = "An error occurred: " . $e->getMessage();
@@ -90,6 +96,7 @@ if (isset($_POST['add_appointment'])) {
 }
 
 ?>
+
 
 
 <!DOCTYPE html>
@@ -734,9 +741,8 @@ if (isset($_POST['add_appointment'])) {
 
                                             <div id="paymentDetails" style="display: none; margin-top: 20px;">
                                                 <h4 id="paymentImage"></h4>
-
                                                 <p>Upload your receipt here:</p>
-                                                <input type="file" name="receipt" required>
+                                                <input type="file" name="receipt" id="receiptInput" required>
                                                 <label for="amount">Input amount you have sent.</label>
                                                 <input type="text" name="amount" id="amount">
                                             </div>
@@ -788,21 +794,29 @@ if (isset($_POST['add_appointment'])) {
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
+
+
     <script>
         function handlePaymentChange(input) {
             const method = input.getAttribute('data-method');
             const imagePath = input.getAttribute('data-image');
             const paymentDetails = document.getElementById('paymentDetails');
             const paymentImage = document.getElementById('paymentImage');
+            const receiptInput = document.getElementById('receiptInput');
 
+            // If the method is not 'cash', show the payment details and the receipt input
             if (method.toLowerCase() !== 'cash') {
                 paymentImage.innerHTML = `<img src="${imagePath}" alt="Payment Method Image" style="max-width: 100px;">`;
                 paymentDetails.style.display = 'block';
+                receiptInput.setAttribute('required', 'required'); // Make receipt input required
             } else {
+                // If the method is 'cash', hide the payment details and make receipt input not required
                 paymentDetails.style.display = 'none';
+                receiptInput.removeAttribute('required'); // Remove required attribute from receipt input
             }
         }
     </script>
+
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             var calendarEl = document.getElementById('calendar');
