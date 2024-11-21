@@ -9,47 +9,66 @@ if (!isset($_SESSION['user_id'])) {
 };
 
 if (isset($_POST['edit_appointment'])) {
-    $appointmentId = $_POST['appointmentId']; // Appointment ID
-    $paymentStatus = $_POST['paymentStatus']; // Payment Status (Pending, Approved, Disapproved)
-    $status = $_POST['appointmentStatus'];    // Appointment Status (Pending, Completed, etc.)
-    $amount = $_POST['amount'];               // Amount from the form input
+    // Extract form inputs
+    $appointmentId = $_POST['appointmentId'];  // Appointment ID
+    $paymentStatus = $_POST['paymentStatus'];  // Payment Status (Pending, Approved, Disapproved)
+    $status = $_POST['appointmentStatus'];     // Appointment Status (Pending, Completed)
+    $doctor = $_POST['doctor'];                // Doctor ID
+    $amount = $_POST['amount'];                // Payment amount
 
     try {
         // Begin transaction
         $pdo->beginTransaction();
 
-        // Update `appointment` table
-        $stmt = $pdo->prepare('UPDATE appointment SET status = ?, paid = ? WHERE id = ?');
-        $stmt->execute([$status, $paymentStatus, $appointmentId]);
+        // Get the department ID of the selected doctor
+        $queryDoctorDepartment = $pdo->prepare("SELECT department_id FROM doctor WHERE employee_id = ?");
+        $queryDoctorDepartment->execute([$doctor]);
+        $doctorDepartment = $queryDoctorDepartment->fetch(PDO::FETCH_ASSOC);
 
-        // Check if appointment_id exists in payment_receipts
-        $stmt1 = $pdo->prepare("SELECT id FROM payment_receipts WHERE appointment_id = ?");
-        $stmt1->execute([$appointmentId]);
-        $existingReceipt = $stmt1->fetch();
+        if (!$doctorDepartment) {
+            throw new Exception("Invalid doctor selected.");
+        }
+
+        $doctorDepartmentId = $doctorDepartment['department_id'];
+
+        // Update `appointment` table
+        $updateAppointment = $pdo->prepare(
+            "UPDATE appointment 
+             SET status = ?, paid = ?, doctor_id = ?, department_id = ? 
+             WHERE id = ?"
+        );
+        $updateAppointment->execute([$status, $paymentStatus, $doctor, $doctorDepartmentId, $appointmentId]);
+
+        // Check if a payment receipt already exists for the appointment
+        $checkReceipt = $pdo->prepare("SELECT id FROM payment_receipts WHERE appointment_id = ?");
+        $checkReceipt->execute([$appointmentId]);
+        $existingReceipt = $checkReceipt->fetch(PDO::FETCH_ASSOC);
 
         if ($existingReceipt) {
-            // If record exists, update the amount
-            $stmt2 = $pdo->prepare("UPDATE payment_receipts SET amount = ? WHERE appointment_id = ?");
-            $stmt2->execute([$amount, $appointmentId]);
+            // Update the amount in `payment_receipts` if it exists
+            $updateReceipt = $pdo->prepare("UPDATE payment_receipts SET amount = ? WHERE appointment_id = ?");
+            $updateReceipt->execute([$amount, $appointmentId]);
         } else {
-            // If record doesn't exist, insert a new record into payment_receipts
-            $stmt3 = $pdo->prepare("INSERT INTO payment_receipts (appointment_id, payment_receipt_path, date, payment_mode_id, amount, status) 
-                                    VALUES (?, ?, NOW(), 3, ?, ?)");
-            $stmt3->execute([$appointmentId, '', $amount, 'Pending']); // Assuming an empty string for payment_receipt_path as you mentioned
+            // Insert a new payment receipt if it doesn't exist
+            $insertReceipt = $pdo->prepare(
+                "INSERT INTO payment_receipts (appointment_id, payment_receipt_path, date, payment_mode_id, amount, status) 
+                 VALUES (?, ?, NOW(), 3, ?, ?)"
+            );
+            $insertReceipt->execute([$appointmentId, '', $amount, 'Pending']); // Default values for missing fields
         }
 
         // Commit transaction
         $pdo->commit();
 
         // Set success message
-        $_SESSION['message'] = "Appointment and payment status updated successfully!";
+        $_SESSION['message'] = "Appointment and payment details updated successfully!";
         $_SESSION['status'] = "success";
     } catch (Exception $e) {
         // Rollback transaction in case of error
         $pdo->rollBack();
 
         // Set error message
-        $_SESSION['message'] = "Error updating appointment or payment status: " . $e->getMessage();
+        $_SESSION['message'] = "Error updating appointment or payment details: " . $e->getMessage();
         $_SESSION['status'] = "error";
     }
 
@@ -57,6 +76,7 @@ if (isset($_POST['edit_appointment'])) {
     header('Location: ../admin/appointment.php');
     exit();
 }
+
 
 
 if (isset($_POST['archive_appointment'])) {
@@ -522,45 +542,73 @@ ORDER BY appointment.date_added ASC;
     <div id="editAppointment" class="modal fade" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <form method="POST" class="modal-content">
+                <!-- Modal Header -->
                 <div class="modal-header">
                     <h5 class="modal-title">Update Appointment Information</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
+
+                <!-- Modal Body -->
                 <div class="modal-body">
                     <div class="row">
-                        <div class="col-md-12 col-sm-12 mb-2">
+                        <!-- Hidden Appointment ID -->
+                        <div class="col-md-12 mb-2">
                             <input type="hidden" name="appointmentId" id="appointmentId">
                         </div>
-                        <div class="col-md-12 col-sm-12 mb-2">
+
+                        <!-- Patient Name -->
+                        <div class="col-md-12 mb-2">
                             <p><b>Patient Name: </b> <span id="appointmentPatient"></span></p>
                         </div>
-                        <div class="col-md-12 col-sm-12 mb-2">
-                            <p><b>Doctor Name: </b> <span id="appointmentDoctor"></span></p>
+
+                        <!-- Assigned Doctor -->
+                        <div class="col-md-12 mb-2">
+                            <p><b>Assigned Doctor: </b> <span id="appointmentDoctor"></span></p>
+                            <?php $doctors = $pdo->query("SELECT * FROM doctor"); ?>
+                            <label class="form-label">Change Doctor</label>
+                            <select name="doctor" id="doctor" class="form-select" required>
+                                <?php foreach ($doctors as $doctor) { ?>
+                                    <option value="<?= $doctor['employee_id']; ?>">
+                                        <?= htmlspecialchars($doctor['firstname'] . ' ' . $doctor['lastname']); ?>
+                                    </option>
+                                <?php } ?>
+                            </select>
                         </div>
-                        <div class="col-md-12 col-sm-12 mb-2">
+
+                        <!-- Service -->
+                        <div class="col-md-12 mb-2">
                             <p><b>Service: </b> <span id="appointmentService"></span></p>
                         </div>
 
-                        <div class="col-md-12 col-sm-12 mb-2">
+                        <!-- Payment Method -->
+                        <div class="col-md-12 mb-2">
                             <p><b>Payment Method: </b> <span id="appointmentPayment"></span></p>
                         </div>
-                        <div class="col-md-12 col-sm-12 mb-2">
+
+                        <!-- Appointment Date -->
+                        <div class="col-md-12 mb-2">
                             <p><b>Appointment Date: </b> <span id="appointmentDate"></span></p>
                         </div>
-                        <div class="col-md-12 col-sm-12 mb-2">
+
+                        <!-- Appointment Time -->
+                        <div class="col-md-12 mb-2">
                             <p><b>Appointment Time: </b> <span id="appointmentTime"></span></p>
                         </div>
-                        <div class="col-md-12 col-sm-12 mb-2">
-                            <p><b>Service Cost: </b> <span id="appointmentCost"></span></p> <!-- Set default value here -->
-                            <span id="appointmentPaymentAmount" style="display: none;"></span>  <!-- Total value -->
-                        </div>
-                        <div class="col-md-12 col-sm-12 mb-2">
-                            <p><b>Total Cost:</b><span class="text-danger">*</span><i> (Bill)</i>
-                                <input type="float" name="amount" class="form-control" required>
-                            </p>
+
+                        <!-- Service Cost -->
+                        <div class="col-md-12 mb-2">
+                            <p><b>Service Cost: </b> <span id="appointmentCost"></span></p>
+                            <input type="hidden" id="appointmentPaymentAmount">
                         </div>
 
-                        <div class="col-md-12 col-sm-12 mb-2">
+                        <!-- Total Bill -->
+                        <div class="col-md-12 mb-2">
+                            <label class="form-label">Total Bill <span class="text-danger">*</span></label>
+                            <input type="number" step="0.01" name="amount" class="form-control" placeholder="Enter total amount" required>
+                        </div>
+
+                        <!-- Payment Status -->
+                        <div class="col-md-12 mb-2">
                             <label class="form-label">Payment Status <span class="text-danger">*</span></label>
                             <select name="paymentStatus" id="paymentStatus" class="form-select" required>
                                 <option value="Pending">Pending</option>
@@ -568,8 +616,10 @@ ORDER BY appointment.date_added ASC;
                                 <option value="Disapproved">Disapproved</option>
                             </select>
                         </div>
-                        <div class="col-md-12 col-sm-12 mb-2">
-                            <label class="form-label">Status <span class="text-danger">*</span></label>
+
+                        <!-- Appointment Status -->
+                        <div class="col-md-12 mb-2">
+                            <label class="form-label">Appointment Status <span class="text-danger">*</span></label>
                             <select name="appointmentStatus" id="appointmentStatus" class="form-select" required>
                                 <option value="Pending">Pending</option>
                                 <option value="Completed">Mark as Complete</option>
@@ -577,6 +627,8 @@ ORDER BY appointment.date_added ASC;
                         </div>
                     </div>
                 </div>
+
+                <!-- Modal Footer -->
                 <div class="modal-footer">
                     <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
                     <button type="submit" name="edit_appointment" class="btn btn-primary">Save Changes</button>
@@ -584,6 +636,7 @@ ORDER BY appointment.date_added ASC;
             </form>
         </div>
     </div>
+
 
     <!-- ARCHIVE APPOINTMENT -->
     <div id="archiveAppointment" class="modal fade" tabindex="-1" aria-hidden="true">

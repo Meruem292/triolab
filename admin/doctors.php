@@ -82,7 +82,7 @@ $admin_id = $_SESSION['user_id'];
                             <div class="card">
 
                                 <div class="card-body">
-                                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addDoctor">+ New Doctor</button>
+                                    <button class="btn btn-primary mb-2" data-bs-toggle="modal" data-bs-target="#addDoctor">+ New Doctor</button>
                                     <!-- Nav tabs -->
                                     <ul class="nav nav-tabs nav-tabs-custom nav-success nav-justified mb-3" role="tablist">
                                         <li class="nav-item">
