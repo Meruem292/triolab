@@ -12,6 +12,7 @@ if (isset($_POST['edit_appointment'])) {
     $appointmentId = $_POST['appointmentId']; // Appointment ID
     $paymentStatus = $_POST['paymentStatus']; // Payment Status (Pending, Approved, Disapproved)
     $status = $_POST['appointmentStatus'];    // Appointment Status (Pending, Completed, etc.)
+    $amount = $_POST['amount'];               // Amount from the form input
 
     try {
         // Begin transaction
@@ -21,9 +22,21 @@ if (isset($_POST['edit_appointment'])) {
         $stmt = $pdo->prepare('UPDATE appointment SET status = ?, paid = ? WHERE id = ?');
         $stmt->execute([$status, $paymentStatus, $appointmentId]);
 
-        // Update `payment_receipts` table
-        $stmt1 = $pdo->prepare("UPDATE payment_receipts SET status = ? WHERE appointment_id = ?");
-        $stmt1->execute([$paymentStatus, $appointmentId]);
+        // Check if appointment_id exists in payment_receipts
+        $stmt1 = $pdo->prepare("SELECT id FROM payment_receipts WHERE appointment_id = ?");
+        $stmt1->execute([$appointmentId]);
+        $existingReceipt = $stmt1->fetch();
+
+        if ($existingReceipt) {
+            // If record exists, update the amount
+            $stmt2 = $pdo->prepare("UPDATE payment_receipts SET amount = ? WHERE appointment_id = ?");
+            $stmt2->execute([$amount, $appointmentId]);
+        } else {
+            // If record doesn't exist, insert a new record into payment_receipts
+            $stmt3 = $pdo->prepare("INSERT INTO payment_receipts (appointment_id, payment_receipt_path, date, payment_mode_id, amount, status) 
+                                    VALUES (?, ?, NOW(), 3, ?, ?)");
+            $stmt3->execute([$appointmentId, '', $amount, 'Pending']); // Assuming an empty string for payment_receipt_path as you mentioned
+        }
 
         // Commit transaction
         $pdo->commit();
@@ -186,26 +199,32 @@ if (isset($_POST['archive_appointment'])) {
                                                             <?php
                                                             $selectAppointment = $pdo->query("
             SELECT 
-                appointment.id AS appointment_id, 
-                patient.firstname AS patient_firstname, 
-                patient.lastname AS patient_lastname, 
-                doctor.firstname AS doctor_firstname, 
-                doctor.lastname AS doctor_lastname, 
-                services.service, 
-                services.type, 
-                services.cost, 
-                appointment.appointment_time, 
-                appointment.appointment_date, 
-                appointment.doctor_id, 
-                appointment.selectedPayment, 
-                appointment.status, 
-                appointment.paid -- Include the payment status
-            FROM appointment 
-            INNER JOIN patient ON appointment.patient_id = patient.id 
-            INNER JOIN services ON appointment.service_id = services.id 
-            LEFT JOIN doctor ON appointment.doctor_id = doctor.employee_id 
-            WHERE appointment.is_archive = 0 AND appointment.status = 'Pending' 
-            ORDER BY appointment.date_added ASC
+    appointment.id AS appointment_id, 
+    patient.firstname AS patient_firstname, 
+    patient.lastname AS patient_lastname, 
+    doctor.firstname AS doctor_firstname, 
+    doctor.lastname AS doctor_lastname, 
+    services.service, 
+    services.type, 
+    services.cost, 
+    appointment.appointment_time, 
+    appointment.appointment_date, 
+    appointment.doctor_id, 
+    appointment.selectedPayment, 
+    appointment.status, 
+    appointment.paid,  -- Include the payment status
+    payment_receipts.amount AS payment_amount,  -- Amount from payment_receipts
+    payment_receipts.status AS payment_status,  -- Payment status
+    payment_receipts.date AS payment_date  -- Payment receipt date
+FROM appointment 
+INNER JOIN patient ON appointment.patient_id = patient.id 
+INNER JOIN services ON appointment.service_id = services.id 
+LEFT JOIN doctor ON appointment.doctor_id = doctor.employee_id 
+LEFT JOIN payment_receipts ON appointment.id = payment_receipts.appointment_id  -- Join payment_receipts
+WHERE appointment.is_archive = 0 
+    AND appointment.status = 'Pending' 
+ORDER BY appointment.date_added ASC;
+
         ");
 
                                                             if ($selectAppointment->rowCount() > 0) {
@@ -258,6 +277,7 @@ if (isset($_POST['archive_appointment'])) {
                                                                                 data-doctor-name="<?= htmlspecialchars($fullnameDoctor); ?>"
                                                                                 data-service="<?= htmlspecialchars($row['service']); ?>"
                                                                                 data-cost="<?= htmlspecialchars($row['cost']); ?>"
+                                                                                data-payment-amount="<?= htmlspecialchars($row['payment_amount']); ?>"
                                                                                 data-payment-method="<?= htmlspecialchars(getPaymentMode($pdo, $row['selectedPayment'])); ?>"
                                                                                 data-appointment-date="<?= htmlspecialchars($row['appointment_date']); ?>"
                                                                                 data-appointment-time="<?= htmlspecialchars($row['appointment_time']); ?>"
@@ -348,26 +368,33 @@ if (isset($_POST['archive_appointment'])) {
                                                             <?php
                                                             $selectAppointment = $pdo->query("
             SELECT 
-                appointment.id AS appointment_id, 
-                patient.firstname AS patient_firstname, 
-                patient.lastname AS patient_lastname, 
-                doctor.firstname AS doctor_firstname, 
-                doctor.lastname AS doctor_lastname, 
-                services.service, 
-                services.type, 
-                services.cost, 
-                appointment.appointment_time, 
-                appointment.appointment_date, 
-                appointment.doctor_id, 
-                appointment.selectedPayment, 
-                appointment.status, 
-                appointment.paid -- Include the payment status
-            FROM appointment 
-            INNER JOIN patient ON appointment.patient_id = patient.id 
-            INNER JOIN services ON appointment.service_id = services.id 
-            LEFT JOIN doctor ON appointment.doctor_id = doctor.employee_id 
-            WHERE appointment.is_archive = 0 AND appointment.status = 'Completed' AND appointment.paid = 'Approved'
-            ORDER BY appointment.date_added ASC
+    appointment.id AS appointment_id, 
+    patient.firstname AS patient_firstname, 
+    patient.lastname AS patient_lastname, 
+    doctor.firstname AS doctor_firstname, 
+    doctor.lastname AS doctor_lastname, 
+    services.service, 
+    services.type, 
+    services.cost, 
+    appointment.appointment_time, 
+    appointment.appointment_date, 
+    appointment.doctor_id, 
+    appointment.selectedPayment, 
+    appointment.status, 
+    appointment.paid,  -- Include the payment status
+    payment_receipts.amount AS payment_amount,  -- Amount from payment_receipts
+    payment_receipts.status AS payment_status,  -- Payment status
+    payment_receipts.date AS payment_date  -- Payment receipt date
+FROM appointment 
+INNER JOIN patient ON appointment.patient_id = patient.id 
+INNER JOIN services ON appointment.service_id = services.id 
+LEFT JOIN doctor ON appointment.doctor_id = doctor.employee_id 
+LEFT JOIN payment_receipts ON appointment.id = payment_receipts.appointment_id  -- Join payment_receipts
+WHERE appointment.is_archive = 0 
+    AND appointment.status = 'Completed' 
+    AND appointment.paid = 'Approved'
+ORDER BY appointment.date_added ASC;
+
         ");
 
                                                             if ($selectAppointment->rowCount() > 0) {
@@ -420,6 +447,7 @@ if (isset($_POST['archive_appointment'])) {
                                                                                 data-doctor-name="<?= htmlspecialchars($fullnameDoctor); ?>"
                                                                                 data-service="<?= htmlspecialchars($row['service']); ?>"
                                                                                 data-cost="<?= htmlspecialchars($row['cost']); ?>"
+                                                                                data-payment-amount="<?= htmlspecialchars($row['payment_amount']); ?>"
                                                                                 data-payment-method="<?= htmlspecialchars(getPaymentMode($pdo, $row['selectedPayment'])); ?>"
                                                                                 data-appointment-date="<?= htmlspecialchars($row['appointment_date']); ?>"
                                                                                 data-appointment-time="<?= htmlspecialchars($row['appointment_time']); ?>"
@@ -523,11 +551,12 @@ if (isset($_POST['archive_appointment'])) {
                             <p><b>Appointment Time: </b> <span id="appointmentTime"></span></p>
                         </div>
                         <div class="col-md-12 col-sm-12 mb-2">
-                            <p><b>Cost: </b> <span id="appointmentCost"></span></p> <!-- Set default value here -->
+                            <p><b>Service Cost: </b> <span id="appointmentCost"></span></p> <!-- Set default value here -->
+                            <span id="appointmentPaymentAmount" style="display: none;"></span>  <!-- Total value -->
                         </div>
                         <div class="col-md-12 col-sm-12 mb-2">
                             <p><b>Total Cost:</b><span class="text-danger">*</span><i> (Bill)</i>
-                                <input type="number" name="amount" class="form-control" required>
+                                <input type="float" name="amount" class="form-control" required>
                             </p>
                         </div>
 
@@ -644,6 +673,7 @@ if (isset($_POST['archive_appointment'])) {
                     const doctorName = this.getAttribute('data-doctor-name');
                     const service = this.getAttribute('data-service');
                     const cost = this.getAttribute('data-cost');
+                    const paymentAmount = this.getAttribute('data-payment-amount');
                     const paymentMethod = this.getAttribute('data-payment-method');
                     const appointmentDate = this.getAttribute('data-appointment-date');
                     const appointmentTime = this.getAttribute('data-appointment-time');
@@ -655,13 +685,15 @@ if (isset($_POST['archive_appointment'])) {
                     document.getElementById('appointmentDoctor').textContent = doctorName;
                     document.getElementById('appointmentService').textContent = service;
                     document.getElementById('appointmentCost').textContent = cost;
+                    document.getElementById('appointmentPaymentAmount').textContent = paymentAmount;
                     document.getElementById('appointmentPayment').textContent = paymentMethod;
                     document.getElementById('appointmentDate').textContent = appointmentDate;
                     document.getElementById('appointmentTime').textContent = appointmentTime;
                     document.getElementById('appointmentStatus').value = status;
                     document.getElementById('paymentStatus').value = paymentStatus;
 
-                    document.querySelector('input[name="amount"]').value = cost;
+
+                    document.querySelector('input[name="amount"]').value = paymentAmount;
                 });
             });
         });
