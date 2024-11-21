@@ -437,6 +437,29 @@ if (isset($_POST['add_payment_method'])) {
     }
     header("Location: ../payments.php");
 }
+
+if(isset($_POST['add_department'])){
+
+    $department = $_POST['department'];
+    $stmt = $pdo->prepare('INSERT INTO departments (name) VALUES (?)');
+    $stmt->execute([$department]);
+    logAction($pdo, 'add department', 'Department added: ' . $department);
+    $_SESSION['message'] = "Department added successfully!";
+    $_SESSION['status'] = "success";
+    header("Location: ../department.php");
+}
+
+if(isset($_POST['edit_department'])){
+    $department_id = $_POST['department_id'];
+    $department = $_POST['department'];
+    $stmt = $pdo->prepare('UPDATE departments SET name = ? WHERE id = ?');
+
+    $stmt->execute([$department, $department_id]);
+    logAction($pdo, 'edit department', 'Department updated with ID: ' . $department_id);
+    $_SESSION['message'] = "Department updated successfully!";
+    $_SESSION['status'] = "success";
+    header("Location: ../department.php");
+}
 ?>
 
 

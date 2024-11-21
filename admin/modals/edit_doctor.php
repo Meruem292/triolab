@@ -1,3 +1,6 @@
+    <?php
+    $departments = getDepartments();
+    ?>
     <!-- UPDATE DOCTOR -->
     <div id="editDoctor" class="modal fade" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
@@ -33,10 +36,10 @@
                     <div class="mb-3">
                         <label class="form-label">Department <span class="text-danger">*</span></label>
                         <select name="department_id" id="editDoctorDepartment" class="form-select" required>
-                            <option value="1">Doctor/Physician</option>
-                            <option value="3">Medical Technician</option>
-                            <option value="2">Radiological Technologist</option>
-                            <option value="4">Medical Consultant</option>
+                            <!-- Dynamically populate departments -->
+                            <?php foreach ($departments as $department): ?>
+                                <option value="<?= $department['id']; ?>"><?= $department['name']; ?></option>
+                            <?php endforeach; ?>
                         </select>
                     </div>
                 </div>
@@ -47,5 +50,3 @@
             </form>
         </div>
     </div>
-
- 
