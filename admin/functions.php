@@ -1,6 +1,7 @@
 <?php
 
-function getPaymentMode($pdo, $paymentModeId) {
+function getPaymentMode($pdo, $paymentModeId)
+{
     try {
         $query = $pdo->prepare("SELECT method FROM payment_mode WHERE id = :id");
         $query->bindParam(':id', $paymentModeId, PDO::PARAM_INT);
@@ -67,9 +68,16 @@ function displayTable($pdo, $table, $columns, $displayImageColumns = [], $includ
             echo '<tr>';
             foreach ($columns as $column) {
                 if (in_array($column, $displayImageColumns)) {
-                    echo '<td><a href="' . htmlspecialchars($imagePathPrefix . $row[$column]) . '" data-lightbox="gallery" data-lightbox="image-' . htmlspecialchars($row['id']) . '">
-                            <img src="' . htmlspecialchars($imagePathPrefix . $row[$column]) . '" alt="Image" style="width: 100px; height: auto;">
-                          </a></td>';
+                    // echo '<td><a href="' . htmlspecialchars($imagePathPrefix . $row[$column]) . '" data-lightbox="gallery" data-lightbox="image-' . htmlspecialchars($row['id']) . '">
+                    //         <img src="' . htmlspecialchars($imagePathPrefix . $row[$column]) . '" alt="Image" style="width: 100px; height: auto;">
+                    //       </a></td>';
+                    echo '<td>
+                    <a href="' . htmlspecialchars($imagePathPrefix . $row[$column]) . '" 
+                        data-lightbox="gallery" 
+                        data-lightbox="image-' . htmlspecialchars($row['id']) . '">
+                        Click to view image
+                        </a>
+                    </td>';
                 } else {
                     echo '<td>' . htmlspecialchars($row[$column]) . '</td>';
                 }

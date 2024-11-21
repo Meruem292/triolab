@@ -500,31 +500,38 @@ if (isset($_POST['archive_appointment'])) {
                 </div>
                 <div class="modal-body">
                     <div class="row">
-                        <div class="col-md-12 col-sm-12 mb-3">
+                        <div class="col-md-12 col-sm-12 mb-2">
                             <input type="hidden" name="appointmentId" id="appointmentId">
                         </div>
-                        <div class="col-md-12 col-sm-12 mb-3">
+                        <div class="col-md-12 col-sm-12 mb-2">
                             <p><b>Patient Name: </b> <span id="appointmentPatient"></span></p>
                         </div>
-                        <div class="col-md-12 col-sm-12 mb-3">
+                        <div class="col-md-12 col-sm-12 mb-2">
                             <p><b>Doctor Name: </b> <span id="appointmentDoctor"></span></p>
                         </div>
-                        <div class="col-md-12 col-sm-12 mb-3">
+                        <div class="col-md-12 col-sm-12 mb-2">
                             <p><b>Service: </b> <span id="appointmentService"></span></p>
                         </div>
-                        <div class="col-md-12 col-sm-12 mb-3">
-                            <p><b>Cost: </b> <span id="appointmentCost"></span></p>
-                        </div>
-                        <div class="col-md-12 col-sm-12 mb-3">
+
+                        <div class="col-md-12 col-sm-12 mb-2">
                             <p><b>Payment Method: </b> <span id="appointmentPayment"></span></p>
                         </div>
-                        <div class="col-md-12 col-sm-12 mb-3">
+                        <div class="col-md-12 col-sm-12 mb-2">
                             <p><b>Appointment Date: </b> <span id="appointmentDate"></span></p>
                         </div>
-                        <div class="col-md-12 col-sm-12 mb-3">
+                        <div class="col-md-12 col-sm-12 mb-2">
                             <p><b>Appointment Time: </b> <span id="appointmentTime"></span></p>
                         </div>
-                        <div class="col-md-12 col-sm-12 mb-3">
+                        <div class="col-md-12 col-sm-12 mb-2">
+                            <p><b>Cost: </b> <span id="appointmentCost"></span></p> <!-- Set default value here -->
+                        </div>
+                        <div class="col-md-12 col-sm-12 mb-2">
+                            <p><b>Total Cost:</b><span class="text-danger">*</span><i> (Bill)</i>
+                                <input type="number" name="amount" class="form-control" required>
+                            </p>
+                        </div>
+
+                        <div class="col-md-12 col-sm-12 mb-2">
                             <label class="form-label">Payment Status <span class="text-danger">*</span></label>
                             <select name="paymentStatus" id="paymentStatus" class="form-select" required>
                                 <option value="Pending">Pending</option>
@@ -532,7 +539,7 @@ if (isset($_POST['archive_appointment'])) {
                                 <option value="Disapproved">Disapproved</option>
                             </select>
                         </div>
-                        <div class="col-md-12 col-sm-12 mb-3">
+                        <div class="col-md-12 col-sm-12 mb-2">
                             <label class="form-label">Status <span class="text-danger">*</span></label>
                             <select name="appointmentStatus" id="appointmentStatus" class="form-select" required>
                                 <option value="Pending">Pending</option>
@@ -592,12 +599,40 @@ if (isset($_POST['archive_appointment'])) {
     <script src="assets/js/app.js"></script>
 
     <script src="assets/js/sweetalert.js"></script>
-
-
-
     <script>
         flatpickr("#datePicker");
     </script>
+
+
+    <script>
+        // Get references to the dropdowns
+        const paymentStatus = document.getElementById('paymentStatus');
+        const appointmentStatus = document.getElementById('appointmentStatus');
+
+        // Add event listener to payment status dropdown
+        paymentStatus.addEventListener('change', () => {
+            if (paymentStatus.value !== 'Approved') {
+                // Disable "Completed" option if payment is not approved
+                for (let option of appointmentStatus.options) {
+                    if (option.value === 'Completed') {
+                        option.disabled = true;
+                        appointmentStatus.value = 'Pending'; // Reset status if already selected
+                    }
+                }
+            } else {
+                // Enable "Completed" option if payment is approved
+                for (let option of appointmentStatus.options) {
+                    if (option.value === 'Completed') {
+                        option.disabled = false;
+                    }
+                }
+            }
+        });
+
+        // Trigger change event to apply initial restrictions on page load
+        paymentStatus.dispatchEvent(new Event('change'));
+    </script>
+
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
@@ -625,6 +660,8 @@ if (isset($_POST['archive_appointment'])) {
                     document.getElementById('appointmentTime').textContent = appointmentTime;
                     document.getElementById('appointmentStatus').value = status;
                     document.getElementById('paymentStatus').value = paymentStatus;
+
+                    document.querySelector('input[name="amount"]').value = cost;
                 });
             });
         });
