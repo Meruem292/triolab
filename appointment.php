@@ -70,7 +70,7 @@ if (isset($_POST['add_appointment'])) {
                     $insertReceipt->execute([$appointment_id, $dbReceiptPath, $date_added, $selectedPayment, $amount, $status]);
 
                     // Update appointment as paid
-                    $updateAppointment = $pdo->prepare("UPDATE `appointment` SET `paid` = 1 WHERE `id` = ?");
+                    $updateAppointment = $pdo->prepare("UPDATE `appointment` SET `paid` = 0 WHERE `id` = ?");
                     $updateAppointment->execute([$appointment_id]);
 
                     $_SESSION['message'] = "Appointment booked successfully with payment!";

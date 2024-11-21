@@ -9,21 +9,42 @@ if (!isset($_SESSION['user_id'])) {
 };
 
 if (isset($_POST['edit_appointment'])) {
-    $appointmentId = $_POST['appointmentId'];
-    $status = $_POST['appointmentStatus'];
+    $appointmentId = $_POST['appointmentId']; // Appointment ID
+    $paymentStatus = $_POST['paymentStatus']; // Payment Status (Pending, Approved, Disapproved)
+    $status = $_POST['appointmentStatus'];    // Appointment Status (Pending, Completed, etc.)
 
-    $stmt = $pdo->prepare('UPDATE appointment SET status = ? WHERE id = ?');
-    if ($stmt->execute([$status, $appointmentId])) {
-        $_SESSION['message'] = "Appointment updated successfully!";
+    try {
+        // Begin transaction
+        $pdo->beginTransaction();
+
+        // Update `appointment` table
+        $stmt = $pdo->prepare('UPDATE appointment SET status = ?, paid = ? WHERE id = ?');
+        $stmt->execute([$status, $paymentStatus, $appointmentId]);
+
+        // Update `payment_receipts` table
+        $stmt1 = $pdo->prepare("UPDATE payment_receipts SET status = ? WHERE appointment_id = ?");
+        $stmt1->execute([$paymentStatus, $appointmentId]);
+
+        // Commit transaction
+        $pdo->commit();
+
+        // Set success message
+        $_SESSION['message'] = "Appointment and payment status updated successfully!";
         $_SESSION['status'] = "success";
-    } else {
-        $_SESSION['message'] = "Error updating appointment.";
+    } catch (Exception $e) {
+        // Rollback transaction in case of error
+        $pdo->rollBack();
+
+        // Set error message
+        $_SESSION['message'] = "Error updating appointment or payment status: " . $e->getMessage();
         $_SESSION['status'] = "error";
     }
 
+    // Redirect to the appointment page
     header('Location: ../admin/appointment.php');
     exit();
 }
+
 
 if (isset($_POST['archive_appointment'])) {
     $appointmentIdDelete = $_POST['appointmentIdDelete'];
@@ -85,6 +106,7 @@ if (isset($_POST['archive_appointment'])) {
 
         <!-- SIDEBAR -->
         <?php require "sidebar.php" ?>
+        <?php include "functions.php"; ?>
         <div class="vertical-overlay"></div>
 
         <div class="main-content">
@@ -156,33 +178,35 @@ if (isset($_POST['archive_appointment'])) {
                                                                 <th>Patient Name</th>
                                                                 <th>Service</th>
                                                                 <th>Doctor</th>
+                                                                <th>Payment Status</th> <!-- New Column -->
                                                                 <th>Action</th>
                                                             </tr>
                                                         </thead>
                                                         <tbody class="list">
                                                             <?php
                                                             $selectAppointment = $pdo->query("
-    SELECT 
-        appointment.id AS appointment_id, 
-        patient.firstname AS patient_firstname, 
-        patient.lastname AS patient_lastname, 
-        doctor.firstname AS doctor_firstname, 
-        doctor.lastname AS doctor_lastname, 
-        services.service, 
-        services.type, 
-        services.cost, 
-        appointment.appointment_time, 
-        appointment.appointment_date, 
-        appointment.doctor_id, 
-        appointment.selectedPayment, 
-        appointment.status 
-    FROM appointment 
-    INNER JOIN patient ON appointment.patient_id = patient.id 
-    INNER JOIN services ON appointment.service_id = services.id 
-    LEFT JOIN doctor ON appointment.doctor_id = doctor.employee_id 
-    WHERE appointment.is_archive = 0 AND appointment.status = 'Pending' 
-    ORDER BY appointment.date_added ASC
-");
+            SELECT 
+                appointment.id AS appointment_id, 
+                patient.firstname AS patient_firstname, 
+                patient.lastname AS patient_lastname, 
+                doctor.firstname AS doctor_firstname, 
+                doctor.lastname AS doctor_lastname, 
+                services.service, 
+                services.type, 
+                services.cost, 
+                appointment.appointment_time, 
+                appointment.appointment_date, 
+                appointment.doctor_id, 
+                appointment.selectedPayment, 
+                appointment.status, 
+                appointment.paid -- Include the payment status
+            FROM appointment 
+            INNER JOIN patient ON appointment.patient_id = patient.id 
+            INNER JOIN services ON appointment.service_id = services.id 
+            LEFT JOIN doctor ON appointment.doctor_id = doctor.employee_id 
+            WHERE appointment.is_archive = 0 AND appointment.status = 'Pending' 
+            ORDER BY appointment.date_added ASC
+        ");
 
                                                             if ($selectAppointment->rowCount() > 0) {
                                                                 while ($row = $selectAppointment->fetch(PDO::FETCH_ASSOC)) {
@@ -198,6 +222,25 @@ if (isset($_POST['archive_appointment'])) {
 
                                                                     // Service details
                                                                     $serviceName = $row['service'] . " (" . $row['type'] . ")";
+
+                                                                    // Determine the Bootstrap class based on the payment status
+                                                                    $paymentStatus = $row['paid']; // Reflect the actual payment status
+                                                                    $statusClass = '';
+
+                                                                    switch ($paymentStatus) {
+                                                                        case 'Pending':
+                                                                            $statusClass = 'bg-warning text-dark'; // Yellow background with dark text for Pending
+                                                                            break;
+                                                                        case 'Approved':
+                                                                            $statusClass = 'bg-success text-white'; // Green background with white text for Approved
+                                                                            break;
+                                                                        case 'Disapproved':
+                                                                            $statusClass = 'bg-danger text-white'; // Red background with white text for Disapproved
+                                                                            break;
+                                                                        default:
+                                                                            $statusClass = 'bg-secondary text-white'; // Default grey background for other statuses
+                                                                    }
+
                                                             ?>
                                                                     <tr>
                                                                         <td class="time"><?= htmlspecialchars($formatted_time); ?></td>
@@ -205,6 +248,9 @@ if (isset($_POST['archive_appointment'])) {
                                                                         <td class="patient_name"><?= htmlspecialchars($fullnamePatient); ?></td>
                                                                         <td class="service"><?= htmlspecialchars($serviceName); ?></td>
                                                                         <td class="doctor"><?= htmlspecialchars($fullnameDoctor); ?></td>
+                                                                        <td class="payment_status">
+                                                                            <span class="badge <?= $statusClass; ?>"><?= htmlspecialchars($paymentStatus); ?></span>
+                                                                        </td> <!-- New Column -->
                                                                         <td>
                                                                             <a href="#" class="btn btn-light btn-sm edit-btn" data-bs-toggle="modal" data-bs-target="#editAppointment"
                                                                                 data-appointment-id="<?= htmlspecialchars($row['appointment_id']); ?>"
@@ -212,9 +258,10 @@ if (isset($_POST['archive_appointment'])) {
                                                                                 data-doctor-name="<?= htmlspecialchars($fullnameDoctor); ?>"
                                                                                 data-service="<?= htmlspecialchars($row['service']); ?>"
                                                                                 data-cost="<?= htmlspecialchars($row['cost']); ?>"
-                                                                                data-payment-method="<?= htmlspecialchars($row['selectedPayment']); ?>"
+                                                                                data-payment-method="<?= htmlspecialchars(getPaymentMode($pdo, $row['selectedPayment'])); ?>"
                                                                                 data-appointment-date="<?= htmlspecialchars($row['appointment_date']); ?>"
                                                                                 data-appointment-time="<?= htmlspecialchars($row['appointment_time']); ?>"
+                                                                                data-payment-status="<?= htmlspecialchars($paymentStatus); ?>"
                                                                                 data-status="<?= htmlspecialchars($row['status']); ?>">
                                                                                 <i class="ri-edit-fill align-bottom me-2 text-muted"></i> Update
                                                                             </a>
@@ -293,33 +340,35 @@ if (isset($_POST['archive_appointment'])) {
                                                                 <th>Patient Name</th>
                                                                 <th>Service</th>
                                                                 <th>Doctor</th>
+                                                                <th>Payment Status</th> <!-- New Column -->
                                                                 <th>Action</th>
                                                             </tr>
                                                         </thead>
                                                         <tbody class="list">
                                                             <?php
                                                             $selectAppointment = $pdo->query("
-                                                                        SELECT 
-                                                                            appointment.id AS appointment_id, 
-                                                                            patient.firstname AS patient_firstname, 
-                                                                            patient.lastname AS patient_lastname, 
-                                                                            doctor.firstname AS doctor_firstname, 
-                                                                            doctor.lastname AS doctor_lastname, 
-                                                                            services.service, 
-                                                                            services.type, 
-                                                                            services.cost, 
-                                                                            appointment.appointment_time, 
-                                                                            appointment.appointment_date, 
-                                                                            appointment.doctor_id, 
-                                                                            appointment.selectedPayment, 
-                                                                            appointment.status 
-                                                                        FROM appointment 
-                                                                        INNER JOIN patient ON appointment.patient_id = patient.id 
-                                                                        INNER JOIN services ON appointment.service_id = services.id 
-                                                                        LEFT JOIN doctor ON appointment.doctor_id = doctor.employee_id 
-                                                                        WHERE appointment.is_archive = 0 AND appointment.status = 'Completed' 
-                                                                        ORDER BY appointment.date_added ASC
-                                                                    ");
+            SELECT 
+                appointment.id AS appointment_id, 
+                patient.firstname AS patient_firstname, 
+                patient.lastname AS patient_lastname, 
+                doctor.firstname AS doctor_firstname, 
+                doctor.lastname AS doctor_lastname, 
+                services.service, 
+                services.type, 
+                services.cost, 
+                appointment.appointment_time, 
+                appointment.appointment_date, 
+                appointment.doctor_id, 
+                appointment.selectedPayment, 
+                appointment.status, 
+                appointment.paid -- Include the payment status
+            FROM appointment 
+            INNER JOIN patient ON appointment.patient_id = patient.id 
+            INNER JOIN services ON appointment.service_id = services.id 
+            LEFT JOIN doctor ON appointment.doctor_id = doctor.employee_id 
+            WHERE appointment.is_archive = 0 AND appointment.status = 'Completed' AND appointment.paid = 'Approved'
+            ORDER BY appointment.date_added ASC
+        ");
 
                                                             if ($selectAppointment->rowCount() > 0) {
                                                                 while ($row = $selectAppointment->fetch(PDO::FETCH_ASSOC)) {
@@ -335,6 +384,25 @@ if (isset($_POST['archive_appointment'])) {
 
                                                                     // Service details
                                                                     $serviceName = $row['service'] . " (" . $row['type'] . ")";
+
+                                                                    // Determine the Bootstrap class based on the payment status
+                                                                    $paymentStatus = $row['paid']; // Reflect the actual payment status
+                                                                    $statusClass = '';
+
+                                                                    switch ($paymentStatus) {
+                                                                        case 'Pending':
+                                                                            $statusClass = 'bg-warning text-dark'; // Yellow background with dark text for Pending
+                                                                            break;
+                                                                        case 'Approved':
+                                                                            $statusClass = 'bg-success text-white'; // Green background with white text for Approved
+                                                                            break;
+                                                                        case 'Disapproved':
+                                                                            $statusClass = 'bg-danger text-white'; // Red background with white text for Disapproved
+                                                                            break;
+                                                                        default:
+                                                                            $statusClass = 'bg-secondary text-white'; // Default grey background for other statuses
+                                                                    }
+
                                                             ?>
                                                                     <tr>
                                                                         <td class="time"><?= htmlspecialchars($formatted_time); ?></td>
@@ -342,6 +410,9 @@ if (isset($_POST['archive_appointment'])) {
                                                                         <td class="patient_name"><?= htmlspecialchars($fullnamePatient); ?></td>
                                                                         <td class="service"><?= htmlspecialchars($serviceName); ?></td>
                                                                         <td class="doctor"><?= htmlspecialchars($fullnameDoctor); ?></td>
+                                                                        <td class="payment_status">
+                                                                            <span class="badge <?= $statusClass; ?>"><?= htmlspecialchars($paymentStatus); ?></span>
+                                                                        </td> <!-- New Column -->
                                                                         <td>
                                                                             <a href="#" class="btn btn-light btn-sm edit-btn" data-bs-toggle="modal" data-bs-target="#editAppointment"
                                                                                 data-appointment-id="<?= htmlspecialchars($row['appointment_id']); ?>"
@@ -349,9 +420,10 @@ if (isset($_POST['archive_appointment'])) {
                                                                                 data-doctor-name="<?= htmlspecialchars($fullnameDoctor); ?>"
                                                                                 data-service="<?= htmlspecialchars($row['service']); ?>"
                                                                                 data-cost="<?= htmlspecialchars($row['cost']); ?>"
-                                                                                data-payment-method="<?= htmlspecialchars($row['selectedPayment']); ?>"
+                                                                                data-payment-method="<?= htmlspecialchars(getPaymentMode($pdo, $row['selectedPayment'])); ?>"
                                                                                 data-appointment-date="<?= htmlspecialchars($row['appointment_date']); ?>"
                                                                                 data-appointment-time="<?= htmlspecialchars($row['appointment_time']); ?>"
+                                                                                data-payment-status="<?= htmlspecialchars($paymentStatus); ?>"
                                                                                 data-status="<?= htmlspecialchars($row['status']); ?>">
                                                                                 <i class="ri-edit-fill align-bottom me-2 text-muted"></i> Update
                                                                             </a>
@@ -453,6 +525,14 @@ if (isset($_POST['archive_appointment'])) {
                             <p><b>Appointment Time: </b> <span id="appointmentTime"></span></p>
                         </div>
                         <div class="col-md-12 col-sm-12 mb-3">
+                            <label class="form-label">Payment Status <span class="text-danger">*</span></label>
+                            <select name="paymentStatus" id="paymentStatus" class="form-select" required>
+                                <option value="Pending">Pending</option>
+                                <option value="Approved">Approved</option>
+                                <option value="Disapproved">Disapproved</option>
+                            </select>
+                        </div>
+                        <div class="col-md-12 col-sm-12 mb-3">
                             <label class="form-label">Status <span class="text-danger">*</span></label>
                             <select name="appointmentStatus" id="appointmentStatus" class="form-select" required>
                                 <option value="Pending">Pending</option>
@@ -533,6 +613,7 @@ if (isset($_POST['archive_appointment'])) {
                     const appointmentDate = this.getAttribute('data-appointment-date');
                     const appointmentTime = this.getAttribute('data-appointment-time');
                     const status = this.getAttribute('data-status');
+                    const paymentStatus = this.getAttribute('data-payment-status');
 
                     document.getElementById('appointmentId').value = appointmentId;
                     document.getElementById('appointmentPatient').textContent = patientName;
@@ -543,6 +624,7 @@ if (isset($_POST['archive_appointment'])) {
                     document.getElementById('appointmentDate').textContent = appointmentDate;
                     document.getElementById('appointmentTime').textContent = appointmentTime;
                     document.getElementById('appointmentStatus').value = status;
+                    document.getElementById('paymentStatus').value = paymentStatus;
                 });
             });
         });

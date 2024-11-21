@@ -1,5 +1,24 @@
 <?php
 
+function getPaymentMode($pdo, $paymentModeId) {
+    try {
+        $query = $pdo->prepare("SELECT method FROM payment_mode WHERE id = :id");
+        $query->bindParam(':id', $paymentModeId, PDO::PARAM_INT);
+        $query->execute();
+        $result = $query->fetch(PDO::FETCH_ASSOC);
+
+        // Check if a result was returned
+        if ($result && isset($result['method'])) {
+            return $result['method'];
+        } else {
+            return 'Unknown Payment Method'; // Default message if no result is found
+        }
+    } catch (PDOException $e) {
+        // Handle any database errors
+        return 'Error retrieving payment method';
+    }
+}
+
 
 function displayTable($pdo, $table, $columns, $displayImageColumns = [], $includeActions = true, $imagePathPrefix = '', $includeArchived = false, $actions = [])
 {
