@@ -284,6 +284,10 @@
                 $doctor_id = $_SESSION['user_id'];
                 $selectDoctor = $pdo->query("SELECT * FROM doctor WHERE employee_id = '$doctor_id'");
                 $fetchDoctor = $selectDoctor->fetch(PDO::FETCH_ASSOC);
+                $department_id = $fetchDoctor['department_id'];
+
+                $selectDepartment = $pdo->query("SELECT * FROM departments WHERE id = '$department_id'");
+                $fetchDepartment = $selectDepartment->fetch(PDO::FETCH_ASSOC);
                 ?>
                 <div class="dropdown ms-sm-3 header-item topbar-user">
                     <button type="button" class="btn material-shadow-none" id="page-header-user-dropdown" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
@@ -291,7 +295,7 @@
                             <img class="rounded-circle header-profile-user" src="<?= $fetchDoctor['profile_img'] == NULL ? "assets/images/dummy.png" : $fetchDoctor['profile_img'] ?>" alt="Header Avatar">
                             <span class="text-start ms-xl-2">
                                 <span class="d-none d-xl-inline-block ms-1 fw-medium user-name-text">Dr. <?= $fetchDoctor['firstname'] . " " . $fetchDoctor['lastname'] ?></span>
-                                <span class="d-none d-xl-block ms-1 fs-12 user-name-sub-text"><?= $fetchDoctor['department'] ?></span>
+                                <span class="d-none d-xl-block ms-1 fs-12 user-name-sub-text"><?= $fetchDepartment['name'] ?></span>
                             </span>
                         </span>
                     </button>

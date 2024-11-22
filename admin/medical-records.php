@@ -258,9 +258,10 @@ $admin_id = $_SESSION['user_id'];
                             data.records.forEach(record => {
                                 const row = document.createElement('tr');
                                 row.innerHTML = `
-                            <td>${record.record_date}</td>
+                            <td>${record.created_at}</td>
                             <td>${record.diagnosis}</td>
                             <td>${record.treatment}</td>
+                            <td>${record.prescription}</td>
                         `;
                                 tableBody.appendChild(row);
                             });

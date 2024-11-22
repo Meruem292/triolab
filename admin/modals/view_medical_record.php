@@ -14,6 +14,7 @@
                             <th>Record Date</th>
                             <th>Diagnosis</th>
                             <th>Treatment</th>
+                            <th>Prescription</th>
                         </tr>
                     </thead>
                     <tbody id="medicalRecordTableBody">

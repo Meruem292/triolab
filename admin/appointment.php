@@ -81,7 +81,7 @@ if (isset($_POST['edit_appointment'])) {
 
 if (isset($_POST['archive_appointment'])) {
     $appointmentIdDelete = $_POST['appointmentIdDelete'];
-    $archive = '1';
+    $archive = '1'; 
 
     // Update the service information in the database
     $archiveQuery = $pdo->prepare("UPDATE appointment SET is_archive = :archive WHERE id = :id");
