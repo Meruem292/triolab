@@ -265,7 +265,7 @@ function calendarWeekShows()
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            var calendarEl = document.getElementById('calendar');
+            var calendarEl = document.getElementById('calendarWeek');
             var calendar = new FullCalendar.Calendar(calendarEl, {
                 initialView: 'dayGridMonth',
                 initialView: 'listWeek',
@@ -278,8 +278,7 @@ function calendarWeekShows()
             calendar.render();
         });
     </script>
-    <h1>Appointment Calendar</h1>
-    <div id="calendar"></div>
+    <div id="calendarWeek"></div>
 
 
 <?php
@@ -324,7 +323,7 @@ function calendarMonthShows()
                 initialView: 'dayGridMonth',
                 selectable: true,
                 events: function(info, successCallback, failureCallback) {
-                    fetch('fetch_appointments.php') // The path to your PHP endpoint
+                    fetch('fetch_appointments.php') // Replace with your PHP endpoint
                         .then(response => response.json())
                         .then(data => {
                             successCallback(data);
@@ -340,12 +339,12 @@ function calendarMonthShows()
                     // Accessing the custom data from extendedProps
                     var appointment = info.event.extendedProps;
 
-                    // Set modal content with the decoded appointment details
-                    document.getElementById('serviceName').innerText = appointment.service_name;
-                    document.getElementById('patientId').innerText = appointment.patient_name;
-                    document.getElementById('doctorId').innerText = appointment.doctor_name;
+                    // Set modal content with the appointment details
+                    document.getElementById('serviceName').innerText = 'Service ID: ' + appointment.service_id;
+                    document.getElementById('patientId').innerText = appointment.patient_id;
+                    document.getElementById('doctorId').innerText = appointment.doctor_id;
                     document.getElementById('appointmentStatus').innerText = appointment.status;
-                    document.getElementById('appointmentTime').innerText = new Date(appointment.start).toLocaleString(); // Display date and time
+                    document.getElementById('appointmentTime').innerText = new Date(appointment.start).toLocaleString();
 
                     // Show the modal
                     var myModal = new bootstrap.Modal(document.getElementById('appointmentModal'));
@@ -361,4 +360,89 @@ function calendarMonthShows()
 
 <?php
 }
-?>
+
+function getTotalSalesByDoctor($doctorId)
+{
+    include "db.php"; // Include the database connection
+    try {
+        $query = "
+            SELECT 
+                SUM(pr.amount) AS total_sales
+            FROM 
+                appointment a
+            INNER JOIN 
+                payment_receipts pr ON a.id = pr.appointment_id
+            WHERE 
+                a.doctor_id = :doctorId AND 
+                a.is_archive = 0 AND 
+                pr.status = 'Approved'
+        ";
+
+        $stmt = $pdo->prepare($query);
+        $stmt->bindParam(':doctorId', $doctorId, PDO::PARAM_INT);
+        $stmt->execute();
+
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        return $result ? (float)$result['total_sales'] : 0.0;
+    } catch (PDOException $e) {
+        // Handle error
+        echo "Error: " . $e->getMessage();
+        return 0.0;
+    }
+}
+
+function getTotalPatientsByDoctor($doctorId){
+    include "db.php"; // Include the database connection
+    try {
+        $query = "
+            SELECT 
+                COUNT(a.patient_id) AS total_patients
+            FROM 
+                appointment a
+            WHERE 
+                a.doctor_id = :doctorId AND 
+                a.is_archive = 0
+        ";
+
+        $stmt = $pdo->prepare($query);
+        $stmt->bindParam(':doctorId', $doctorId, PDO::PARAM_INT);
+        $stmt->execute();
+
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        return $result ? (int)$result['total_patients'] : 0;
+    } catch (PDOException $e) {
+        // Handle error
+        echo "Error: " . $e->getMessage();
+        return 0;
+    }
+}
+
+function getTotalAppointmentsByDoctor($doctorId){
+    include "db.php"; // Include the database connection
+    try {
+        $query = "
+            SELECT 
+                COUNT(a.id) AS total_appointments
+            FROM 
+                appointment a
+            WHERE 
+                a.doctor_id = :doctorId AND 
+                a.is_archive = 0
+                
+        ";
+
+        $stmt = $pdo->prepare($query);
+        $stmt->bindParam(':doctorId', $doctorId, PDO::PARAM_INT);
+        $stmt->execute();
+
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        return $result ? (int)$result['total_appointments'] : 0;
+    } catch (PDOException $e) {
+        // Handle error
+        echo "Error: " . $e->getMessage();
+        return 0;
+    }
+}

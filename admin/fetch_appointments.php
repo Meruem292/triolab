@@ -1,15 +1,8 @@
 <?php
 // Include your database connection
 include('db.php');
-session_start();
 
 header('Content-Type: application/json');
-
-// Check if user_id is set in the session
-if (!isset($_SESSION['user_id'])) {
-    echo json_encode(['error' => 'User not authenticated']);
-    exit;
-}
 
 // Prepare the SQL query to fetch appointment details along with decoded values
 $sql = "
@@ -22,14 +15,11 @@ $sql = "
     LEFT JOIN doctor d ON a.doctor_id = d.employee_id
     LEFT JOIN services s ON a.service_id = s.id
     LEFT JOIN departments dept ON a.department_id = dept.id
-    WHERE a.is_archive = 0 AND d.employee_id = :doctor_id";  // Corrected doctor_id field
+    WHERE a.is_archive = 0";  // Ensure you're getting non-archived records
 
-// Execute the query with the doctor_id parameter
+// Execute the query
 $stmt = $pdo->prepare($sql);
-$stmt->bindParam(':doctor_id', $_SESSION['user_id'], PDO::PARAM_INT); // Bind the session doctor ID
 $stmt->execute();
-
-// Fetch all appointment details
 $appointments = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 // Prepare the data for FullCalendar

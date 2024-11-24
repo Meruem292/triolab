@@ -46,8 +46,8 @@ if (isset($_POST['edit_appointment'])) {
 
         if ($existingReceipt) {
             // Update the amount in `payment_receipts` if it exists
-            $updateReceipt = $pdo->prepare("UPDATE payment_receipts SET amount = ? WHERE appointment_id = ?");
-            $updateReceipt->execute([$amount, $appointmentId]);
+            $updateReceipt = $pdo->prepare("UPDATE payment_receipts SET amount = ?, status = ? WHERE appointment_id = ?");
+            $updateReceipt->execute([$amount,$paymentStatus, $appointmentId]);
         } else {
             // Insert a new payment receipt if it doesn't exist
             $insertReceipt = $pdo->prepare(
@@ -441,7 +441,7 @@ WHERE appointment.is_archive = 0
     AND appointment.paid = 'Approved'
 ORDER BY appointment.date_added ASC;
 
-        ");
+        "); 
 
                                                             if ($selectAppointment->rowCount() > 0) {
                                                                 while ($row = $selectAppointment->fetch(PDO::FETCH_ASSOC)) {
