@@ -1,7 +1,60 @@
 <?php
 session_start();
-?>
+include 'db.php';
 
+// Retrieve data from URL
+$appointmentId = $_GET['appointment_id'] ?? '';
+$queryAppointment = "SELECT * FROM appointment WHERE id = ?";
+$stmtAppointment = $pdo->prepare($queryAppointment);
+$stmtAppointment->execute([$appointmentId]);
+$appointment = $stmtAppointment->fetch(PDO::FETCH_ASSOC);
+
+if (!$appointment) {
+    die('Appointment not found.');
+}
+
+$appointmentDate = $appointment['appointment_date'];
+$appointmentTime = $appointment['appointment_time'];
+$appointmentNote = $appointment['medical'];
+$serviceName = $pdo->query("SELECT type FROM services WHERE id = " . $appointment['service_id'])->fetchColumn();
+$doctorId = $appointment['doctor_id'];
+
+// Use prepared statements to safely get the doctor's data
+$queryDoctor = "SELECT * FROM doctor WHERE employee_id = ?";
+$stmtDoctor = $pdo->prepare($queryDoctor);
+$stmtDoctor->execute([$doctorId]);
+$doctor = $stmtDoctor->fetch(PDO::FETCH_ASSOC);
+
+$doctorName = '';
+$doctorDepartment = '';
+$doctorDepartmentId = null;
+if ($doctor) {
+    $doctorName = $doctor['firstname'] . ' ' . $doctor['lastname']; // Combine first and last name
+    $doctorDepartmentId = $doctor['department_id'];
+} else {
+    $doctorName = 'No Doctor Assigned';
+}
+
+// Check if doctor department ID is valid
+if ($doctorDepartmentId) {
+    // Use prepared statement for department query
+    $queryDepartment = "SELECT name FROM departments WHERE id = ?";
+    $stmtDepartment = $pdo->prepare($queryDepartment);
+    $stmtDepartment->execute([$doctorDepartmentId]);
+    $doctorDepartment = $stmtDepartment->fetchColumn();
+
+    
+    if (!$doctorDepartment) {
+        $doctorDepartment = 'Unknown Department';
+    }
+}
+
+
+$email = $_SESSION['user_email'];
+$fname = $_SESSION['user_firstname'];
+$lname = $_SESSION['user_lastname'];
+$phone = $_SESSION['user_phone'];
+?>
 
 <!DOCTYPE html>
 <html lang="en" id="clearance">
@@ -174,47 +227,47 @@ session_start();
 <body>
     <div class="max-w-2xl mx-auto p-6 bg-white rounded-lg shadow-lg dark:bg-zinc-800">
         <div class="flex items-center">
-            <img src="../images/logo.png" alt="Clinic Logo" class="h-20 w-20 mr-1" />
-            <h3 class="text-xl text-blue-900 font-bold text-center dark:text-blue-400">
-                TRIOLAB DIAGNOSTIC AND MEDICAL CLINIC CO.
-            </h3>
+            <img src="../images/triolab_header.png" alt="Clinic Logo" />
 
         </div>
-        <p class="text-center text-sm text-zinc-600 dark:text-zinc-300">G/F Lilianne Bldg. Cong. North Avenue, Sta. Lucia, Dasmariñas City, Cavite</p>
-        <p class="text-center text-sm text-zinc-600 dark:text-zinc-300 border-b-2">Contact Number: 093843583273 / 09916457318</p>
+
         <h4 class="text-xl font-bold text-center mt-4 text-zinc-900 dark:text-zinc-100">APPOINTMENT RECEIPT</h4>
         <div class="mt-1 flex justify-end flex-col items-end space-y-0">
-            <!-- Appointment Date -->
-            <p class="text-sm text-zinc-600 dark:text-zinc-300">Appointment Date: May 2, 2024</p>
-            <!-- Appointment Time -->
-            <p class="text-sm text-zinc-600 dark:text-zinc-300">Appointment Time: 12:00</p>
+            <p class="text-sm text-zinc-600 dark:text-zinc-300">Appointment Date: <?php echo $appointmentDate; ?></p>
+            <p class="text-sm text-zinc-600 dark:text-zinc-300">Appointment Time: <?php echo $appointmentTime; ?></p>
         </div>
-
 
         <div class="mt-2">
-            <p class="font-bold text-zinc-900 dark:text-zinc-100">Name: <span class="font-normal text-zinc-800 dark:text-zinc-300">DELA CRUZ, JUAN</span></p>
-            <p class="font-bold text-zinc-900 dark:text-zinc-100">Age/Sex: <span class="font-normal text-zinc-800 dark:text-zinc-300">22/M</span></p>
-            <p class="font-bold text-zinc-900 dark:text-zinc-100">Address: <span class="font-normal text-zinc-800 dark:text-zinc-300">Dasmarinas, Cavite</span></p>
-            <p class="font-bold text-zinc-900 dark:text-zinc-100">Requested Service: <span class="font-normal text-zinc-800 dark:text-zinc-300">
-                OP</span></p>
-            <!-- Service -->
-            <p class="font-bold text-zinc-900 dark:text-zinc-100 mt-4">Kind of Examination: <span class="font-normal text-zinc-800 dark:text-zinc-300">CHEST PA</span></p> 
-            <!-- medical -->
+            <p class="font-bold text-zinc-900 dark:text-zinc-100">Name: <span class="font-normal text-zinc-800 dark:text-zinc-300"><?php echo strtoupper($lname) . ', ' . ucfirst($fname); ?></span></p>
+            <p class="font-bold text-zinc-900 dark:text-zinc-100">Age/Sex: <span class="font-normal text-zinc-800 dark:text-zinc-300">22/M</span></p> <!-- You can dynamically change age/sex if available -->
+            <p class="font-bold text-zinc-900 dark:text-zinc-100">Address: <span class="font-normal text-zinc-800 dark:text-zinc-300"><?php echo $email; ?></span></p>
+            <p class="font-bold text-zinc-900 dark:text-zinc-100">Requested Service: <span class="font-normal text-zinc-800 dark:text-zinc-300"><?php echo $serviceName; ?></span></p>
+            <p class="font-bold text-zinc-900 dark:text-zinc-100 mt-4">Note: <span class="font-normal text-zinc-800 dark:text-zinc-300"><?php echo $appointmentNote; ?></span></p>
         </div>
-        
+
+        <div class="row">
+            <div class="col-8">
+
+            </div>
+            <div class="col-auto">
+                <div class="mt-6" style="margin: 150px 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;">
+                    <p class="text-zinc-900 dark:text-zinc-100"><ins><?php echo $doctorName ?></ins></p>
+                    <p class="text-zinc-900 dark:text-zinc-100"><?= $doctorDepartment ?></p>
+                </div>
+            </div>
+        </div>
 
 
-        <div class="mt-6" style="margin: 150px 0;">
-            <p class="text-right text-zinc-900 dark:text-zinc-100"><ins>NOEL M. PUNO, MD DPBR</ins></p>
-            <p class="text-right text-zinc-900 dark:text-zinc-100" style="margin-right:10%">Radiologist</p>
-        </div>
+
     </div>
+
 
     <!-- Action Buttons -->
     <div class="action-buttons noprint">
         <button type="button" class="btn btn-success" onclick="window.print()">Print</button>
         <button type="button" class="btn btn-danger" onclick="window.history.back()">Close</button>
     </div>
+
 
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>

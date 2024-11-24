@@ -27,16 +27,8 @@
                         <i class="ri-calendar-line"></i> <span data-key="t-appointment">Appointment</span>
                     </a>
                 </li>
-                <li class="nav-item">
-                    <a class="nav-link menu-link" href="services.php">
-                        <i class="ri-dashboard-line"></i> <span data-key="t-services">Services</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link menu-link" href="doctors.php">
-                        <i class="ri-nurse-line"></i> <span data-key="t-doctors">Doctors</span>
-                    </a>
-                </li>
+                
+                
                 <li class="nav-item">
                     <a class="nav-link menu-link" href="patients.php">
                         <i class="ri-team-line"></i> <span data-key="t-patients">Patients</span>
@@ -47,11 +39,7 @@
                         <i class="ri-file-list-3-line"></i> <span data-key="t-medical-records">Medical Records</span>
                     </a>
                 </li>
-                <li class="nav-item">
-                    <a class="nav-link menu-link" href="payments.php">
-                        <i class="ri-wallet-line"></i> <span data-key="t-payments">Payments</span>
-                    </a>
-                </li>
+                
                 <li class="nav-item">
                     <a class="nav-link menu-link" href="settings.php">
                         <i class="ri-settings-line"></i> <span data-key="t-settings">Settings</span>

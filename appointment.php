@@ -54,7 +54,7 @@ if (isset($_POST['add_appointment'])) {
         $appointment_id = $pdo->lastInsertId();
 
         // If payment is not cash, handle the receipt upload
-        if (strtolower($selectedPayment) !== '3'    ) {
+        if (strtolower($selectedPayment) !== '3') {
             if ($_FILES['receipt']['error'] === UPLOAD_ERR_OK) {
                 $uploadDir = '../triolab/admin/modals/uploads/payment_receipts/';
                 $fileName = time() . '_' . basename($_FILES['receipt']['name']);
@@ -73,6 +73,15 @@ if (isset($_POST['add_appointment'])) {
                     $updateAppointment = $pdo->prepare("UPDATE `appointment` SET `paid` = `Pending` WHERE `id` = ?");
                     $updateAppointment->execute([$appointment_id]);
 
+                    // update slot appointment_slot
+                    $updateAppointmentSlot = $pdo->prepare("UPDATE `appointment_slots` SET `slot` = `slot` - 1 WHERE `id` = ?");
+                    $updateAppointmentSlot->execute([$selectedSlot]);
+
+
+
+                    $insertMedical = $pdo->prepare("INSERT INTO `medical_records` (`patient_id`, `appointment_id`) VALUES (?, ?)");
+                    $insertMedical->execute([$user_id, $appointment_id]);
+
                     $_SESSION['message'] = "Appointment booked successfully with payment!";
                     $_SESSION['status'] = "success";
                 } else {
@@ -85,6 +94,12 @@ if (isset($_POST['add_appointment'])) {
             // For cash payment, no receipt required, set the appointment as paid
             $updateAppointment = $pdo->prepare("UPDATE `appointment` SET `paid` = 'Pending' WHERE `id` = ?");
             $updateAppointment->execute([$appointment_id]);
+
+            $updateAppointmentSlot = $pdo->prepare("UPDATE `appointment_slots` SET `slot` = `slot` - 1 WHERE `id` = ?");
+            $updateAppointmentSlot->execute([$selectedSlot]);
+
+            $insertMedical = $pdo->prepare("INSERT INTO `medical_records` (`patient_id`, `appointment_id`) VALUES (?, ?)");
+            $insertMedical->execute([$user_id, $appointment_id]);
 
             $_SESSION['message'] = "Appointment booked successfully with cash payment!";
             $_SESSION['status'] = "success";

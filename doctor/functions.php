@@ -220,3 +220,63 @@ function editFormPayments($pdo)
     </div>
 <?php
 }
+
+function calendarCss() {
+    echo '<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/6.1.6/fullcalendar.min.css">';
+    echo '<style>
+            #calendar {
+                max-width: 900px;
+                margin: 20px auto;
+            }
+            .fc-toolbar-title {
+                font-size: 1.5em;
+                font-weight: bold;
+            }
+          </style>';
+}
+
+function calendarJs() {
+    echo '<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>';
+    echo '<script src="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/6.1.6/fullcalendar.min.js"></script>';
+}
+
+function calendar() {
+    calendarCss();
+    calendarJs();
+?>
+    <div id="calendar"></div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const calendarEl = document.getElementById('calendar');
+
+            // Fetch events from the backend
+            fetch('fetch_appointments.php')
+                .then(response => response.json())
+                .then(data => {
+                    if (Array.isArray(data)) {
+                        const calendar = new FullCalendar.Calendar(calendarEl, {
+                            initialView: 'dayGridMonth',
+                            headerToolbar: {
+                                left: 'prev,next today',
+                                center: 'title',
+                                right: 'dayGridMonth,timeGridWeek,timeGridDay'
+                            },
+                            events: data.map(event => ({
+                                title: event.eventName,
+                                start: event.date,
+                                backgroundColor: event.color,
+                                borderColor: event.color
+                            }))
+                        });
+
+                        calendar.render();
+                    } else {
+                        console.error('Failed to load events:', data.error);
+                    }
+                })
+                .catch(err => console.error('Error fetching events:', err));
+        });
+    </script>
+<?php
+}
+?>

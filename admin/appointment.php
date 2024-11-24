@@ -81,7 +81,7 @@ if (isset($_POST['edit_appointment'])) {
 
 if (isset($_POST['archive_appointment'])) {
     $appointmentIdDelete = $_POST['appointmentIdDelete'];
-    $archive = '1'; 
+    $archive = '1';
 
     // Update the service information in the database
     $archiveQuery = $pdo->prepare("UPDATE appointment SET is_archive = :archive WHERE id = :id");
@@ -211,6 +211,7 @@ if (isset($_POST['archive_appointment'])) {
                                                                 <th>Patient Name</th>
                                                                 <th>Service</th>
                                                                 <th>Doctor</th>
+                                                                <th>Service Status</th>
                                                                 <th>Payment Status</th> <!-- New Column -->
                                                                 <th>Action</th>
                                                             </tr>
@@ -218,7 +219,7 @@ if (isset($_POST['archive_appointment'])) {
                                                         <tbody class="list">
                                                             <?php
                                                             $selectAppointment = $pdo->query("
-            SELECT 
+           SELECT 
     appointment.id AS appointment_id, 
     patient.firstname AS patient_firstname, 
     patient.lastname AS patient_lastname, 
@@ -235,16 +236,21 @@ if (isset($_POST['archive_appointment'])) {
     appointment.paid,  -- Include the payment status
     payment_receipts.amount AS payment_amount,  -- Amount from payment_receipts
     payment_receipts.status AS payment_status,  -- Payment status
-    payment_receipts.date AS payment_date  -- Payment receipt date
+    payment_receipts.date AS payment_date,  -- Payment receipt date
+    medical_records.diagnosis,  -- Include the diagnosis from medical_records
+    medical_records.treatment,  -- Include the treatment from medical_records
+    medical_records.prescription,  -- Include the prescription from medical_records
+    medical_records.status AS medical_status,  -- Include the status from medical_records
+    medical_records.record_date  -- Include the record date from medical_records
 FROM appointment 
 INNER JOIN patient ON appointment.patient_id = patient.id 
 INNER JOIN services ON appointment.service_id = services.id 
 LEFT JOIN doctor ON appointment.doctor_id = doctor.employee_id 
 LEFT JOIN payment_receipts ON appointment.id = payment_receipts.appointment_id  -- Join payment_receipts
+LEFT JOIN medical_records ON appointment.id = medical_records.appointment_id  -- Join medical_records
 WHERE appointment.is_archive = 0 
     AND appointment.status = 'Pending' 
 ORDER BY appointment.date_added ASC;
-
         ");
 
                                                             if ($selectAppointment->rowCount() > 0) {
@@ -261,6 +267,20 @@ ORDER BY appointment.date_added ASC;
 
                                                                     // Service details
                                                                     $serviceName = $row['service'] . " (" . $row['type'] . ")";
+
+                                                                    $medicalStatus = $row['medical_status']; // Reflect the actual medical status
+                                                                    $medicalStatusClass = '';
+
+                                                                    switch ($medicalStatus) {
+                                                                        case 'Pending':
+                                                                            $medicalStatusClass = 'bg-warning text-dark'; // Yellow background with dark text for Pending
+                                                                            break;
+                                                                        case 'Completed':
+                                                                            $medicalStatusClass = 'bg-success text-white'; // Green background with white text for Approved
+                                                                            break;
+                                                                        default:
+                                                                            $medicalStatusClass = 'bg-secondary text-white'; // Default grey background for other statuses
+                                                                    }
 
                                                                     // Determine the Bootstrap class based on the payment status
                                                                     $paymentStatus = $row['paid']; // Reflect the actual payment status
@@ -280,6 +300,8 @@ ORDER BY appointment.date_added ASC;
                                                                             $statusClass = 'bg-secondary text-white'; // Default grey background for other statuses
                                                                     }
 
+
+
                                                             ?>
                                                                     <tr>
                                                                         <td class="time"><?= htmlspecialchars($formatted_time); ?></td>
@@ -287,6 +309,9 @@ ORDER BY appointment.date_added ASC;
                                                                         <td class="patient_name"><?= htmlspecialchars($fullnamePatient); ?></td>
                                                                         <td class="service"><?= htmlspecialchars($serviceName); ?></td>
                                                                         <td class="doctor"><?= htmlspecialchars($fullnameDoctor); ?></td>
+                                                                        <td class="service_status">
+                                                                            <span class="badge <?= $medicalStatusClass; ?>"><?= htmlspecialchars($medicalStatus); ?></span>
+                                                                        </td> <!-- New Column -->
                                                                         <td class="payment_status">
                                                                             <span class="badge <?= $statusClass; ?>"><?= htmlspecialchars($paymentStatus); ?></span>
                                                                         </td> <!-- New Column -->
@@ -410,7 +435,8 @@ INNER JOIN patient ON appointment.patient_id = patient.id
 INNER JOIN services ON appointment.service_id = services.id 
 LEFT JOIN doctor ON appointment.doctor_id = doctor.employee_id 
 LEFT JOIN payment_receipts ON appointment.id = payment_receipts.appointment_id  -- Join payment_receipts
-WHERE appointment.is_archive = 0 
+WHERE appointment.is_archive = 0
+
     AND appointment.status = 'Completed' 
     AND appointment.paid = 'Approved'
 ORDER BY appointment.date_added ASC;
@@ -564,16 +590,26 @@ ORDER BY appointment.date_added ASC;
                         <!-- Assigned Doctor -->
                         <div class="col-md-12 mb-2">
                             <p><b>Assigned Doctor: </b> <span id="appointmentDoctor"></span></p>
-                            <?php $doctors = $pdo->query("SELECT * FROM doctor"); ?>
+                            <?php
+                            // Order doctors by their department name
+                            $doctors = $pdo->query("
+            SELECT doctor.*, departments.name AS department_name 
+            FROM doctor
+            JOIN departments ON doctor.department_id = departments.id
+            ORDER BY departments.name
+        ");
+                            ?>
                             <label class="form-label">Change Doctor</label>
                             <select name="doctor" id="doctor" class="form-select" required>
                                 <?php foreach ($doctors as $doctor) { ?>
                                     <option value="<?= $doctor['employee_id']; ?>">
-                                        <?= htmlspecialchars($doctor['firstname'] . ' ' . $doctor['lastname']); ?>
+                                        <?= ucfirst(htmlspecialchars($doctor['firstname']) . ' ' . ucfirst($doctor['lastname']) . ' - ' . $doctor['department_name']); ?>
                                     </option>
                                 <?php } ?>
                             </select>
                         </div>
+
+
 
                         <!-- Service -->
                         <div class="col-md-12 mb-2">
@@ -623,6 +659,7 @@ ORDER BY appointment.date_added ASC;
                             <select name="appointmentStatus" id="appointmentStatus" class="form-select" required>
                                 <option value="Pending">Pending</option>
                                 <option value="Completed">Mark as Complete</option>
+                                <option value="Cancelled">Cancelled</option>
                             </select>
                         </div>
                     </div>

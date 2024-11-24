@@ -45,6 +45,7 @@ $doctor_id = $_SESSION['user_id'];
 
         <!-- HEADER -->
         <?php require "header.php"; ?>
+        <?php require "functions.php"; ?>
 
         <!-- SIDEBAR -->
         <?php require "sidebar.php" ?>
@@ -60,6 +61,12 @@ $doctor_id = $_SESSION['user_id'];
                                 <h4 class="mb-sm-0">Dashboard</h4>
                             </div>
                         </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-6">
+                            <?php echo calendar(); ?>
+                        </div>
+                        <div class="col-6"></div>
                     </div>
                     <div class="row">
                         <div class="col-xxl-3">
@@ -215,6 +222,8 @@ $doctor_id = $_SESSION['user_id'];
                             </div>
                         </div>
                     </div>
+                    
+                    
 
                     <div class="row">
                         <div class="col-lg-12">

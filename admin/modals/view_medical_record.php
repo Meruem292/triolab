@@ -15,6 +15,7 @@
                             <th>Diagnosis</th>
                             <th>Treatment</th>
                             <th>Prescription</th>
+                            <th>Print Record</th>
                         </tr>
                     </thead>
                     <tbody id="medicalRecordTableBody">

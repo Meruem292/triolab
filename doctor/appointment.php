@@ -233,11 +233,10 @@ LEFT JOIN payment_receipts
 LEFT JOIN medical_records 
     ON appointment.id = medical_records.appointment_id  -- Match medical records by appointment ID
 WHERE appointment.is_archive = 0 
-    AND medical_records.status = 'Pending'
     AND appointment.status = 'Pending'
+    AND medical_records.status = 'Pending'
     AND appointment.doctor_id = '$user_id'
 ORDER BY appointment.date_added ASC;
-
         ");
 
                                                             if ($selectAppointment->rowCount() > 0) {
@@ -266,7 +265,6 @@ ORDER BY appointment.date_added ASC;
                                                                         case 'Completed':
                                                                             $statusClass = 'bg-success text-white'; // Green background with white text for Approved
                                                                             break;
-
                                                                         default:
                                                                             $statusClass = 'bg-secondary text-white'; // Default grey background for other statuses
                                                                     }
@@ -300,10 +298,7 @@ ORDER BY appointment.date_added ASC;
                                                                                 data-status="<?= htmlspecialchars($row['appointment_status']); ?>">
                                                                                 <i class="ri-edit-fill align-bottom me-2 text-muted"></i> Update
                                                                             </a>
-                                                                            <a href="#" class="btn btn-danger btn-sm archive-btn" data-bs-toggle="modal" data-bs-target="#archiveAppointment"
-                                                                                data-appointment-id="<?= htmlspecialchars($row['appointment_id']); ?>">
-                                                                                <i class="ri-delete-bin-fill align-bottom me-2"></i> Archive
-                                                                            </a>
+                                                                            
                                                                         </td>
                                                                     </tr>
                                                                 <?php
@@ -481,10 +476,7 @@ ORDER BY appointment.date_added ASC;
                                                                                 data-status="<?= htmlspecialchars($row['appointment_status']); ?>">
                                                                                 <i class="ri-edit-fill align-bottom me-2 text-muted"></i> Update
                                                                             </a>
-                                                                            <a href="#" class="btn btn-danger btn-sm archive-btn" data-bs-toggle="modal" data-bs-target="#archiveAppointment"
-                                                                                data-appointment-id="<?= htmlspecialchars($row['appointment_id']); ?>">
-                                                                                <i class="ri-delete-bin-fill align-bottom me-2"></i> Archive
-                                                                            </a>
+                                                                            
                                                                         </td>
                                                                     </tr>
                                                                 <?php

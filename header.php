@@ -119,7 +119,8 @@
                                 $appointmentTime = htmlspecialchars($appointment['appointment_time']);
                                 $appointmentPayment = htmlspecialchars($paymentModes[$appointment['selectedPayment']]);
                                 $doctorId = $appointment['doctor_id'];
-                                $doctorName = htmlspecialchars($doctors[$doctorId] ?? 'Unknown');
+                                $doctorName = htmlspecialchars($doctors[$doctorId] ?? 'No doctor has been assigned');
+
                                 $appointmentNote = htmlspecialchars($appointment['medical']);
                                 $appointmentPaid = htmlspecialchars($appointment['paid']);
                             ?>
@@ -131,7 +132,7 @@
                                     <td><?= $appointmentNote ?></td>
                                     <td><?= $appointmentPaid ?></td>
                                     <td>
-                                        <a href="generate_appointment_receipt.php?appointment_id=<?= $appointmentId ?>&service=<?= urlencode($serviceName) ?>&date=<?= urlencode($appointmentDate) ?>&time=<?= urlencode($appointmentTime) ?>&payment=<?= urlencode($appointmentPayment) ?>&doctor=<?= urlencode($doctorName) ?>&note=<?= urlencode($appointmentNote) ?>&paid=<?= urlencode($appointmentPaid) ?>" class="btn btn-primary">Download Receipt</a>
+                                        <a href="assets/docs/appointment_receipt.php?appointment_id=<?= $appointmentId ?>" class="btn btn-primary">Download Receipt</a>
                                     </td>
                                 </tr>
                             <?php } ?>

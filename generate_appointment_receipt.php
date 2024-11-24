@@ -29,9 +29,6 @@ $pdf->SetFont('Arial', 'B', 16);
 $pdf->Cell(0, 10, 'Appointment Receipt', 0, 1, 'C');
 $pdf->Ln(10); // Space after the title
 
-$pdf->SetFont('Arial', '', 12);
-$pdf->Cell(50, 10, 'Phone No.:', 0);
-$pdf->Cell(100, 10, $appointmentId, 0, 1);
 
 // Appointment Details
 $pdf->SetFont('Arial', '', 12);
