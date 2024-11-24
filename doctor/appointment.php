@@ -144,6 +144,11 @@ if (isset($_POST['archive_appointment'])) {
                             </div>
                         </div>
                     </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <?= calendarMonthShows(); ?>
+                        </div>
+                    </div>
 
                     <div class="row">
                         <div class="col-12">
@@ -298,7 +303,7 @@ ORDER BY appointment.date_added ASC;
                                                                                 data-status="<?= htmlspecialchars($row['appointment_status']); ?>">
                                                                                 <i class="ri-edit-fill align-bottom me-2 text-muted"></i> Update
                                                                             </a>
-                                                                            
+
                                                                         </td>
                                                                     </tr>
                                                                 <?php
@@ -476,7 +481,7 @@ ORDER BY appointment.date_added ASC;
                                                                                 data-status="<?= htmlspecialchars($row['appointment_status']); ?>">
                                                                                 <i class="ri-edit-fill align-bottom me-2 text-muted"></i> Update
                                                                             </a>
-                                                                            
+
                                                                         </td>
                                                                     </tr>
                                                                 <?php

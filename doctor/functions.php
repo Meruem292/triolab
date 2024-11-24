@@ -221,62 +221,144 @@ function editFormPayments($pdo)
 <?php
 }
 
-function calendarCss() {
-    echo '<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/6.1.6/fullcalendar.min.css">';
-    echo '<style>
-            #calendar {
-                max-width: 900px;
-                margin: 20px auto;
-            }
-            .fc-toolbar-title {
-                font-size: 1.5em;
-                font-weight: bold;
-            }
-          </style>';
-}
-
-function calendarJs() {
-    echo '<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>';
-    echo '<script src="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/6.1.6/fullcalendar.min.js"></script>';
-}
-
-function calendar() {
-    calendarCss();
-    calendarJs();
+function calendarWeekShows()
+{
 ?>
-    <div id="calendar"></div>
+    <?php
+    require 'db.php'; // Include the database connection
+
+    try {
+        // Fetch appointments from the database
+        $query = "SELECT a.id, a.appointment_date, a.appointment_time, s.service, 
+                     p.firstname AS patient_firstname, p.lastname AS patient_lastname, 
+                     d.firstname AS doctor_firstname, d.lastname AS doctor_lastname, 
+                     dept.name AS department_name, a.status
+              FROM appointment a
+              LEFT JOIN services s ON a.service_id = s.id
+              LEFT JOIN patient p ON a.patient_id = p.id
+              LEFT JOIN doctor d ON a.doctor_id = d.employee_id
+              LEFT JOIN departments dept ON a.department_id = dept.id
+              WHERE a.is_archive = 0";
+        $stmt = $pdo->prepare($query);
+        $stmt->execute();
+        $appointments = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    } catch (PDOException $e) {
+        echo "Error: " . $e->getMessage();
+        exit;
+    }
+
+    // Prepare data for FullCalendar
+    $events = [];
+    foreach ($appointments as $appointment) {
+        $events[] = [
+            'title' => $appointment['service'] . ' - ' . $appointment['patient_firstname'] . ' ' . $appointment['patient_lastname'],
+            'start' => $appointment['appointment_date'] . 'T' . $appointment['appointment_time'],
+            'description' => 'Doctor: ' . $appointment['doctor_firstname'] . ' ' . $appointment['doctor_lastname'] .
+                ' | Department: ' . $appointment['department_name'] .
+                ' | Status: ' . $appointment['status']
+        ];
+    }
+    ?>
+
+    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
+
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            const calendarEl = document.getElementById('calendar');
-
-            // Fetch events from the backend
-            fetch('fetch_appointments.php')
-                .then(response => response.json())
-                .then(data => {
-                    if (Array.isArray(data)) {
-                        const calendar = new FullCalendar.Calendar(calendarEl, {
-                            initialView: 'dayGridMonth',
-                            headerToolbar: {
-                                left: 'prev,next today',
-                                center: 'title',
-                                right: 'dayGridMonth,timeGridWeek,timeGridDay'
-                            },
-                            events: data.map(event => ({
-                                title: event.eventName,
-                                start: event.date,
-                                backgroundColor: event.color,
-                                borderColor: event.color
-                            }))
-                        });
-
-                        calendar.render();
-                    } else {
-                        console.error('Failed to load events:', data.error);
-                    }
-                })
-                .catch(err => console.error('Error fetching events:', err));
+            var calendarEl = document.getElementById('calendar');
+            var calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'dayGridMonth',
+                initialView: 'listWeek',
+                events: <?php echo json_encode($events); ?>, // Pass PHP events to JavaScript
+                eventDidMount: function(info) {
+                    // Add a tooltip or extra information
+                    info.el.title = info.event.extendedProps.description;
+                }
+            });
+            calendar.render();
         });
     </script>
+    <h1>Appointment Calendar</h1>
+    <div id="calendar"></div>
+
+
+<?php
+}
+
+function calendarMonthShows()
+{
+?>
+    <script src="https://cdn.jsdelivr.net/npm/@fullcalendar/core@6.1.15/index.global.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@fullcalendar/daygrid@6.1.15/index.global.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+
+    <div id="calendar"></div>
+
+    <!-- Modal HTML structure -->
+    <div id="appointmentModal" class="modal" tabindex="-1" aria-labelledby="appointmentModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="appointmentModalLabel">Appointment Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p><strong>Service:</strong> <span id="serviceName"></span></p>
+                    <p><strong>Patient ID:</strong> <span id="patientId"></span></p>
+                    <p><strong>Doctor ID:</strong> <span id="doctorId"></span></p>
+                    <p><strong>Status:</strong> <span id="appointmentStatus"></span></p>
+                    <p><strong>Appointment Time:</strong> <span id="appointmentTime"></span></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var calendarEl = document.getElementById('calendar');
+
+            var calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'dayGridMonth',
+                selectable: true,
+                events: function(info, successCallback, failureCallback) {
+                    fetch('fetch_appointments.php') // The path to your PHP endpoint
+                        .then(response => response.json())
+                        .then(data => {
+                            successCallback(data);
+                        })
+                        .catch(error => {
+                            failureCallback(error);
+                        });
+                },
+                eventClick: function(info) {
+                    // Log to debug if event click is properly triggered
+                    console.log('Event clicked:', info.event);
+
+                    // Accessing the custom data from extendedProps
+                    var appointment = info.event.extendedProps;
+
+                    // Set modal content with the decoded appointment details
+                    document.getElementById('serviceName').innerText = appointment.service_name;
+                    document.getElementById('patientId').innerText = appointment.patient_name;
+                    document.getElementById('doctorId').innerText = appointment.doctor_name;
+                    document.getElementById('appointmentStatus').innerText = appointment.status;
+                    document.getElementById('appointmentTime').innerText = new Date(appointment.start).toLocaleString(); // Display date and time
+
+                    // Show the modal
+                    var myModal = new bootstrap.Modal(document.getElementById('appointmentModal'));
+                    myModal.show();
+                }
+            });
+
+            calendar.render();
+        });
+    </script>
+
+
+
 <?php
 }
 ?>

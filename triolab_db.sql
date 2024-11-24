@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Nov 17, 2024 at 12:40 PM
+-- Generation Time: Nov 24, 2024 at 03:13 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -54,7 +54,7 @@ CREATE TABLE `appointment` (
   `appointment_slot_id` int(255) NOT NULL,
   `appointment_time` varchar(255) NOT NULL,
   `doctor_id` varchar(255) DEFAULT NULL,
-  `department_id` int(255) NOT NULL,
+  `department_id` int(255) DEFAULT NULL,
   `selectedPayment` varchar(255) NOT NULL,
   `medical` text DEFAULT NULL,
   `status` varchar(255) NOT NULL DEFAULT 'Pending',
@@ -68,11 +68,7 @@ CREATE TABLE `appointment` (
 --
 
 INSERT INTO `appointment` (`id`, `service_id`, `patient_id`, `appointment_date`, `appointment_slot_id`, `appointment_time`, `doctor_id`, `department_id`, `selectedPayment`, `medical`, `status`, `paid`, `date_added`, `is_archive`) VALUES
-(8, 3, 9, '2024-11-16', 1, '', 'TRLB6874', 1, '', NULL, 'Pending', 'Unpaid', '2024-11-15 13:41:40', 0),
-(9, 1, 10, '2024-11-16', 3, '11:14', NULL, 0, 'cash', 'fracture', 'Approved', '0', '2024-11-16 08:14:42', 0),
-(10, 1, 10, '2024-11-16', 2, '21:18', 'TRLB1690', 1, '', NULL, 'Completed', 'Unpaid', '2024-11-16 13:12:55', 0),
-(11, 2, 19, '2024-11-16', 2, '21:19', 'TRLB5602', 2, '', NULL, 'Pending', 'Unpaid', '2024-11-16 13:13:16', 0),
-(12, 1, 10, '2024-11-16', 3, '16:30', NULL, 0, '3', 'fracture', 'pending', '0', '2024-11-17 11:32:25', 0);
+(53, 1, 10, '2024-11-20', 2, '13:52', 'TRLB6874', 1, '3', 'qweqee', 'Pending', 'Pending', '2024-11-23 22:52:37', 0);
 
 -- --------------------------------------------------------
 
@@ -93,10 +89,32 @@ CREATE TABLE `appointment_slots` (
 --
 
 INSERT INTO `appointment_slots` (`id`, `schedule`, `date`, `slot`, `is_archive`) VALUES
-(1, 'Morning', '2024-05-04', '20', 0),
-(2, 'Afternoon', '2024-05-04', '24', 0),
-(3, 'Morning', '2024-11-16', '3', 0),
-(4, 'Morning', '2024-11-09', '5', 0);
+(1, 'Morning', '2024-05-04', '18', 0),
+(2, 'Afternoon', '2024-11-20', '84', 0),
+(3, 'Morning', '2024-11-16', '0', 0),
+(4, 'Morning', '2024-11-09', '1', 0);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `database_backup`
+--
+
+CREATE TABLE `database_backup` (
+  `id` int(255) NOT NULL,
+  `path` varchar(255) NOT NULL,
+  `date` datetime DEFAULT NULL,
+  `is_archive` tinyint(255) NOT NULL DEFAULT 0
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `database_backup`
+--
+
+INSERT INTO `database_backup` (`id`, `path`, `date`, `is_archive`) VALUES
+(6, 'backup_20241119_124027.sql', '2024-11-19 12:40:27', 0),
+(7, 'backup_20241119_124122.sql', '2024-11-19 12:41:22', 0),
+(8, 'backup_20241122_004019.sql', '2024-11-22 00:40:19', 0);
 
 -- --------------------------------------------------------
 
@@ -107,6 +125,7 @@ INSERT INTO `appointment_slots` (`id`, `schedule`, `date`, `slot`, `is_archive`)
 CREATE TABLE `departments` (
   `id` int(255) NOT NULL,
   `name` varchar(255) NOT NULL,
+  `date_added` date NOT NULL DEFAULT current_timestamp(),
   `is_archive` tinyint(4) NOT NULL DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -114,11 +133,11 @@ CREATE TABLE `departments` (
 -- Dumping data for table `departments`
 --
 
-INSERT INTO `departments` (`id`, `name`, `is_archive`) VALUES
-(1, 'Physicist', 0),
-(2, 'RADIOLOGIC TECHNOLOGIST', 0),
-(3, 'MEDICAL TECHNICIAN', 0),
-(4, 'MEDICAL CONSULTANT', 0);
+INSERT INTO `departments` (`id`, `name`, `date_added`, `is_archive`) VALUES
+(1, 'PHYSICIST', '2024-11-21', 0),
+(2, 'RADIOLOGICAL TECHNOLOGIST', '2024-11-21', 0),
+(3, 'MEDICAL TECHNICIAN', '2024-11-21', 0),
+(4, 'MEDICAL CONSULTANT', '2024-11-21', 0);
 
 -- --------------------------------------------------------
 
@@ -180,7 +199,13 @@ INSERT INTO `logs` (`id`, `action`, `user`, `timestamp`, `details`, `is_archive`
 (5, 'Add payment method error', 0, '2024-11-17 06:00:15', 'Failed to upload image for payment method: sample 2 ', 0),
 (6, 'Add payment method error', 0, '2024-11-17 06:02:43', 'Payment method already exists: sample 2 ', 0),
 (7, 'Add payment method error', 0, '2024-11-17 06:03:00', 'Failed to upload image for payment method: neww23', 0),
-(8, 'Add payment method', 0, '2024-11-17 06:05:01', 'Payment method added: neww23', 0);
+(8, 'Add payment method', 0, '2024-11-17 06:05:01', 'Payment method added: neww23', 0),
+(9, 'edit patient', 0, '2024-11-19 04:35:56', 'Patient updated with ID: 9', 0),
+(10, 'Submit medical record', 0, '2024-11-19 04:36:25', 'Medical record added for patient ID: 9', 0),
+(11, 'edit department', 0, '2024-11-21 15:51:35', 'Department updated with ID: 1', 0),
+(12, 'edit department', 0, '2024-11-21 15:52:59', 'Department updated with ID: 1', 0),
+(13, 'edit department', 0, '2024-11-21 15:53:49', 'Department updated with ID: 1', 0),
+(14, 'edit department', 0, '2024-11-21 15:53:54', 'Department updated with ID: 1', 0);
 
 -- --------------------------------------------------------
 
@@ -191,12 +216,23 @@ INSERT INTO `logs` (`id`, `action`, `user`, `timestamp`, `details`, `is_archive`
 CREATE TABLE `medical_records` (
   `id` int(11) NOT NULL,
   `patient_id` int(11) NOT NULL,
+  `appointment_id` int(255) NOT NULL,
+  `doctor_id` varchar(255) NOT NULL,
   `diagnosis` text NOT NULL,
   `treatment` text NOT NULL,
+  `prescription` varchar(255) NOT NULL,
+  `status` varchar(255) NOT NULL DEFAULT 'Pending',
   `record_date` date NOT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `medical_records`
+--
+
+INSERT INTO `medical_records` (`id`, `patient_id`, `appointment_id`, `doctor_id`, `diagnosis`, `treatment`, `prescription`, `status`, `record_date`, `created_at`, `updated_at`) VALUES
+(9, 10, 53, 'TRLB6874', 'malambot bituka', 'konting ligo', 'yakapsul', 'Pending', '0000-00-00', '2024-11-24 05:52:37', '2024-11-24 07:50:33');
 
 -- --------------------------------------------------------
 
@@ -225,9 +261,9 @@ CREATE TABLE `patient` (
 --
 
 INSERT INTO `patient` (`id`, `firstname`, `lastname`, `email`, `dob`, `birthplace`, `contact`, `password`, `province`, `city`, `barangay`, `street`, `date_added`) VALUES
-(9, 'Kyle Andre', 'Lim', 'kylemastercoder14@gmail.com', '2000-01-14', 'Cavite', '9152479692', '$2y$10$3PCQfGLAMDsHHnCjAH2np.2rBEr3XF.h6TlmZ9fdc4BtqyLoOioCq', 'Cavite', 'City of Dasmariñas', 'Santa Lucia', 'B111 L4 Ruby Street', '2024-05-04 13:34:34'),
-(10, 'Mherwen Wiel', 'Romero', 'romeroqmherwen@gmail.com', '2024-11-16', 'Dasma', '09553471926', '$2y$10$Kd4wh.OShR1hgpORWodxVu/HDR3MVn.kbzPbaErn4R.pXXaAetj3K', 'Cavite', 'City of Dasmariñas', 'San Luis I', 'BLK D 8 LOT 16 SAN LUIS 1 DASMARIÑAS CAV', '2024-11-15 11:33:41'),
-(25, 'Linda', 'Romero', 'Linda@gmail.com', '2024-11-17', NULL, '0955237123', '', 'cavite', 'dasmarinas', 'SABUTAN', 'blk d8 lot 15', '2024-11-17 02:55:36');
+(9, 'Kyle Andre', 'Lim', 'kylemastercoder14@gmail.com', '2000-01-14', 'Cavite', '9152479691', '$2y$10$3PCQfGLAMDsHHnCjAH2np.2rBEr3XF.h6TlmZ9fdc4BtqyLoOioCq', 'Cavite', 'City of Dasmariñas', 'Santa Lucia', 'B111 L4 Ruby Street', '2024-05-04 13:34:34'),
+(10, 'Mherwen Wiel', 'Romero', 'romeroqmherwen@gmail.com', '2024-11-16', 'Dasma', '09553471926', '$2y$10$Kd4wh.OShR1hgpORWodxVu/HDR3MVn.kbzPbaErn4R.pXXaAetj3K', 'Cavite', 'City of Tagaytay', 'Tolentino West', 'BLK D 8 LOT 16 SAN LUIS 1 DASMARIÑAS CAV', '2024-11-15 11:33:41'),
+(25, 'Lindaxxx', 'Romero', 'Linda@gmail.com', '2024-11-17', NULL, '0955237123', '', 'cavite', 'dasmarinas', 'SABUTAN', 'blk d8 lot 15', '2024-11-17 02:55:36');
 
 -- --------------------------------------------------------
 
@@ -248,7 +284,6 @@ CREATE TABLE `payment_mode` (
 
 INSERT INTO `payment_mode` (`id`, `method`, `image_path`, `updated_at`) VALUES
 (1, 'Gcash', 'uploads/payment_methods/gcash.jpg', '2024-11-17 04:11:04'),
-(2, 'Paymaya', 'uploads/payment_methods/maya.jpg', '2024-11-17 04:11:14'),
 (3, 'Cash', 'uploads/payment_methods/cash.jpg', '2024-11-17 04:11:24');
 
 -- --------------------------------------------------------
@@ -263,8 +298,16 @@ CREATE TABLE `payment_receipts` (
   `payment_receipt_path` varchar(255) DEFAULT NULL,
   `date` date DEFAULT NULL,
   `payment_mode_id` int(11) DEFAULT NULL,
-  `amount` decimal(10,2) DEFAULT NULL
+  `amount` decimal(10,2) DEFAULT NULL,
+  `status` varchar(255) NOT NULL DEFAULT 'pending'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `payment_receipts`
+--
+
+INSERT INTO `payment_receipts` (`id`, `appointment_id`, `payment_receipt_path`, `date`, `payment_mode_id`, `amount`, `status`) VALUES
+(9, 53, '', '2024-11-24', 3, 300.50, 'Pending');
 
 -- --------------------------------------------------------
 
@@ -277,7 +320,7 @@ CREATE TABLE `services` (
   `category` varchar(255) NOT NULL,
   `type` varchar(255) NOT NULL,
   `service` varchar(255) NOT NULL,
-  `department` varchar(255) NOT NULL,
+  `department_id` int(255) NOT NULL,
   `cost` varchar(255) NOT NULL,
   `date_added` timestamp NOT NULL DEFAULT current_timestamp(),
   `is_archive` tinyint(4) NOT NULL DEFAULT 0
@@ -287,11 +330,11 @@ CREATE TABLE `services` (
 -- Dumping data for table `services`
 --
 
-INSERT INTO `services` (`id`, `category`, `type`, `service`, `department`, `cost`, `date_added`, `is_archive`) VALUES
-(1, 'Imaging Services', 'X-Ray', 'Spot Film', 'Radiological Technologist', '300.50', '2024-05-03 07:44:15', 0),
-(2, 'Imaging Services', 'X-Ray', 'T-Cage', 'Radiological Technologist', '250.80', '2024-05-03 07:44:54', 0),
-(3, 'Laboratory Services', 'CBC', 'Red Blood Cell', 'Radiological Technologist', '200', '2024-05-03 07:53:00', 0),
-(4, 'Imaging Services', 'CT SCAN', 'PELVIC', 'Radiological Technologist', '100', '2024-11-16 03:17:58', 0);
+INSERT INTO `services` (`id`, `category`, `type`, `service`, `department_id`, `cost`, `date_added`, `is_archive`) VALUES
+(1, 'Imaging Services', 'X-Ray', 'Spot Film', 2, '300.50', '2024-05-03 07:44:15', 0),
+(2, 'Imaging Services', 'X-Ray', 'T-Cage', 2, '250.80', '2024-05-03 07:44:54', 0),
+(3, 'Laboratory Services', 'CBC', 'Red Blood Cell', 2, '200', '2024-05-03 07:53:00', 0),
+(4, 'Imaging Services', 'CT SCAN', 'PELVIC', 2, '100', '2024-11-16 03:17:58', 0);
 
 --
 -- Indexes for dumped tables
@@ -313,6 +356,12 @@ ALTER TABLE `appointment`
 -- Indexes for table `appointment_slots`
 --
 ALTER TABLE `appointment_slots`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `database_backup`
+--
+ALTER TABLE `database_backup`
   ADD PRIMARY KEY (`id`);
 
 --
@@ -381,13 +430,19 @@ ALTER TABLE `admin`
 -- AUTO_INCREMENT for table `appointment`
 --
 ALTER TABLE `appointment`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=54;
 
 --
 -- AUTO_INCREMENT for table `appointment_slots`
 --
 ALTER TABLE `appointment_slots`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+
+--
+-- AUTO_INCREMENT for table `database_backup`
+--
+ALTER TABLE `database_backup`
+  MODIFY `id` int(255) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 
 --
 -- AUTO_INCREMENT for table `departments`
@@ -399,13 +454,13 @@ ALTER TABLE `departments`
 -- AUTO_INCREMENT for table `logs`
 --
 ALTER TABLE `logs`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
 
 --
 -- AUTO_INCREMENT for table `medical_records`
 --
 ALTER TABLE `medical_records`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
 
 --
 -- AUTO_INCREMENT for table `patient`
@@ -423,7 +478,7 @@ ALTER TABLE `payment_mode`
 -- AUTO_INCREMENT for table `payment_receipts`
 --
 ALTER TABLE `payment_receipts`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
 
 --
 -- AUTO_INCREMENT for table `services`
