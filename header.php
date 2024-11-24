@@ -108,23 +108,39 @@
                                 <th>Selected Payment</th>
                                 <th>Note</th>
                                 <th>Paid</th>
+                                <th>Appointment Receipt</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <?php foreach ($appointments as $appointment) { ?>
+                            <?php foreach ($appointments as $appointment) {
+                                $appointmentId = $appointment['id'];
+                                $serviceName = htmlspecialchars($services[$appointment['service_id']]);
+                                $appointmentDate = htmlspecialchars($appointment['appointment_date']);
+                                $appointmentTime = htmlspecialchars($appointment['appointment_time']);
+                                $appointmentPayment = htmlspecialchars($paymentModes[$appointment['selectedPayment']]);
+                                $doctorId = $appointment['doctor_id'];
+                                $doctorName = htmlspecialchars($doctors[$doctorId] ?? 'Unknown');
+                                $appointmentNote = htmlspecialchars($appointment['medical']);
+                                $appointmentPaid = htmlspecialchars($appointment['paid']);
+                            ?>
                                 <tr>
-                                    <td><?= htmlspecialchars($services[$appointment['service_id']]) ?></td>
-                                    <td><?= htmlspecialchars($appointment['appointment_date']) . " (" . htmlspecialchars($appointment['appointment_time']) . ")" ?></td>
-                                    <td><?= htmlspecialchars($doctors[$appointment['doctor_id']] ?? 'Unknown') ?></td>
-                                    <td><?= htmlspecialchars($paymentModes[$appointment['selectedPayment']]) ?></td>
-                                    <td><?= htmlspecialchars($appointment['medical']) ?></td>
-                                    <td><?= htmlspecialchars($appointment['paid']) ?></td>
+                                    <td><?= $serviceName ?></td>
+                                    <td><?= $appointmentDate . " (" . $appointmentTime . ")" ?></td>
+                                    <td><?= $doctorName ?></td>
+                                    <td><?= $appointmentPayment ?></td>
+                                    <td><?= $appointmentNote ?></td>
+                                    <td><?= $appointmentPaid ?></td>
+                                    <td>
+                                        <a href="generate_appointment_receipt.php?appointment_id=<?= $appointmentId ?>&service=<?= urlencode($serviceName) ?>&date=<?= urlencode($appointmentDate) ?>&time=<?= urlencode($appointmentTime) ?>&payment=<?= urlencode($appointmentPayment) ?>&doctor=<?= urlencode($doctorName) ?>&note=<?= urlencode($appointmentNote) ?>&paid=<?= urlencode($appointmentPaid) ?>" class="btn btn-primary">Download Receipt</a>
+                                    </td>
                                 </tr>
                             <?php } ?>
                         </tbody>
                     </table>
+
                 </div>
                 <div class="modal-footer">
+
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                 </div>
             </div>

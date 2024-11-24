@@ -18,6 +18,11 @@ if (isset($_POST['login'])) {
             // Set session variables
             $_SESSION['user_id'] = $user['id'];
             $_SESSION['user_email'] = $user['email'];
+            $_SESSION['user_firstname'] = $user['firstname'];
+            $_SESSION['user_lastname'] = $user['lastname'];
+            $_SESSION['user_phone'] = $user['contact'];
+            
+
 
             header("Location: index.php");
         } else {
