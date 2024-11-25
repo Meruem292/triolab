@@ -235,38 +235,31 @@ $admin_id = $_SESSION['user_id'];
             button.addEventListener('click', function() {
                 const patientId = this.getAttribute('data-patient-id');
 
-                // Log the patient ID for debugging
-                console.log("Patient ID:", patientId);
-
                 if (!patientId) {
                     console.error("No patient ID found.");
-                    return; // Stop further execution if no patient ID
+                    return; // Stop if no patient ID
                 }
 
                 fetch('../admin/fetch_medical_records.php?patient_id=' + patientId)
-                    .then(response => {
-                        console.log("Response status:", response.status);
-                        return response.json();
-                    })
+                    .then(response => response.json())
                     .then(data => {
-                        console.log("Fetched data:", data); // Log the data for debugging
                         const tableBody = document.getElementById('medicalRecordTableBody');
-                        tableBody.innerHTML = ''; // Clear the previous table contents
+                        tableBody.innerHTML = ''; // Clear previous table contents
 
-                        // Loop through the records and populate the table
                         if (data.records && data.records.length > 0) {
                             data.records.forEach(record => {
                                 const row = document.createElement('tr');
                                 row.innerHTML = `
-                            <td>${record.created_at}</td>
-                            <td>${record.diagnosis}</td>
-                            <td>${record.treatment}</td>
-                            <td>${record.prescription}</td>
-                        `;
+                                <td>${record.record_date}</td>
+                                <td>${record.diagnosis}</td>
+                                <td>${record.treatment}</td>
+                                <td>${record.prescription}</td>
+                                <td><a href="print_medical_record.php?record_id=${record.id}" class="btn btn-primary btn-sm" target="_blank">Print</a></td>
+                            `;
                                 tableBody.appendChild(row);
                             });
                         } else {
-                            tableBody.innerHTML = '<tr><td colspan="3" class="text-center">No records found for this patient.</td></tr>';
+                            tableBody.innerHTML = '<tr><td colspan="5" class="text-center">No records found for this patient.</td></tr>';
                         }
                     })
                     .catch(error => {
@@ -275,6 +268,7 @@ $admin_id = $_SESSION['user_id'];
             });
         });
     </script>
+
 
     <script>
         function searchTable() {

@@ -1,4 +1,3 @@
-<!-- Modal for viewing medical records -->
 <div class="modal fade" id="viewMedicalRecordModal" tabindex="-1" aria-labelledby="viewMedicalRecordModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
