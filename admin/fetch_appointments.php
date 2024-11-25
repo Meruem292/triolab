@@ -37,25 +37,11 @@ try {
     $calendar_events = [];
 
     foreach ($appointments as $appointment) {
-        // Determine if the appointment is expired
-        $appointmentDateTime = new DateTime($appointment['appointment_date'] . ' ' . $appointment['appointment_time']);
-        $now = new DateTime();
-
-        // Determine event color based on status and expiration
-        $eventColor = 'secondary'; // Default color for "Cancelled"
-
-        if ($appointment['status'] === 'Completed') {
-            $eventColor = 'green'; // Success color for completed appointments
-        } elseif ($appointment['status'] === 'Pending') {
-            $eventColor = $appointmentDateTime < $now ? 'red' : 'blue'; // Danger if expired, primary if not expired
-        }
-
         $calendar_events[] = [
             'id' => $appointment['id'],
-            'title' => $appointment['service_name'] . " (" . $appointment['department_name'] . ")",
+            'title' => date('h:i A', strtotime($appointment['appointment_time'])), // Format time as HH:MM AM/PM
             'start' => $appointment['appointment_date'] . 'T' . $appointment['appointment_time'],
             'end' => $appointment['appointment_date'] . 'T' . date('H:i:s', strtotime($appointment['appointment_time']) + 3600),
-            'color' => $eventColor,
             'extendedProps' => [
                 'service_name' => $appointment['service_name'],
                 'patient_name' => $appointment['patient_name'],
@@ -66,6 +52,7 @@ try {
             ]
         ];
     }
+    
 
     // Return JSON-encoded data
     echo json_encode($calendar_events);

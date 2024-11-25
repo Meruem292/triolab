@@ -291,6 +291,13 @@ function calendarMonthShows()
     <script src="https://cdn.jsdelivr.net/npm/@fullcalendar/daygrid@6.1.15/index.global.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
 
+    <style>
+        .fc-event-title {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+    </style>
     <div id="calendar"></div>
 
     <!-- Modal HTML structure -->
@@ -336,28 +343,40 @@ function calendarMonthShows()
                     // Access custom data from extendedProps
                     var appointment = info.event.extendedProps;
 
+                    // Check if values exist, use fallback if they don't
+                    var patientName = appointment.patient_name ? appointment.patient_name.replace(/\b\w/g, char => char.toUpperCase()) : "N/A";
+                    var serviceName = appointment.service_name ? appointment.service_name : "N/A";
+                    var doctorName = appointment.doctor_name ? appointment.doctor_name.replace(/\b\w/g, char => char.toUpperCase()) : "N/A";
+                    var appointmentStatus = appointment.status ? appointment.status : "N/A";
+
                     // Update modal with appointment details
-                    document.getElementById('serviceName').innerText = appointment.service_name;
-                    document.getElementById('patientId').innerText = appointment.patient_name;
-                    document.getElementById('doctorId').innerText = appointment.doctor_name;
-                    document.getElementById('appointmentStatus').innerText = appointment.status;
+                    document.getElementById('serviceName').innerText = serviceName;
+                    document.getElementById('patientId').innerText = patientName;
+                    document.getElementById('doctorId').innerText = doctorName;
+                    document.getElementById('appointmentStatus').innerText = appointmentStatus;
                     document.getElementById('appointmentTime').innerText = new Date(info.event.start).toLocaleString();
 
                     // Show the modal
                     var myModal = new bootstrap.Modal(document.getElementById('appointmentModal'));
                     myModal.show();
                 },
+
                 eventContent: function(arg) {
-                    // Modify event rendering to include color logic
-                    var title = document.createElement('div');
-                    title.innerHTML = arg.event.title;
-
+                    // Modify event rendering to show only time and service name
                     var time = document.createElement('div');
-                    time.style.fontSize = '0.8em';
-                    time.style.color = '#555';
-                    time.innerText = new Date(arg.event.start).toLocaleString();
+                    time.style.paddingLeft = "5px";
+                    time.style.fontWeight = 'bold';
+                    time.style.fontSize = '0.9em';
+                    time.innerText = arg.event.title; // Time from the title
 
-                    return { domNodes: [title, time] };
+                    var service = document.createElement('div');
+                    service.style.fontSize = '0.9em';
+                    service.style.fontWeight = 'bold';
+                    service.innerText = arg.event.extendedProps.service_name; // Service name from extendedProps
+
+                    return {
+                        domNodes: [service, time]
+                    };
                 },
                 eventDidMount: function(info) {
                     // Assign colors based on status directly
@@ -375,9 +394,33 @@ function calendarMonthShows()
                     } else if (info.event.extendedProps.status === 'Cancelled') {
                         info.el.style.backgroundColor = 'gray';
                     }
-                }
+                },
+                eventOverlap: true, // Allow events to overlap
+                displayEventEnd: true, // Display event end time if needed
+                eventDisplay: 'block', // Make sure each event is rendered as a block element
+                eventOrder: "start,title", // Order events by start time and title for clarity
             });
 
+            calendar.render();
+        });
+    </script>
+
+<?php
+}
+
+
+function calendar22()
+{
+?>
+    <div id='calendar'></div>
+    
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar-scheduler@6.1.15/index.global.min.js'></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var calendarEl = document.getElementById('calendar');
+            var calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'resourceTimelineWeek'
+            });
             calendar.render();
         });
     </script>
