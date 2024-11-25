@@ -303,8 +303,8 @@ function calendarMonthShows()
                 </div>
                 <div class="modal-body">
                     <p><strong>Service:</strong> <span id="serviceName"></span></p>
-                    <p><strong>Patient ID:</strong> <span id="patientId"></span></p>
-                    <p><strong>Doctor ID:</strong> <span id="doctorId"></span></p>
+                    <p><strong>Patient:</strong> <span id="patientId"></span></p>
+                    <p><strong>Assigned Doctor:</strong> <span id="doctorId"></span></p>
                     <p><strong>Status:</strong> <span id="appointmentStatus"></span></p>
                     <p><strong>Appointment Time:</strong> <span id="appointmentTime"></span></p>
                 </div>
@@ -323,7 +323,7 @@ function calendarMonthShows()
                 initialView: 'dayGridMonth',
                 selectable: true,
                 events: function(info, successCallback, failureCallback) {
-                    fetch('fetch_appointments.php') // The path to your PHP endpoint
+                    fetch('fetch_appointments.php') // Endpoint to fetch event data
                         .then(response => response.json())
                         .then(data => {
                             successCallback(data);
@@ -333,22 +333,48 @@ function calendarMonthShows()
                         });
                 },
                 eventClick: function(info) {
-                    // Log to debug if event click is properly triggered
-                    console.log('Event clicked:', info.event);
-
-                    // Accessing the custom data from extendedProps
+                    // Access custom data from extendedProps
                     var appointment = info.event.extendedProps;
 
-                    // Set modal content with the decoded appointment details
+                    // Update modal with appointment details
                     document.getElementById('serviceName').innerText = appointment.service_name;
                     document.getElementById('patientId').innerText = appointment.patient_name;
                     document.getElementById('doctorId').innerText = appointment.doctor_name;
                     document.getElementById('appointmentStatus').innerText = appointment.status;
-                    document.getElementById('appointmentTime').innerText = new Date(appointment.start).toLocaleString(); // Display date and time
+                    document.getElementById('appointmentTime').innerText = new Date(info.event.start).toLocaleString();
 
                     // Show the modal
                     var myModal = new bootstrap.Modal(document.getElementById('appointmentModal'));
                     myModal.show();
+                },
+                eventContent: function(arg) {
+                    // Modify event rendering to include color logic
+                    var title = document.createElement('div');
+                    title.innerHTML = arg.event.title;
+
+                    var time = document.createElement('div');
+                    time.style.fontSize = '0.8em';
+                    time.style.color = '#555';
+                    time.innerText = new Date(arg.event.start).toLocaleString();
+
+                    return { domNodes: [title, time] };
+                },
+                eventDidMount: function(info) {
+                    // Assign colors based on status directly
+                    if (info.event.extendedProps.status === 'Completed') {
+                        info.el.style.backgroundColor = 'green';
+                    } else if (info.event.extendedProps.status === 'Pending') {
+                        var appointmentTime = new Date(info.event.start);
+                        var now = new Date();
+
+                        if (appointmentTime < now) {
+                            info.el.style.backgroundColor = 'red'; // Expired
+                        } else {
+                            info.el.style.backgroundColor = 'blue'; // Pending and not expired
+                        }
+                    } else if (info.event.extendedProps.status === 'Cancelled') {
+                        info.el.style.backgroundColor = 'gray';
+                    }
                 }
             });
 
@@ -357,6 +383,7 @@ function calendarMonthShows()
     </script>
 <?php
 }
+
 
 function getTotalSalesByDoctor($pdo)
 {

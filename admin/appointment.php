@@ -160,6 +160,15 @@ if (isset($_POST['archive_appointment'])) {
                             </div>
                         </div>
                     </div>
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-body">
+                                    <?php calendarMonthShows(); ?>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
                     <div class="row">
                         <div class="col-12">
