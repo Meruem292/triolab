@@ -2,12 +2,16 @@
 
 require "db.php";
 session_start();
+include "functions.php";
 
 $admin_id = $_SESSION['user_id'];
 if(!isset($_SESSION['user_id'])){
     header('Location: signin.php');
 };
 
+$totalSales = getTotalSales($pdo);
+$totalPatients = getTotalPatients($pdo);
+$totalAppointments = getTotalAppointments($pdo);
 ?>
 
 <!doctype html>
@@ -122,7 +126,7 @@ if(!isset($_SESSION['user_id'])){
                                                     </div>
                                                     <div class="flex-grow-1 ms-3">
                                                         <p class="text-uppercase fw-semibold fs-12 text-muted mb-1"> Total Sales</p>
-                                                        <h4 class=" mb-0">₱<span class="counter-value" data-target="2390.68">0</span></h4>
+                                                        <h4 class=" mb-0">₱<span class="counter-value" data-target="<?= $totalSales; ?>">0</span></h4>
                                                     </div>
                                                     <div class="flex-shrink-0 align-self-end">
                                                         <span class="badge bg-success-subtle text-success"><i class="ri-arrow-up-s-fill align-middle me-1"></i>6.24 %<span> </span></span>
@@ -142,7 +146,7 @@ if(!isset($_SESSION['user_id'])){
                                                     </div>
                                                     <div class="flex-grow-1 ms-3">
                                                         <p class="text-uppercase fw-semibold fs-12 text-muted mb-1"> Total Patient</p>
-                                                        <h4 class=" mb-0"><span class="counter-value" data-target="195">0</span></h4>
+                                                        <h4 class=" mb-0"><span class="counter-value" data-target="<?= $totalPatients; ?>">0</span></h4>
                                                     </div>
                                                     <div class="flex-shrink-0 align-self-end">
                                                         <span class="badge bg-success-subtle text-success"><i class="ri-arrow-up-s-fill align-middle me-1"></i>3.67 %<span> </span></span>
@@ -162,7 +166,7 @@ if(!isset($_SESSION['user_id'])){
                                                     </div>
                                                     <div class="flex-grow-1 ms-3">
                                                         <p class="text-uppercase fw-semibold fs-12 text-muted mb-1">Total Doctors</p>
-                                                        <h4 class=" mb-0"><span class="counter-value" data-target="25">0</span></h4>
+                                                        <h4 class=" mb-0"><span class="counter-value" data-target="<?= $totalAppointments; ?>">0</span></h4>
                                                     </div>
                                                     <div class="flex-shrink-0 align-self-end">
                                                         <span class="badge bg-danger-subtle text-danger"><i class="ri-arrow-down-s-fill align-middle me-1"></i>4.80 %<span> </span></span>

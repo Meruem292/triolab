@@ -483,69 +483,29 @@ function calendarMonthShowsAdmin()
 }
 
 
-function calendar22()
-{
-?>
-    <div id='calendar'></div>
-
-    <script src='https://cdn.jsdelivr.net/npm/fullcalendar-scheduler@6.1.15/index.global.min.js'></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            var calendarEl = document.getElementById('calendar');
-            var calendar = new FullCalendar.Calendar(calendarEl, {
-                initialView: 'resourceTimelineWeek'
-            });
-            calendar.render();
-        });
-    </script>
-<?php
+// Function to get total sales
+function getTotalSales($pdo) {
+    $sql = "SELECT SUM(amount) AS total_sales FROM payment_receipts";
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute();
+    $result = $stmt->fetch(PDO::FETCH_ASSOC);
+    return $result['total_sales'] ? $result['total_sales'] : 0; // Return 0 if no sales
 }
 
-
-function getTotalSalesByDoctor($pdo)
-{
-    try {
-        $query = "
-            SELECT 
-                d.employee_id AS doctor_id,
-                CONCAT(d.firstname, ' ', d.lastname) AS doctor_name,
-                dep.name AS department,
-                SUM(pr.amount) AS total_sales
-            FROM 
-                appointment a
-            INNER JOIN 
-                doctor d ON a.doctor_id = d.employee_id
-            INNER JOIN 
-                payment_receipts pr ON a.id = pr.appointment_id
-            INNER JOIN 
-                departments dep ON d.department_id = dep.id
-            WHERE 
-                a.is_archive = 0 AND d.is_archive = 0 AND pr.status = 'paid'
-            GROUP BY 
-                d.employee_id
-            ORDER BY 
-                total_sales DESC
-        ";
-
-        $stmt = $pdo->prepare($query);
-        $stmt->execute();
-
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
-    } catch (PDOException $e) {
-        // Handle error
-        echo "Error: " . $e->getMessage();
-        return [];
-    }
+// Function to get total number of patients
+function getTotalPatients($pdo) {
+    $sql = "SELECT COUNT(*) AS total_patients FROM patient";
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute();
+    $result = $stmt->fetch(PDO::FETCH_ASSOC);
+    return $result['total_patients'];
 }
 
-// Example usage
-
-$salesData = getTotalSalesByDoctor($pdo);
-
-// Output the data
-foreach ($salesData as $data) {
-    echo "Doctor ID: " . $data['doctor_id'] . "\n";
-    echo "Name: " . $data['doctor_name'] . "\n";
-    echo "Department: " . $data['department'] . "\n";
-    echo "Total Sales: $" . number_format($data['total_sales'], 2) . "\n\n";
+// Function to get total number of appointments
+function getTotalAppointments($pdo) {
+    $sql = "SELECT COUNT(*) AS total_appointments FROM appointment";
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute();
+    $result = $stmt->fetch(PDO::FETCH_ASSOC);
+    return $result['total_appointments'];
 }

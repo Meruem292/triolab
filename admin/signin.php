@@ -8,13 +8,14 @@ if (isset($_POST['login'])) {
     $username = $_POST['username'];
     $password = $_POST['password'];
 
+    // Fetch user from the database
     $stmt = $pdo->prepare("SELECT * FROM admin WHERE username = ?");
     $stmt->execute([$username]);
     $user = $stmt->fetch();
 
     if ($user) {
-        // Verify password
-        if ($password == $user['password']) {
+        // Verify password using password_verify
+        if (password_verify($password, $user['password'])) {
             // Set session variables
             $_SESSION['user_id'] = $user['id'];
             $_SESSION['user_username'] = $user['username'];
@@ -37,6 +38,7 @@ if (isset($_POST['login'])) {
     header("Location: signin.php");
     exit();
 }
+
 
 
 ?>
