@@ -223,12 +223,20 @@ function editFormPayments($pdo)
 
 function calendarWeekShows()
 {
-?>
+    ?>
     <?php
     require 'db.php'; // Include the database connection
 
+    // Check if employee_id (doctor ID) is set in the session
+    if (!isset($_SESSION['user_id'])) {
+        echo "User not authenticated.";
+        exit;
+    }
+
     try {
-        // Fetch appointments from the database
+        $doctor_id = $_SESSION['user_id']; // Retrieve the logged-in doctor's ID from the session
+
+        // Fetch appointments for the logged-in doctor
         $query = "SELECT a.id, a.appointment_date, a.appointment_time, s.service, 
                      p.firstname AS patient_firstname, p.lastname AS patient_lastname, 
                      d.firstname AS doctor_firstname, d.lastname AS doctor_lastname, 
@@ -238,9 +246,10 @@ function calendarWeekShows()
               LEFT JOIN patient p ON a.patient_id = p.id
               LEFT JOIN doctor d ON a.doctor_id = d.employee_id
               LEFT JOIN departments dept ON a.department_id = dept.id
-              WHERE a.is_archive = 0";
+              WHERE a.is_archive = 0 AND a.doctor_id = :doctor_id"; // Filter by doctor ID
+
         $stmt = $pdo->prepare($query);
-        $stmt->execute();
+        $stmt->execute(['doctor_id' => $doctor_id]); // Bind the doctor ID
         $appointments = $stmt->fetchAll(PDO::FETCH_ASSOC);
     } catch (PDOException $e) {
         echo "Error: " . $e->getMessage();
@@ -253,9 +262,13 @@ function calendarWeekShows()
         $events[] = [
             'title' => $appointment['service'] . ' - ' . $appointment['patient_firstname'] . ' ' . $appointment['patient_lastname'],
             'start' => $appointment['appointment_date'] . 'T' . $appointment['appointment_time'],
-            'description' => 'Doctor: ' . $appointment['doctor_firstname'] . ' ' . $appointment['doctor_lastname'] .
-                ' | Department: ' . $appointment['department_name'] .
-                ' | Status: ' . $appointment['status']
+            'end' => $appointment['appointment_date'] . 'T' . date('H:i:s', strtotime($appointment['appointment_time']) + 3600), // Assuming 1-hour duration
+            'extendedProps' => [
+                'service' => $appointment['service'],
+                'doctor' => $appointment['doctor_firstname'] . ' ' . $appointment['doctor_lastname'],
+                'department' => $appointment['department_name'],
+                'status' => $appointment['status']
+            ]
         ];
     }
     ?>
@@ -267,22 +280,78 @@ function calendarWeekShows()
         document.addEventListener('DOMContentLoaded', function() {
             var calendarEl = document.getElementById('calendarWeek');
             var calendar = new FullCalendar.Calendar(calendarEl, {
-                initialView: 'dayGridMonth',
-                initialView: 'listWeek',
+                initialView: 'listWeek', // Displaying the calendar in a weekly list view
                 events: <?php echo json_encode($events); ?>, // Pass PHP events to JavaScript
                 eventDidMount: function(info) {
-                    // Add a tooltip or extra information
-                    info.el.title = info.event.extendedProps.description;
-                }
+                    // Assign colors based on status directly
+                    if (info.event.extendedProps.status === 'Completed') {
+                        info.el.style.backgroundColor = 'green'; // Green for Completed
+                    } else if (info.event.extendedProps.status === 'Pending') {
+                        var appointmentTime = new Date(info.event.start);
+                        var now = new Date();
+
+                        if (appointmentTime < now) {
+                            info.el.style.backgroundColor = 'red'; // Red for expired Pending
+                        } else {
+                            info.el.style.backgroundColor = 'blue'; // Blue for Pending and not expired
+                        }
+                    } else if (info.event.extendedProps.status === 'Cancelled') {
+                        info.el.style.backgroundColor = 'gray'; // Gray for Cancelled
+                    }
+                },
+                eventClick: function(info) {
+                    // Access custom data from extendedProps
+                    var appointment = info.event.extendedProps;
+
+                    // Check if values exist, use fallback if they don't
+                    var patientName = appointment.patient_name ? appointment.patient_name.replace(/\b\w/g, char => char.toUpperCase()) : "N/A";
+                    var serviceName = appointment.service_name ? appointment.service_name : "N/A";
+                    var doctorName = appointment.doctor_name ? appointment.doctor_name.replace(/\b\w/g, char => char.toUpperCase()) : "N/A";
+                    var appointmentStatus = appointment.status ? appointment.status : "N/A";
+
+                    // Update modal with appointment details
+                    document.getElementById('serviceName').innerText = serviceName;
+                    document.getElementById('patientId').innerText = patientName;
+                    document.getElementById('doctorId').innerText = doctorName;
+                    document.getElementById('appointmentStatus').innerText = appointmentStatus;
+                    document.getElementById('appointmentTime').innerText = new Date(info.event.start).toLocaleString();
+
+                    // Show the modal
+                    var myModal = new bootstrap.Modal(document.getElementById('appointmentModal'));
+                    myModal.show();
+                },
+                eventContent: function(arg) {
+                    // Modify event rendering to show only time and service name
+                    var time = document.createElement('div');
+                    time.style.paddingLeft = "5px";
+                    time.style.fontWeight = 'bold';
+                    time.style.fontSize = '0.9em';
+                    time.innerText = arg.event.title; // Time from the title
+
+                    var service = document.createElement('div');
+                    service.style.fontSize = '0.9em';
+                    service.style.fontWeight = 'bold';
+                    service.innerText = arg.event.extendedProps.service_name; // Service name from extendedProps
+
+                    return {
+                        domNodes: [time]
+                    };
+                },
+                eventOverlap: true, // Allow events to overlap
+                displayEventEnd: true, // Display event end time if needed
+                eventDisplay: 'block', // Make sure each event is rendered as a block element
+                eventOrder: "start,title", // Order events by start time and title for clarity
             });
+
             calendar.render();
         });
     </script>
+
     <div id="calendarWeek"></div>
 
-
-<?php
+    <?php
 }
+
 
 function calendarMonthShows()
 {
@@ -290,6 +359,14 @@ function calendarMonthShows()
     <script src="https://cdn.jsdelivr.net/npm/@fullcalendar/core@6.1.15/index.global.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@fullcalendar/daygrid@6.1.15/index.global.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+
+    <style>
+        .fc-event-title {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+    </style>
 
     <div id="calendar"></div>
 
@@ -303,8 +380,8 @@ function calendarMonthShows()
                 </div>
                 <div class="modal-body">
                     <p><strong>Service:</strong> <span id="serviceName"></span></p>
-                    <p><strong>Patient ID:</strong> <span id="patientId"></span></p>
-                    <p><strong>Doctor ID:</strong> <span id="doctorId"></span></p>
+                    <p><strong>Patient:</strong> <span id="patientId"></span></p>
+                    <p><strong>Assigned Doctor:</strong> <span id="doctorId"></span></p>
                     <p><strong>Status:</strong> <span id="appointmentStatus"></span></p>
                     <p><strong>Appointment Time:</strong> <span id="appointmentTime"></span></p>
                 </div>
@@ -323,7 +400,7 @@ function calendarMonthShows()
                 initialView: 'dayGridMonth',
                 selectable: true,
                 events: function(info, successCallback, failureCallback) {
-                    fetch('fetch_appointments.php') // Replace with your PHP endpoint
+                    fetch('fetch_appointments.php') // Endpoint to fetch event data
                         .then(response => response.json())
                         .then(data => {
                             successCallback(data);
@@ -333,31 +410,70 @@ function calendarMonthShows()
                         });
                 },
                 eventClick: function(info) {
-                    // Log to debug if event click is properly triggered
-                    console.log('Event clicked:', info.event);
-
-                    // Accessing the custom data from extendedProps
+                    // Access custom data from extendedProps
                     var appointment = info.event.extendedProps;
 
-                    // Set modal content with the appointment details
-                    document.getElementById('serviceName').innerText = 'Service ID: ' + appointment.service_id;
-                    document.getElementById('patientId').innerText = appointment.patient_id;
-                    document.getElementById('doctorId').innerText = appointment.doctor_id;
-                    document.getElementById('appointmentStatus').innerText = appointment.status;
-                    document.getElementById('appointmentTime').innerText = new Date(appointment.start).toLocaleString();
+                    // Check if values exist, use fallback if they don't
+                    var patientName = appointment.patient_name ? appointment.patient_name.replace(/\b\w/g, char => char.toUpperCase()) : "N/A";
+                    var serviceName = appointment.service_name ? appointment.service_name : "N/A";
+                    var doctorName = appointment.doctor_name ? appointment.doctor_name.replace(/\b\w/g, char => char.toUpperCase()) : "N/A";
+                    var appointmentStatus = appointment.status ? appointment.status : "N/A";
+
+                    // Update modal with appointment details
+                    document.getElementById('serviceName').innerText = serviceName;
+                    document.getElementById('patientId').innerText = patientName;
+                    document.getElementById('doctorId').innerText = doctorName;
+                    document.getElementById('appointmentStatus').innerText = appointmentStatus;
+                    document.getElementById('appointmentTime').innerText = new Date(info.event.start).toLocaleString();
 
                     // Show the modal
                     var myModal = new bootstrap.Modal(document.getElementById('appointmentModal'));
                     myModal.show();
-                }
+                },
+
+                eventContent: function(arg) {
+                    // Modify event rendering to show only time and service name
+                    var time = document.createElement('div');
+                    time.style.paddingLeft = "5px";
+                    time.style.fontWeight = 'bold';
+                    time.style.fontSize = '0.9em';
+                    time.innerText = arg.event.title; // Time from the title
+
+                    var service = document.createElement('div');
+                    service.style.fontSize = '0.9em';
+                    service.style.fontWeight = 'bold';
+                    service.innerText = arg.event.extendedProps.service_name; // Service name from extendedProps
+
+                    return {
+                        domNodes: [time]
+                    };
+                },
+                eventDidMount: function(info) {
+                    // Assign colors based on status directly
+                    if (info.event.extendedProps.status === 'Completed') {
+                        info.el.style.backgroundColor = 'green';
+                    } else if (info.event.extendedProps.status === 'Pending') {
+                        var appointmentTime = new Date(info.event.start);
+                        var now = new Date();
+
+                        if (appointmentTime < now) {
+                            info.el.style.backgroundColor = 'red'; // Expired
+                        } else {
+                            info.el.style.backgroundColor = 'blue'; // Pending and not expired
+                        }
+                    } else if (info.event.extendedProps.status === 'Cancelled') {
+                        info.el.style.backgroundColor = 'gray';
+                    }
+                },
+                eventOverlap: true, // Allow events to overlap
+                displayEventEnd: true, // Display event end time if needed
+                eventDisplay: 'block', // Make sure each event is rendered as a block element
+                eventOrder: "start,title", // Order events by start time and title for clarity
             });
 
             calendar.render();
         });
     </script>
-
-
-
 <?php
 }
 
@@ -392,7 +508,8 @@ function getTotalSalesByDoctor($doctorId)
     }
 }
 
-function getTotalPatientsByDoctor($doctorId){
+function getTotalPatientsByDoctor($doctorId)
+{
     include "db.php"; // Include the database connection
     try {
         $query = "
@@ -419,7 +536,8 @@ function getTotalPatientsByDoctor($doctorId){
     }
 }
 
-function getTotalAppointmentsByDoctor($doctorId){
+function getTotalAppointmentsByDoctor($doctorId)
+{
     include "db.php"; // Include the database connection
     try {
         $query = "
