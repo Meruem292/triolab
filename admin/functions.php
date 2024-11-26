@@ -184,6 +184,19 @@ function handleActionButton($pdo, $action, $row, $table)
                   </script>';
             editFormPayments($pdo);
             break;
+        case 'print_medical_record':
+            echo '
+                <script type="text/javascript">
+                    function printMedicalRecord() {
+                        var printWindow = window.open("../assets/docs/hematology.php", "_blank", "width=800,height=600");
+                        printWindow.onload = function() {
+                            printWindow.print();
+                        };
+                    }
+                    printMedicalRecord();
+                </script>
+                ';
+            break;
     }
 }
 
@@ -484,7 +497,8 @@ function calendarMonthShowsAdmin()
 
 
 // Function to get total sales
-function getTotalSales($pdo) {
+function getTotalSales($pdo)
+{
     $sql = "SELECT SUM(amount) AS total_sales FROM payment_receipts";
     $stmt = $pdo->prepare($sql);
     $stmt->execute();
@@ -493,7 +507,8 @@ function getTotalSales($pdo) {
 }
 
 // Function to get total number of patients
-function getTotalPatients($pdo) {
+function getTotalPatients($pdo)
+{
     $sql = "SELECT COUNT(*) AS total_patients FROM patient";
     $stmt = $pdo->prepare($sql);
     $stmt->execute();
@@ -502,7 +517,8 @@ function getTotalPatients($pdo) {
 }
 
 // Function to get total number of appointments
-function getTotalAppointments($pdo) {
+function getTotalAppointments($pdo)
+{
     $sql = "SELECT COUNT(*) AS total_appointments FROM appointment";
     $stmt = $pdo->prepare($sql);
     $stmt->execute();
