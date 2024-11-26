@@ -522,7 +522,7 @@ ORDER BY appointment.date_added ASC;
                                                                                 data-appointment-id="<?= htmlspecialchars($row['appointment_id']); ?>">
                                                                                 <i class="ri-delete-bin-fill align-bottom me-2"></i> Archive
                                                                             </a>
-                                                                            <a href="javascript:void(0);" class="btn btn-info btn-sm" onclick="printMedicalRecord()">
+                                                                            <a href="javascript:void(0);" class="btn btn-info btn-sm" onclick="printMedicalRecord(<?php echo $row['appointment_id'] ?>)">
                                                                                 <i class="ri-printer-fill align-bottom me-2"></i> Print Medical Record
                                                                             </a>
                                                                         </td>
@@ -743,8 +743,8 @@ ORDER BY appointment.date_added ASC;
     </script>
 
     <script type="text/javascript">
-        function printMedicalRecord() {
-            var printWindow = window.open("../assets/docs/hematology.php", "_blank", "width=800,height=600");
+        function printMedicalRecord(appointmentId) {
+            var printWindow = window.open("../assets/docs/hematology.php?appointmentId=" + appointmentId, "_blank", "width=800,height=600");
             printWindow.onload = function() {
                 printWindow.print();
             };

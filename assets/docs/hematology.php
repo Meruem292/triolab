@@ -1,5 +1,33 @@
 <?php
 session_start();
+require_once 'db.php';
+
+// if (!isset($_SESSION['user_id'])) {
+//     header('Location: ../index.php');
+//     exit();
+// }
+
+$id = $_GET['appointmentId'] ?? null;
+
+$query = 'SELECT * FROM appointment WHERE id = :id';
+$stmt = $pdo->prepare($query);
+$stmt->execute(['id' => $id]);
+$appointment = $stmt->fetch();
+
+if (!$appointment) {
+    die('Appointment not found.');
+}
+
+$query = 'SELECT * FROM patient WHERE id = :id';
+$stmt = $pdo->prepare($query);
+$stmt->execute(['id' => $appointment['patient_id']]);
+$patient = $stmt->fetch();
+
+$query = 'SELECT * FROM doctor WHERE employee_id = :id';
+$stmt = $pdo->prepare($query);
+$stmt->execute(['id' => $appointment['doctor_id']]);
+$doctor = $stmt->fetch();
+
 ?>
 
 
@@ -143,6 +171,18 @@ session_start();
     background-color: #f44336;
     color: white;
 }
+input[type="text"] {
+    border: none;
+    border-bottom: 1px solid black;
+    width: 100px;
+    margin-left: 10px;
+    margin-right: 10px;
+    padding: 2px 0; /* Reduced padding */
+    height: 14px; /* Smaller height */
+    font-size: 16px; 
+    line-height: 0.5; 
+    text-align: center; /* Center-align text inside the input */
+}
 
 @media print {
     body {
@@ -174,27 +214,25 @@ session_start();
 <body>
 
     <div class="max-w-2xl mx-auto p-6 bg-white rounded-lg shadow-lg dark:bg-zinc-800">
-        <div class="flex items-center">
-            <img src="../images/logo.png" alt="Clinic Logo" class="h-20 w-20 mr-1" />
-            <h3 class="text-xl text-blue-900 font-bold text-center dark:text-blue-400">
-                TRIOLAB DIAGNOSTIC AND MEDICAL CLINIC CO.
-            </h3>
-
+        <div class="flex items-center mb-2">
+            <img src="../images/triolab_header.png" alt="logo_header" class="h-100 w-100">
         </div>
-        <p class="text-center text-sm text-zinc-600 dark:text-zinc-300">G/F Lilianne Bldg. Cong. North Avenue, Sta. Lucia, Dasmariñas City, Cavite</p>
-        <p class="text-center text-sm text-zinc-600 dark:text-zinc-300 border-b-2">Contact Number: 093843583273 / 09916457318</p>
 
         <div class="flex justify-between">
             <!-- on the left -->
             <div>
-                <p>Name of the Patient: </p>
-                <p>Requested By: </p>
+                <p><strong>Patient Name:</strong>
+                    <?= isset($patient) && $patient ? htmlspecialchars($patient['lastname'] . ', ' . $patient['firstname']) : 'N/A' ?>
+                </p>
+                <p><strong>Requested By:</strong>
+                    <?= isset($doctor) && $doctor ? htmlspecialchars($doctor['firstname'] . ' ' . $doctor['lastname']) : 'N/A' ?>
+                </p>
             </div>
 
             <!-- on the right -->
             <div style="margin-right: 10%">
-                <p>Age/Sex: </p>
-                <p>Date: </p>
+                <!-- <p>Age/Sex: </p> -->
+                <p><strong>Date:</strong> <?= date('Y-m-d') ?></p>
             </div>
         </div>
 
@@ -207,20 +245,20 @@ session_start();
             <!-- on the left -->
             <div style="text-align: right;">
                 <h2 class="text-m font-bold text-zinc-900 dark:text-zinc-100">Complete Blood Count</h2>
-                <p>Hemoglobin: </p>
-                <p>Hematorcrit: </p>
-                <p>WBC Count: </p>
-                <p>RBC Count: </p>
+                <p>Hemoglobin: <input type="text" name="hemoglobin" ></p>
+                <p>Hematocrit: <input type="text" name="hematocrit" ></p>
+                <p>WBC Count: <input type="text" name="wbc_count" ></p>
+                <p>RBC Count: <input type="text" name="rbc_count" ></p>
                 <h2 class="text-m font-bold text-zinc-900 dark:text-zinc-100">Differential Count</h2>
-                <p>Segmenters: </p>
-                <p>Lymphocytes: </p>
-                <p>Eosinophils: </p>
-                <p>Monocytes: </p>
-                <p>Platelet Count: </p>
-                <h2 class="text-m font-bold text-zinc-900 dark:text-zinc-100">OTHERS</h2>
-                <p>BLOOD TYPE: </p>
+                <p>Segmenters: <input type="text" name="segmenters" ></p>
+                <p>Lymphocytes: <input type="text" name="lymphocytes" ></p>
+                <p>Eosinophils: <input type="text" name="eosinophils" ></p>
+                <p>Monocytes: <input type="text" name="monocytes" ></p>
+                <p>Platelet Count: <input type="text" name="platelet_count" ></p>
+                <h2 class="text-m font-bold text-zinc-900 dark:text-zinc-100">Others</h2>
+                <p>BLOOD TYPE: <input type="text" name="blood_type" ></p>
                 <br>
-                <p>GLENDA F. EDERADAN, RMT</p>
+                <p><?= strtoupper($doctor['firstname']). ' ' . strtoupper($doctor['lastname']). ', '?> RMT</p>
             </div>
 
             <!-- on the right -->
@@ -229,7 +267,7 @@ session_start();
                 <p>M: 140 - 170 g/L F: 120 - 150 g/L</p>
                 <p>M: 0.40 - 0.54 F: 0.37 - 0.47 </p>
                 <p>5 - 10 x 10<sup>9</sup>/L </p>
-                <p>3.9 - 5.5 x 10*12/L </p>
+                <p>3.9 - 5.5 x 10<sup>12</sup>/L </p>
                 <h2 class="text-m font-bold text-zinc-900 dark:text-zinc-100">Differential Count</h2>
                 <p>0.50 - 0.70</p>
                 <p>0.20 - 0.40</p>
@@ -242,6 +280,7 @@ session_start();
                 <p><ins>LUDIVINA T. SOLS, MD, FPSP</ins></p>
             </div>
         </div>
+
     </div>
 
     <!-- Action Buttons -->
