@@ -24,6 +24,10 @@
                         <input type="number" name="contact" class="form-control" required>
                     </div>
                     <div class="col-md-12 mb-3">
+                        <label class="form-label">Birthplace</label>
+                        <input type="date" name="birthplace" class="form-control" required>
+                    </div>
+                    <div class="col-md-12 mb-3">
                         <label class="form-label">Date of Birth</label>
                         <input type="date" name="dob" class="form-control" required>
                     </div>
@@ -59,20 +63,23 @@
 </div>
 
 <script>
-    document.querySelector('form').addEventListener('input', function() {
-        // Get the values from each address field
-        var province = document.querySelector('input[name="province"]').value;
-        var city = document.querySelector('input[name="city"]').value;
-        var barangay = document.querySelector('input[name="barangay"]').value;
-        var street = document.querySelector('input[name="street"]').value;
+    document.addEventListener('DOMContentLoaded', function() {
+        const addressFields = ['province', 'city', 'barangay', 'street'];
+        const fullAddressField = document.getElementById('fullAddress');
 
-        // Create the full address
-        var addressParts = [province, city, barangay, street];
-        var fullAddress = addressParts.filter(function(part) {
-            return part.trim() !== ""; // Filter out empty parts
-        }).join(", ");
+        // Function to update the full address
+        function updateFullAddress() {
+            let addressParts = addressFields.map(field => {
+                return document.querySelector(`input[name="${field}"]`).value.trim();
+            }).filter(part => part !== "");
 
-        // Update the full address field
-        document.getElementById('fullAddress').value = fullAddress;
+            fullAddressField.value = addressParts.join(", ");
+        }
+
+        // Attach event listeners to the address fields
+        addressFields.forEach(field => {
+            const input = document.querySelector(`input[name="${field}"]`);
+            input.addEventListener('input', updateFullAddress);
+        });
     });
 </script>

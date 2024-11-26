@@ -34,7 +34,7 @@ if (isset($_POST['add_doctor'])) {
     $username = htmlspecialchars($_POST['username']);
     $email = htmlspecialchars($_POST['email']);
     $department_id = $_POST['department_id']; // Using department_id now
-    $password = $_POST['username']; // No hashing as per requirement
+    $password = hash($_POST['username'],PASSWORD_DEFAULT); // No hashing as per requirement
 
     $checkQuery = $pdo->prepare("SELECT * FROM doctor WHERE email = :email OR username = :username");
     $checkQuery->bindParam(':email', $email);
@@ -136,11 +136,13 @@ if (isset($_POST['add_patient'])) {
     $lastname = htmlspecialchars($_POST['lastname']);
     $email = htmlspecialchars($_POST['email']);
     $contact = htmlspecialchars($_POST['contact']);
+    $birthplace = $_POST['birthplace'];
     $dob = htmlspecialchars($_POST['dob']);
     $province = htmlspecialchars($_POST['province']);
     $city = htmlspecialchars($_POST['city']);
     $barangay = htmlspecialchars($_POST['barangay']);
     $street = htmlspecialchars($_POST['street']);
+    $password = password_hash($_POST['email'], PASSWORD_DEFAULT);
 
     // Check if the email already exists in the database
     $checkQuery = $pdo->prepare("SELECT * FROM patient WHERE email = :email");
@@ -155,8 +157,8 @@ if (isset($_POST['add_patient'])) {
     } else {
         // Insert the new patient information into the database
         $insertQuery = $pdo->prepare("
-            INSERT INTO patient (firstname, lastname, email, contact, dob, province, city, barangay, street) 
-            VALUES (:firstname, :lastname, :email, :contact, :dob, :province, :city, :barangay, :street)
+            INSERT INTO patient (firstname, lastname, email, contact, dob, province, city, barangay, street, password, birthplace) 
+            VALUES (:firstname, :lastname, :email, :contact, :dob, :province, :city, :barangay, :street, :password)
         ");
         $insertQuery->bindParam(':firstname', $firstname);
         $insertQuery->bindParam(':lastname', $lastname);
@@ -167,6 +169,9 @@ if (isset($_POST['add_patient'])) {
         $insertQuery->bindParam(':city', $city);
         $insertQuery->bindParam(':barangay', $barangay);
         $insertQuery->bindParam(':street', $street);
+        $insertQuery->bindParam(':password', $password);
+        $insertQuery->bindParam(':birthplace', $birthplace);
+
 
         if ($insertQuery->execute()) {
             logAction($pdo, 'add patient', 'Patient added with email: ' . $email);
