@@ -160,18 +160,7 @@ if (isset($_POST['archive_appointment'])) {
                             </div>
                         </div>
                     </div>
-                    <div class="row">
-                        <div class="col-12">
-                            <div class="card">
-                                <div class="card-body">
-                                    <div class="calendar">
-                                        <?php calendarMonthShows(); ?>
-                                    </div>
 
-                                </div>
-                            </div>
-                        </div>
-                    </div>
 
                     <div class="row">
                         <div class="col-12">
@@ -185,7 +174,12 @@ if (isset($_POST['archive_appointment'])) {
                                     <!-- Nav tabs -->
                                     <ul class="nav nav-tabs nav-tabs-custom nav-success nav-justified mb-3" role="tablist">
                                         <li class="nav-item">
-                                            <a class="nav-link active" data-bs-toggle="tab" href="#new" role="tab">
+                                            <a class="nav-link active" data-bs-toggle="tab" href="#calendarTab" role="tab">
+                                                CALENDAR OF APPOINTMENTS
+                                            </a>
+                                        </li>
+                                        <li class="nav-item">
+                                            <a class="nav-link" data-bs-toggle="tab" href="#new" role="tab">
                                                 NEW/PENDING APPOINTMENTS
                                             </a>
                                         </li>
@@ -198,7 +192,18 @@ if (isset($_POST['archive_appointment'])) {
 
                                     <!-- Tab panes -->
                                     <div class="tab-content text-muted">
-                                        <div class="tab-pane active" id="new" role="tabpanel">
+                                        <div class="tab-pane active" id="calendarTab" role="tabpanel">
+                                            <div class="row">
+                                                <div class="col-xxl-8">
+                                                    <?php calendarMonthShowsAdmin(); ?>
+                                                </div>
+                                                <div class="col-xxl-4">
+                                                    <?php calendarWeekShowsAdmin(); ?>
+                                                </div>
+                                            </div>
+
+                                        </div>
+                                        <div class="tab-pane" id="new" role="tabpanel">
                                             <div class="d-flex align-items-center gap-3">
                                                 <div class="d-flex justify-content-sm-start">
                                                     <div class="search-box ms-2 mt-3 mb-3">

@@ -175,10 +175,10 @@ if (isset($_POST['archive_appointment'])) {
                                         <div class="tab-pane active" id="calendarTab" role="tabpanel">
                                             <div class="row">
                                                 <div class="col-md-8">
-                                                    <?= calendarMonthShows(); ?>
+                                                    <?= calendarMonthShowsDoctor(); ?>
                                                 </div>
                                                 <div class="col-md-4">
-                                                    <?= calendarWeekShows(); ?>
+                                                    <?= calendarWeekShowsDoctor(); ?>
                                                 </div>
                                             </div>
                                         </div>
