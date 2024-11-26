@@ -291,16 +291,22 @@ if (isset($_POST['update_medical_record'])) {
     $query = "UPDATE medical_records SET diagnosis = :diagnosis, treatment = :treatment, record_date = :record_date , prescription = :prescription
               WHERE id = :medical_id";
     $stmt = $pdo->prepare($query);
-    $stmt->execute([
+
+    if ($stmt->execute([
         ':diagnosis' => $diagnosis,
         ':treatment' => $treatment,
         ':record_date' => $record_date,
         ':prescription' => $prescription,
         ':medical_id' => $medical_id
-    ]);
-
-    $_SESSION['message'] = "Medical record updated successfully!";
-    $_SESSION['status'] = "success";
+    ])) {
+        logAction($pdo, 'update medical record', 'Medical record updated for medical ID: ' . $medical_id);
+        $_SESSION['message'] = "Medical record updated successfully!";
+        $_SESSION['status'] = "success";
+    } else {
+        logAction($pdo, 'update medical record error', 'Error updating medical record for medical ID: ' . $medical_id);
+        $_SESSION['message'] = "Error updating medical record.";
+        $_SESSION['status'] = "error";
+    }
     header("Location: ../medical-records.php");
 }
 
@@ -473,12 +479,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_profile'])) {
         $stmt = $pdo->prepare($query);
         $stmt->execute($params);
 
+        // Log the success action
+        logAction($pdo, 'update profile', 'Admin profile updated for ID: ' . $id);
+
         // Set success message
         $_SESSION['message'] = "Profile updated successfully!";
         $_SESSION['status'] = "success";
     } catch (Exception $e) {
-        // Log the error and set error message
-        error_log("Error updating admin profile: " . $e->getMessage());
+        // Log the error
+        logAction($pdo, 'update profile error', 'Error updating admin profile for ID: ' . $id . '. Error: ' . $e->getMessage());
+
+        // Set error message
         $_SESSION['message'] = "An error occurred while updating the profile.";
         $_SESSION['status'] = "error";
     }

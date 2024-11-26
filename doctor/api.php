@@ -1,5 +1,6 @@
-<?php 
+<?php
 include "../db.php";
+include "logAction.php";
 session_start();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_profile'])) {
@@ -73,17 +74,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_profile'])) {
 
         // Execute the statement
         if ($stmt->execute()) {
+            // Log success action
+            logAction($pdo, 'update profile', 'Profile updated for doctor with employee ID: ' . $employee_id);
+
             // Set success message
             $_SESSION['message'] = "Profile updated successfully!";
             $_SESSION['status'] = "success";
         } else {
+            // Log error action
+            logAction($pdo, 'update profile error', 'Failed to update profile for doctor with employee ID: ' . $employee_id);
+
             // Set error message
             $_SESSION['message'] = "Failed to update profile.";
             $_SESSION['status'] = "error";
         }
     } catch (Exception $e) {
         // Log error and set failure message
-        error_log("Error updating profile: " . $e->getMessage());
+        logAction($pdo, 'update profile error', 'Error updating profile for doctor with employee ID: ' . $employee_id . '. Error: ' . $e->getMessage());
+
         $_SESSION['message'] = "An error occurred while updating the profile.";
         $_SESSION['status'] = "error";
     }
@@ -92,4 +100,3 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_profile'])) {
     header("Location: settings.php");
     exit();
 }
-?>

@@ -1,6 +1,7 @@
 <?php
 
 require "db.php";
+include "logAction.php";
 session_start();
 
 if(isset($_POST['add_service'])) {
@@ -20,6 +21,9 @@ if(isset($_POST['add_service'])) {
         // Entry already exists
         $_SESSION['message'] = "Service already exists in the database.";
         $_SESSION['status'] = "warning";
+
+        // Log the warning action for existing service
+        logAction($pdo, 'add service warning', 'Service already exists with type: ' . $type . ', service: ' . $service);
     } else {
         // Insert the new service information into the database
         $insertQuery = $pdo->prepare("INSERT INTO services (category, type, service, department, cost) VALUES (:category, :type, :service, :department, :cost)");
@@ -32,12 +36,19 @@ if(isset($_POST['add_service'])) {
         if ($insertQuery->execute()) {
             $_SESSION['message'] = "Service added successfully.";
             $_SESSION['status'] = "success";
+
+            // Log the successful action for adding the service
+            logAction($pdo, 'add service', 'Service added with category: ' . $category . ', service: ' . $service);
         } else {
             $_SESSION['message'] = "Error inserting service.";
             $_SESSION['status'] = "error";
+
+            // Log the error action for failed insertion
+            logAction($pdo, 'add service error', 'Error inserting service with category: ' . $category . ', service: ' . $service);
         }
     }
 };
+
 
 if(isset($_POST['edit_service'])) {
 
@@ -61,11 +72,18 @@ if(isset($_POST['edit_service'])) {
     if ($updateQuery->execute()) {
         $_SESSION['message'] = "Service updated successfully.";
         $_SESSION['status'] = "success";
+
+        // Log the successful action for editing the service
+        logAction($pdo, 'edit service', 'Service updated with ID: ' . $editServicesId . ', category: ' . $editServiceCategory . ', service: ' . $editServicesService);
     } else {
         $_SESSION['message'] = "Error updating service.";
         $_SESSION['status'] = "error";
+
+        // Log the error action for failed update
+        logAction($pdo, 'edit service error', 'Error updating service with ID: ' . $editServicesId . ', category: ' . $editServiceCategory . ', service: ' . $editServicesService);
     }
 };
+
 
 if(isset($_POST['archive_service'])) {
     $servicesIdDelete = $_POST['servicesIdDelete'];
@@ -79,9 +97,15 @@ if(isset($_POST['archive_service'])) {
     if ($archiveQuery->execute()) {
         $_SESSION['message'] = "Service archived successfully.";
         $_SESSION['status'] = "success";
+
+        // Log the successful action for archiving the service
+        logAction($pdo, 'archive service', 'Service archived with ID: ' . $servicesIdDelete);
     } else {
         $_SESSION['message'] = "Error archiving service.";
         $_SESSION['status'] = "error";
+
+        // Log the error action for failed archiving
+        logAction($pdo, 'archive service error', 'Error archiving service with ID: ' . $servicesIdDelete);
     }
 }
 

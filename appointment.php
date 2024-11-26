@@ -1,7 +1,8 @@
 <?php
-
 require "db.php";
 session_start();
+include "logAction.php";
+
 
 $user_id = $_SESSION['user_id'];
 if (!isset($_SESSION['user_id'])) {
@@ -53,6 +54,9 @@ if (isset($_POST['add_appointment'])) {
         $insertAppointment->execute([$serviceID, $user_id, $selectedDate, $selectedTime, $selectedSlot, $doctor_id, $department_id, $selectedPayment, $medical, $status, $paid, $date_added]);
         $appointment_id = $pdo->lastInsertId();
 
+        // Log the appointment booking action
+        logAction($pdo, 'add appointment', 'Appointment booked with ID: ' . $appointment_id . ' for patient ID: ' . $user_id);
+
         // If payment is not cash, handle the receipt upload
         if (strtolower($selectedPayment) !== '3') {
             if ($_FILES['receipt']['error'] === UPLOAD_ERR_OK) {
@@ -76,8 +80,6 @@ if (isset($_POST['add_appointment'])) {
                     // update slot appointment_slot
                     $updateAppointmentSlot = $pdo->prepare("UPDATE `appointment_slots` SET `slot` = `slot` - 1 WHERE `id` = ?");
                     $updateAppointmentSlot->execute([$selectedSlot]);
-
-
 
                     $insertMedical = $pdo->prepare("INSERT INTO `medical_records` (`patient_id`, `appointment_id`) VALUES (?, ?)");
                     $insertMedical->execute([$user_id, $appointment_id]);
@@ -107,8 +109,12 @@ if (isset($_POST['add_appointment'])) {
     } catch (Exception $e) {
         $_SESSION['message'] = "An error occurred: " . $e->getMessage();
         $_SESSION['status'] = "error";
+
+        // Log the error in case of an exception
+        logAction($pdo, 'add appointment error', 'Error booking appointment for patient ID: ' . $user_id . ' - ' . $e->getMessage());
     }
 }
+
 
 ?>
 

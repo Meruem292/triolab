@@ -45,11 +45,11 @@
                         <i class="ri-settings-line"></i> <span data-key="t-settings">Settings</span>
                     </a>
                 </li>
-                <li class="nav-item">
+                <!-- <li class="nav-item">
                     <a class="nav-link menu-link" href="logs.php">
                         <i class="ri-folder-5-line"></i> <span data-key="t-logs">Logs</span>
                     </a>
-                </li>
+                </li> -->
                 <li class="nav-item">
                     <a class="nav-link menu-link" href="logout.php">
                         <i class="mdi mdi-logout"></i> <span data-key="t-logout">Logout</span>

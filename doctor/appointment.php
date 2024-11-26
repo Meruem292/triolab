@@ -1,7 +1,7 @@
 <?php
-
-require "db.php";
 session_start();
+require "db.php";
+include "logAction.php";
 
 $user_id = $_SESSION['user_id'];
 if (!isset($_SESSION['user_id'])) {
@@ -34,9 +34,15 @@ if (isset($_POST['edit_appointment'])) {
             // Update the existing record
             $updateMedicalRecord = $pdo->prepare("UPDATE medical_records SET patient_id = ?, doctor_id = ?, diagnosis = ?, treatment = ?, prescription = ?, status = ? WHERE appointment_id = ?");
             if ($updateMedicalRecord->execute([$patientId, $doctor, $diagnosis, $treatment, $prescription, $medicalStatus, $appointmentId])) {
+                // Log success action
+                logAction($pdo, 'update appointment', 'Updated appointment with ID: ' . $appointmentId . ' for patient ID: ' . $patientId);
+
                 $_SESSION['message'] = "Appointment updated successfully.";
                 $_SESSION['status'] = "success";
             } else {
+                // Log error action
+                logAction($pdo, 'update appointment error', 'Failed to update appointment with ID: ' . $appointmentId);
+
                 $_SESSION['message'] = "Error updating appointment.";
                 $_SESSION['status'] = "error";
             }
@@ -44,14 +50,23 @@ if (isset($_POST['edit_appointment'])) {
             // Insert a new record
             $insertMedicalRecord = $pdo->prepare("INSERT INTO medical_records (appointment_id, patient_id, doctor_id, diagnosis, treatment, prescription, status) VALUES (?, ?, ?, ?, ?, ?, ?)");
             if ($insertMedicalRecord->execute([$appointmentId, $patientId, $doctor, $diagnosis, $treatment, $prescription, $medicalStatus])) {
+                // Log success action
+                logAction($pdo, 'create appointment', 'Created new medical record for appointment ID: ' . $appointmentId . ' for patient ID: ' . $patientId);
+
                 $_SESSION['message'] = "Appointment created successfully.";
                 $_SESSION['status'] = "success";
             } else {
+                // Log error action
+                logAction($pdo, 'create appointment error', 'Failed to create new medical record for appointment ID: ' . $appointmentId);
+
                 $_SESSION['message'] = "Error creating appointment.";
                 $_SESSION['status'] = "error";
             }
         }
     } else {
+        // Log error action for invalid appointment ID or patient not found
+        logAction($pdo, 'invalid appointment', 'Invalid appointment ID or patient not found for appointment ID: ' . $appointmentId);
+
         $_SESSION['message'] = "Invalid appointment ID or patient not found.";
         $_SESSION['status'] = "error";
     }
@@ -60,6 +75,7 @@ if (isset($_POST['edit_appointment'])) {
     header('Location: ../doctor/appointment.php');
     exit();
 }
+
 
 
 
@@ -73,13 +89,20 @@ if (isset($_POST['archive_appointment'])) {
     $archiveQuery->bindParam(':id', $appointmentIdDelete);
 
     if ($archiveQuery->execute()) {
+        // Log the successful archive action
+        logAction($pdo, 'archive appointment', 'Archived appointment with ID: ' . $appointmentIdDelete);
+
         $_SESSION['message'] = "Appointment archived successfully.";
         $_SESSION['status'] = "success";
     } else {
+        // Log the error action
+        logAction($pdo, 'archive appointment error', 'Failed to archive appointment with ID: ' . $appointmentIdDelete);
+
         $_SESSION['message'] = "Error archiving appointment.";
         $_SESSION['status'] = "error";
     }
 }
+
 
 ?>
 

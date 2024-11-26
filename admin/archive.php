@@ -1,6 +1,7 @@
 <?php
 require 'db.php';
 
+
 if (isset($_POST['archive'])) {
     $id = $_POST['id'];
     $table = $_POST['table'];

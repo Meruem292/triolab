@@ -1,5 +1,6 @@
 <?php
 include "db.php";
+include "functions.php";
 session_start();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_payment'])) {
@@ -29,6 +30,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_payment'])) {
             // Commit the transaction
             $pdo->commit();
 
+            // Log the successful action
+            logAction($pdo, 'update payment status', 'Payment status updated to ' . $status . ' for payment ID: ' . $id);
+
             $_SESSION['message'] = "Status updated successfully.";
             $_SESSION['status'] = "success"; // Success icon for SweetAlert
         } else {
@@ -37,6 +41,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_payment'])) {
     } catch (Exception $e) {
         // Roll back the transaction on error
         $pdo->rollBack();
+
+        // Log the error action
+        logAction($pdo, 'update payment status error', 'Failed to update payment status for payment ID: ' . $id . '. Error: ' . $e->getMessage());
+
         $_SESSION['message'] = "Failed to update status: " . $e->getMessage();
         $_SESSION['status'] = "error"; // Error icon for SweetAlert
     }
