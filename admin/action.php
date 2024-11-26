@@ -44,6 +44,3 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_payment'])) {
     header("Location: payments.php");
     exit;
 }
-?>
-
-?>

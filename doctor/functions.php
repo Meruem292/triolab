@@ -326,13 +326,13 @@ function calendarWeekShowsDoctor()
                     // Assign colors based on status directly
                     var status = info.event.extendedProps.status;
                     if (status === 'Completed') {
-                        info.el.style.backgroundColor = 'green';
+                        info.el.style.backgroundColor = '#8FD14F';
                     } else if (status === 'Pending') {
                         var appointmentTime = new Date(info.event.start);
                         var now = new Date();
 
                         if (appointmentTime < now) {
-                            info.el.style.backgroundColor = 'red'; // Expired
+                            info.el.style.backgroundColor = '#FF6600'; // Expired
                         } else {
                             info.el.style.backgroundColor = 'blue'; // Pending and not expired
                         }
@@ -451,13 +451,13 @@ function calendarMonthShowsDoctor()
                     // Assign colors based on status directly
                     var status = info.event.extendedProps.status;
                     if (status === 'Completed') {
-                        info.el.style.backgroundColor = 'green'; // Green for Completed
+                        info.el.style.backgroundColor = '#8FD14F'; // Green for Completed
                     } else if (status === 'Pending') {
                         var appointmentTime = new Date(info.event.start);
                         var now = new Date();
 
                         if (appointmentTime < now) {
-                            info.el.style.backgroundColor = 'red'; // Red for expired Pending
+                            info.el.style.backgroundColor = '#FF6600'; // Red for expired Pending
                         } else {
                             info.el.style.backgroundColor = 'blue'; // Blue for Pending and not expired
                         }
@@ -559,4 +559,20 @@ function getTotalAppointmentsByDoctor($doctorId)
         echo "Error: " . $e->getMessage();
         return 0;
     }
+}
+
+function getDoctor($pdo, $doctorId)
+{
+    try {
+        $query = $pdo->prepare("SELECT * FROM doctor WHERE employee_id = :doctorId");
+        $query->bindParam(':doctorId', $doctorId, PDO::PARAM_INT);
+        $query->execute();
+        $result = $query->fetch(PDO::FETCH_ASSOC);
+
+        return $result;
+    } catch (PDOException $e) {
+        // Handle any database errors
+        return null;
+    }
+
 }

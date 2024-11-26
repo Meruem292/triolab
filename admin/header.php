@@ -19,13 +19,13 @@
                 </div>
 
                 <div class="dropdown topbar-head-dropdown ms-1 header-item" id="notificationDropdown">
-                    <button type="button" class="btn btn-icon btn-topbar material-shadow-none btn-ghost-secondary rounded-circle" id="page-header-notifications-dropdown" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-haspopup="true" aria-expanded="false">
+                    <!-- <button type="button" class="btn btn-icon btn-topbar material-shadow-none btn-ghost-secondary rounded-circle" id="page-header-notifications-dropdown" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-haspopup="true" aria-expanded="false">
                         <i class='bx bx-bell fs-22'></i>
                         <span class="position-absolute topbar-badge fs-10 translate-middle badge rounded-pill bg-danger">0<span class="visually-hidden">unread messages</span></span>
-                    </button>
+                    </button> -->
                     <div class="dropdown-menu dropdown-menu-lg dropdown-menu-end p-0" aria-labelledby="page-header-notifications-dropdown">
                         <div class="dropdown-head bg-primary bg-pattern rounded-top">
-                            <div class="p-3">
+                            <!-- <div class="p-3">
                                 <div class="row align-items-center">
                                     <div class="col">
                                         <h6 class="m-0 fs-16 fw-semibold text-white"> Notifications </h6>
@@ -34,9 +34,9 @@
                                         <span class="badge bg-light text-body fs-13"> 0 New</span>
                                     </div>
                                 </div>
-                            </div>
+                            </div> -->
 
-                            <div class="px-2 pt-2">
+                            <!-- <div class="px-2 pt-2">
                                 <ul class="nav nav-tabs dropdown-tabs nav-tabs-custom" data-dropdown-tabs="true" id="notificationItemsTab" role="tablist">
                                     <li class="nav-item waves-effect waves-light">
                                         <a class="nav-link active" data-bs-toggle="tab" href="#all-noti-tab" role="tab" aria-selected="true">
@@ -54,7 +54,7 @@
                                         </a>
                                     </li>
                                 </ul>
-                            </div>
+                            </div> -->
 
                         </div>
 
@@ -280,29 +280,28 @@
                         </div>
                     </div>
                 </div>
-
+                <?php
+                $admin_id = $_SESSION['user_id'];
+                $selectAdmin = $pdo->query("SELECT * FROM admin WHERE id = '$admin_id'");
+                $fetchAdmin = $selectAdmin->fetch(PDO::FETCH_ASSOC);
+                
+                
+                ?>
                 <div class="dropdown ms-sm-3 header-item topbar-user">
                     <button type="button" class="btn material-shadow-none" id="page-header-user-dropdown" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                         <span class="d-flex align-items-center">
-                            <img class="rounded-circle header-profile-user" src="assets/images/admin.png" alt="Header Avatar">
+                            <img class="rounded-circle header-profile-user" src="assets/images/dummy.png"  alt="Header Avatar">
                             <span class="text-start ms-xl-2">
-                                <span class="d-none d-xl-inline-block ms-1 fw-medium user-name-text">Jane Dela Cruz</span>
-                                <span class="d-none d-xl-block ms-1 fs-12 user-name-sub-text">Admin</span>
+                                <span class="d-none d-xl-inline-block ms-1 fw-medium user-name-text">Admin</span>
+                                <span class="d-none d-xl-block ms-1 fs-12 user-name-sub-text"></span>
                             </span>
                         </span>
                     </button>
                     <div class="dropdown-menu dropdown-menu-end">
                         <!-- item-->
-                        <h6 class="dropdown-header">Welcome Jane!</h6>
-                        <a class="dropdown-item" href="messages.php">
-                            <!-- <i class="mdi mdi-message-text-outline text-muted fs-16 align-middle me-1"></i>  -->
-                            <span class="align-middle">Messages</span></a>
-
-                        <form action="" method="post">
-                            <button class="btn btn-backup" type="submit" name="backup">
-                                <i class="fa fa-database"></i>Back up database
-                            </button>
-                        </form>
+                        <h6 class="dropdown-header">Welcome Admin!</h6>
+                        <a class="dropdown-item" href="profile.php"><i class="mdi mdi-account-circle text-muted fs-16 align-middle me-1"></i> <span class="align-middle">Profile</span></a>
+                        <a class="dropdown-item" href="messages.php"><i class="mdi mdi-message-text-outline text-muted fs-16 align-middle me-1"></i> <span class="align-middle">Messages</span></a>
                         <div class="dropdown-divider"></div>
                         <a class="dropdown-item" href="logout.php"><i class="mdi mdi-logout text-muted fs-16 align-middle me-1"></i> <span class="align-middle" data-key="t-logout">Logout</span></a>
                     </div>
@@ -311,22 +310,3 @@
         </div>
     </div>
 </header>
-
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        <?php if ($backupStatus): ?>
-            Swal.fire({
-                icon: 'success',
-                title: 'Backup Successful',
-                text: 'The database has been backed up successfully.',
-            });
-        <?php else: ?>
-            Swal.fire({
-                icon: 'error',
-                title: 'Backup Failed',
-                text: 'There was an error backing up the database.',
-            });
-        <?php endif; ?>
-    });
-</script>

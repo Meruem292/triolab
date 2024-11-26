@@ -34,7 +34,7 @@ if (isset($_POST['add_doctor'])) {
     $username = htmlspecialchars($_POST['username']);
     $email = htmlspecialchars($_POST['email']);
     $department_id = $_POST['department_id']; // Using department_id now
-    $password = hash($_POST['username'],PASSWORD_DEFAULT); // No hashing as per requirement
+    $password = hash($_POST['username'], PASSWORD_DEFAULT); // No hashing as per requirement
 
     $checkQuery = $pdo->prepare("SELECT * FROM doctor WHERE email = :email OR username = :username");
     $checkQuery->bindParam(':email', $email);
@@ -247,6 +247,7 @@ if (isset($_POST['submit_medical_record'])) {
     $patient_id = $_POST['patient_id'];  // Assuming you have patient_id from your form
     $diagnosis = $_POST['diagnosis'];
     $treatment = $_POST['treatment'];
+    $prescription = $_POST['prescription'];
     $record_date = $_POST['record_date'];
 
     // Check if the patient exists by their 'id'
@@ -264,8 +265,8 @@ if (isset($_POST['submit_medical_record'])) {
 
     // Insert the medical record with the correct patient_id (which is 'id' from the patient table)
     try {
-        $stmt = $pdo->prepare("INSERT INTO medical_records (patient_id, record_date, diagnosis, treatment) VALUES (?, ?, ?, ?)");
-        $stmt->execute([$patient_id, $record_date, $diagnosis, $treatment]);
+        $stmt = $pdo->prepare("INSERT INTO medical_records (patient_id, record_date, diagnosis, treatment, prescription) VALUES (?, ?, ?, ?, ?)");
+        $stmt->execute([$patient_id, $record_date, $diagnosis, $treatment, $prescription]);
 
         logAction($pdo, 'Submit medical record', 'Medical record added for patient ID: ' . $patient_id);
         $_SESSION['message'] = "Medical record added successfully!";
@@ -283,16 +284,18 @@ if (isset($_POST['update_medical_record'])) {
     $medical_id = $_POST['medical_id'];
     $diagnosis = $_POST['diagnosis'];
     $treatment = $_POST['treatment'];
+    $prescription = $_POST['prescription'];
     $record_date = $_POST['record_date'];
 
     // Update medical record
-    $query = "UPDATE medical_records SET diagnosis = :diagnosis, treatment = :treatment, record_date = :record_date 
+    $query = "UPDATE medical_records SET diagnosis = :diagnosis, treatment = :treatment, record_date = :record_date , prescription = :prescription
               WHERE id = :medical_id";
     $stmt = $pdo->prepare($query);
     $stmt->execute([
         ':diagnosis' => $diagnosis,
         ':treatment' => $treatment,
         ':record_date' => $record_date,
+        ':prescription' => $prescription,
         ':medical_id' => $medical_id
     ]);
 
@@ -302,28 +305,6 @@ if (isset($_POST['update_medical_record'])) {
 }
 
 
-if (isset($_POST['update_medical_record'])) {
-    $medical_id = $_POST['medical_id'];
-    $diagnosis = $_POST['diagnosis'];
-    $treatment = $_POST['treatment'];
-    $record_date = $_POST['record_date'];
-
-    // Update medical record
-    $query = "UPDATE medical_records SET diagnosis = :diagnosis, treatment = :treatment, record_date = :record_date 
-              WHERE id = :medical_id";
-    $stmt = $pdo->prepare($query);
-    $stmt->execute([
-        ':diagnosis' => $diagnosis,
-        ':treatment' => $treatment,
-        ':record_date' => $record_date,
-        ':medical_id' => $medical_id
-    ]);
-
-    logAction($pdo, 'Update medical record', 'Medical record updated with ID: ' . $medical_id);
-    $_SESSION['message'] = "Medical record updated successfully!";
-    $_SESSION['status'] = "success";
-    header("Location: ../medical-records.php");
-}
 
 if (isset($_POST['upload_payment_method'])) {
     $method_id = $_POST['method_id'];  // Payment method ID
@@ -443,7 +424,7 @@ if (isset($_POST['add_payment_method'])) {
     header("Location: ../payments.php");
 }
 
-if(isset($_POST['add_department'])){
+if (isset($_POST['add_department'])) {
 
     $department = $_POST['department'];
     $stmt = $pdo->prepare('INSERT INTO departments (name) VALUES (?)');
@@ -454,7 +435,7 @@ if(isset($_POST['add_department'])){
     header("Location: ../department.php");
 }
 
-if(isset($_POST['edit_department'])){
+if (isset($_POST['edit_department'])) {
     $department_id = $_POST['department_id'];
     $department = $_POST['department'];
     $stmt = $pdo->prepare('UPDATE departments SET name = ? WHERE id = ?');
@@ -465,6 +446,44 @@ if(isset($_POST['edit_department'])){
     $_SESSION['status'] = "success";
     header("Location: ../department.php");
 }
-?>
 
 
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_profile'])) {
+    try {
+        // Get the form data
+        $id = $_SESSION['user_id']; // Assuming the admin ID is stored in the session
+        $username = $_POST['username'];
+        $password = $_POST['password']; // Password is optional
+
+        // Initialize the query and parameters array
+        $query = "UPDATE admin SET username = :username";
+        $params = [':username' => $username, ':id' => $id];
+
+        // Check if password is provided and include it in the query
+        if (!empty($password)) {
+            $hashed_password = password_hash($password, PASSWORD_DEFAULT); // Hash the password
+            $query .= ", password = :password";
+            $params[':password'] = $hashed_password;
+        }
+
+        // Complete the query
+        $query .= " WHERE id = :id";
+
+        // Prepare and execute the statement
+        $stmt = $pdo->prepare($query);
+        $stmt->execute($params);
+
+        // Set success message
+        $_SESSION['message'] = "Profile updated successfully!";
+        $_SESSION['status'] = "success";
+    } catch (Exception $e) {
+        // Log the error and set error message
+        error_log("Error updating admin profile: " . $e->getMessage());
+        $_SESSION['message'] = "An error occurred while updating the profile.";
+        $_SESSION['status'] = "error";
+    }
+
+    // Redirect after setting the session message
+    header("Location: ../settings.php");
+    exit();
+}

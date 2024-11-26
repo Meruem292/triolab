@@ -205,9 +205,9 @@ $admin_id = $_SESSION['user_id'];
                         <li class="nav-item" role="presentation">
                             <button class="nav-link active" id="payment-modes-tab" data-bs-toggle="tab" data-bs-target="#payment-modes" type="button" role="tab" aria-controls="payment-modes" aria-selected="true">Backup and Restore</button>
                         </li>
-                        <li class="nav-item" role="presentation">
+                        <!-- <li class="nav-item" role="presentation">
                             <button class="nav-link" id="payment-receipts-tab" data-bs-toggle="tab" data-bs-target="#payment-receipts" type="button" role="tab" aria-controls="payment-receipts" aria-selected="false">Backup Archives</button>
-                        </li>
+                        </li> -->
                     </ul>
 
 

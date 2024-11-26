@@ -318,13 +318,13 @@ function calendarWeekShowsAdmin()
                     // Assign colors based on status directly
                     var status = info.event.extendedProps.status;
                     if (status === 'Completed') {
-                        info.el.style.backgroundColor = 'green';
+                        info.el.style.backgroundColor = '#8FD14F'; // Green
                     } else if (status === 'Pending') {
                         var appointmentTime = new Date(info.event.start);
                         var now = new Date();
 
                         if (appointmentTime < now) {
-                            info.el.style.backgroundColor = 'red'; // Expired
+                            info.el.style.backgroundColor = '#FF6600    '; // Expired
                         } else {
                             info.el.style.backgroundColor = 'blue'; // Pending and not expired
                         }
@@ -455,13 +455,13 @@ function calendarMonthShowsAdmin()
                     // Assign colors based on status directly
                     var status = info.event.extendedProps.status;
                     if (status === 'Completed') {
-                        info.el.style.backgroundColor = 'green';
+                        info.el.style.backgroundColor = '#8FD14F';
                     } else if (status === 'Pending') {
                         var appointmentTime = new Date(info.event.start);
                         var now = new Date();
 
                         if (appointmentTime < now) {
-                            info.el.style.backgroundColor = 'red'; // Expired
+                            info.el.style.backgroundColor = '#FF6600'; // Expired
                         } else {
                             info.el.style.backgroundColor = 'blue'; // Pending and not expired
                         }
