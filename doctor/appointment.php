@@ -336,8 +336,8 @@ ORDER BY appointment.date_added ASC;
                                                                                 data-status="<?= htmlspecialchars($row['appointment_status']); ?>">
                                                                                 <i class="ri-edit-fill align-bottom me-2 text-muted"></i> Update
                                                                             </a>
-                                                                            <a href="../doctor/docs/hematology.php?appointmentId=<?= $row['appointment_id']; ?>" class="btn btn-info btn-sm">
-                                                                                <i class="ri-printer-fill align-bottom me-2"></i> Report
+                                                                            <a href="../doctor/docs/document_layout.php?appointmentId=<?= $row['appointment_id']; ?>" class="btn btn-info btn-sm">
+                                                                                <i class="ri-printer-fill align-bottom me-2"></i> Edit PDF
                                                                             </a>
 
                                                                         </td>
@@ -516,8 +516,8 @@ ORDER BY appointment.date_added ASC;
                                                                                 data-status="<?= htmlspecialchars($row['appointment_status']); ?>">
                                                                                 <i class="ri-edit-fill align-bottom me-2 text-muted"></i> Update
                                                                             </a>
-                                                                            <a href="../doctor/docs/hematology.php?appointmentId=<?= $row['appointment_id']; ?>" class="btn btn-info btn-sm">
-                                                                                <i class="ri-printer-fill align-bottom me-2"></i> Report
+                                                                            <a href="../doctor/docs/document_layout.php?appointmentId=<?= $row['appointment_id']; ?>" class="btn btn-info btn-sm">
+                                                                                <i class="ri-printer-fill align-bottom me-2"></i> Edit PDF
                                                                             </a>
 
                                                                         </td>

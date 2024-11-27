@@ -28,7 +28,7 @@ CREATE TABLE `appointment` (
 ) ENGINE=InnoDB AUTO_INCREMENT=58 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 INSERT INTO `appointment` (id, service_id, patient_id, appointment_date, appointment_slot_id, appointment_time, doctor_id, department_id, selectedPayment, medical, status, paid, date_added, is_archive) VALUES ('55', '1', '10', '2024-11-25', '2', '10:29', 'TRLB6874', '1', '3', 'fracture', 'Completed', 'Approved', '2024-11-24 16:29:45', '0');
-INSERT INTO `appointment` (id, service_id, patient_id, appointment_date, appointment_slot_id, appointment_time, doctor_id, department_id, selectedPayment, medical, status, paid, date_added, is_archive) VALUES ('56', '1', '10', '2024-11-25', '4', '13:04', 'TRLB7292', '3', '3', 'fracture', 'Pending', 'Pending', '2024-11-25 06:04:56', '0');
+INSERT INTO `appointment` (id, service_id, patient_id, appointment_date, appointment_slot_id, appointment_time, doctor_id, department_id, selectedPayment, medical, status, paid, date_added, is_archive) VALUES ('56', '2', '10', '2024-11-25', '4', '13:04', 'TRLB7292', '3', '3', 'fracture', 'Pending', 'Pending', '2024-11-25 06:04:56', '0');
 INSERT INTO `appointment` (id, service_id, patient_id, appointment_date, appointment_slot_id, appointment_time, doctor_id, department_id, selectedPayment, medical, status, paid, date_added, is_archive) VALUES ('57', '1', '10', '2024-11-25', '2', '13:46', 'TRLB6874', '1', '3', 'dadczcxz', 'Pending', 'Pending', '2024-11-25 14:47:02', '0');
 
 DROP TABLE IF EXISTS `appointment_slots`;
@@ -119,7 +119,7 @@ CREATE TABLE `medical_records` (
   `diagnosis` text NOT NULL,
   `treatment` text NOT NULL,
   `prescription` varchar(255) NOT NULL,
-  `document_path` varchar(255) NOT NULL,
+  `content` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL CHECK (json_valid(`content`)),
   `status` varchar(255) NOT NULL DEFAULT 'Pending',
   `record_date` date NOT NULL DEFAULT current_timestamp(),
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
@@ -128,11 +128,11 @@ CREATE TABLE `medical_records` (
   KEY `fk_patient_id` (`patient_id`),
   CONSTRAINT `fk_patient_id` FOREIGN KEY (`patient_id`) REFERENCES `patient` (`id`) ON DELETE CASCADE,
   CONSTRAINT `medical_records_ibfk_1` FOREIGN KEY (`patient_id`) REFERENCES `patient` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=14 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=16 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
-INSERT INTO `medical_records` (id, patient_id, appointment_id, doctor_id, diagnosis, treatment, prescription, document_path, status, record_date, created_at, updated_at) VALUES ('11', '10', '55', 'TRLB6874', 'Diagnosis', 'Treatment', 'Prescription', '', 'Completed', '2024-11-26', '2024-11-24 23:29:45', '2024-11-24 23:52:13');
-INSERT INTO `medical_records` (id, patient_id, appointment_id, doctor_id, diagnosis, treatment, prescription, document_path, status, record_date, created_at, updated_at) VALUES ('12', '10', '56', 'TRLB6874', 'diagnossis', 'treatment', '', '', 'Pending', '2024-11-26', '2024-11-25 13:04:56', '2024-11-26 16:42:05');
-INSERT INTO `medical_records` (id, patient_id, appointment_id, doctor_id, diagnosis, treatment, prescription, document_path, status, record_date, created_at, updated_at) VALUES ('13', '10', '57', '', '', '', '', '', 'Pending', '2024-11-26', '2024-11-25 21:47:02', '2024-11-25 21:47:02');
+INSERT INTO `medical_records` (id, patient_id, appointment_id, doctor_id, diagnosis, treatment, prescription, content, status, record_date, created_at, updated_at) VALUES ('11', '10', '55', 'TRLB6874', 'Diagnosis', 'Treatment', 'Prescription', '{\"hemoglobin\":null,\"hematocrit\":null,\"wbc_count\":null,\"rbc_count\":null,\"segmenters\":null,\"lymphocytes\":null,\"eosinophils\":null,\"monocytes\":null,\"platelet_count\":null,\"blood_type\":null}', 'Completed', '2024-11-26', '2024-11-24 23:29:45', '2024-11-27 22:57:17');
+INSERT INTO `medical_records` (id, patient_id, appointment_id, doctor_id, diagnosis, treatment, prescription, content, status, record_date, created_at, updated_at) VALUES ('12', '10', '56', 'TRLB6874', 'diagnossis', 'treatment', '', '{\"date\":\"2024-11-27\",\"x_ray_number\":\"X-ray No. 24 - 3\",\"patient_name\":\"ROMERO, MHERWEN WIEL\",\"age_sex\":\"\",\"address\":\"City of Tagaytay\",\"request_by\":\"OP\",\"examination\":\"CHSET PA\",\"findings\":\"Heart is not enlarge\",\"impression\":\"Normal Chest Study\",\"doctor_name\":\"ERWIN PETIL\",\"doctor_title\":\"MD\",\"radiologist_signature\":\"ERWIN PETIL, MD\",\"radiologist_position\":\"Radiologist\"}', 'Pending', '2024-11-26', '2024-11-25 13:04:56', '2024-11-28 00:37:34');
+INSERT INTO `medical_records` (id, patient_id, appointment_id, doctor_id, diagnosis, treatment, prescription, content, status, record_date, created_at, updated_at) VALUES ('15', '10', '57', 'TRLB6874', '', '', '', '{\"hemoglobin\":\"2\",\"hematocrit\":\"2\",\"wbc_count\":\"2\",\"rbc_count\":\"2\",\"segmenters\":\"2\",\"lymphocytes\":\"2\",\"eosinophils\":\"2\",\"monocytes\":\"2\",\"platelet_count\":\"2\",\"blood_type\":\"F\"}', 'Pending', '2024-11-27', '2024-11-27 23:07:29', '2024-11-27 23:30:43');
 
 DROP TABLE IF EXISTS `patient`;
 CREATE TABLE `patient` (
