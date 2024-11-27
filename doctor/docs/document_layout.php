@@ -354,7 +354,7 @@ input[type="text"] {
 
 
         <?php switch ($appointment['service_id']) {
-            case 1: ?>
+            case 3: ?>
                 <div class="flex justify-between">
                     <!-- on the left -->
                     <div>
@@ -452,13 +452,47 @@ input[type="text"] {
                             </div>
                         </div>
 
-                <?php break;
-        } ?>
+                    <?php break;
+                case 1: ?>
+                        <form action="" method="POST" enctype="multipart/form-data">
+                            <input type="hidden" name="type" value="xray">
+                            <input type="hidden" name="appointment_id" value="<?= $appointment_id ?>">
+                            <h5 class="text-lg font-bold text-center mt-4 text-zinc-900 dark:text-zinc-100">ROENTGENOLOGICAL REPORT</h5>
+                            <div class="row">
+                                <div class="col-9">
+
+                                </div>
+                                <div class="col-auto">
+                                    <p>Date: <?= date('Y-m-d') ?></p>
+                                    <p>X-ray No. 24 - <?= $appointment_count_by_services ?></p>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-12">
+                                    <p>Name: <strong><?= strtoupper($patient['lastname']) . ", " . strtoupper($patient['firstname']) ?></strong></p>
+                                    <p>Age/Sex: <strong></strong></p>
+                                    <p>Address: <?= $patient['city'] ?></p>
+                                    <p>Requsted by: <input type="text" name="request_by" value="<?= $request_by ?>"></p>
+                                    <br>
+                                    <p>Kind of Examination: <input type="text" name="examination" value="<?= $examination ?>"></p>
+                                    <p class="mt-3"> Radiographic Findings:</p>
+                                    <textarea class="mb-3 w-100" name="findings" id="findings" value="<?= $findings ?>"></textarea>
+                                    <p class="mb-2">IMPRESSION: </p>
+                                    <textarea class="w-100" name="impression" id="impression" value="<?= $impression ?>"></textarea>
+                                </div>
+                            </div>
+                            <div class="row mt-5 mb-5">
+                                <div class="col-8"></div>
+                                <div class="col-4">
+                                    <p class="mr-5"><strong><ins><?= strtoupper($doctor['firstname']) . ' ' . strtoupper($doctor['lastname']) . ', ' ?> MD</ins></strong></p>
+                                    <p style="margin-left: 20%;">Radiologist</p>
+                                </div>
+                            </div>
+
+                    <?php break;
+            } ?>
 
     </div>
-
-    <!-- Action Buttons -->
-
 
     <!-- Your existing HTML content -->
     <div class="action-buttons noprint">
