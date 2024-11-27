@@ -2,32 +2,84 @@
 session_start();
 require_once 'db.php';
 
-// if (!isset($_SESSION['user_id'])) {
-//     header('Location: ../index.php');
-//     exit();
-// }
+$appointment_id = $_GET['appointmentId'] ?? null;
 
-$id = $_GET['appointmentId'] ?? null;
+if (!$appointment_id) {
+    die('Invalid appointment ID.');
+}
 
+// Fetch appointment details
 $query = 'SELECT * FROM appointment WHERE id = :id';
 $stmt = $pdo->prepare($query);
-$stmt->execute(['id' => $id]);
+$stmt->execute(['id' => $appointment_id]);
 $appointment = $stmt->fetch();
 
 if (!$appointment) {
     die('Appointment not found.');
 }
 
+// Fetch patient details
 $query = 'SELECT * FROM patient WHERE id = :id';
 $stmt = $pdo->prepare($query);
 $stmt->execute(['id' => $appointment['patient_id']]);
 $patient = $stmt->fetch();
 
+// Fetch doctor details
 $query = 'SELECT * FROM doctor WHERE employee_id = :id';
 $stmt = $pdo->prepare($query);
 $stmt->execute(['id' => $appointment['doctor_id']]);
 $doctor = $stmt->fetch();
 
+// Check if form is submitted
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Define the directory to save uploaded files
+    $targetDir = "uploads/medical_reports/";
+
+    // Ensure the directory exists
+    if (!is_dir($targetDir)) {
+        mkdir($targetDir, 0777, true);
+    }
+
+    // Get file details
+    $fileName = basename($_FILES['document']['name']);
+    $targetFilePath = $targetDir . uniqid() . '_' . $fileName; // Ensure unique file name
+    $fileType = strtolower(pathinfo($targetFilePath, PATHINFO_EXTENSION));
+
+    // Allowed file types
+    $allowedTypes = ['pdf', 'doc', 'docx', 'jpg', 'jpeg', 'png'];
+
+    if (in_array($fileType, $allowedTypes)) {
+        // Attempt to upload file
+        if (move_uploaded_file($_FILES['document']['tmp_name'], $targetFilePath)) {
+            try {
+                // Begin transaction
+                $pdo->beginTransaction();
+
+                // Update the document_path for the given appointment ID
+                $stmt = $pdo->prepare("UPDATE appointment SET document_path = :document_path WHERE id = :appointment_id");
+                $stmt->execute([
+                    ':document_path' => $targetFilePath,
+                    ':appointment_id' => $appointment_id
+                ]);
+
+                // Log the action (requires logAction function)
+                logAction($pdo, 'Upload', "Document uploaded for appointment ID $appointment_id");
+
+                // Commit transaction
+                $pdo->commit();
+
+                echo "<p class='text-success'>File uploaded and path updated successfully.</p>";
+            } catch (PDOException $e) {
+                $pdo->rollBack();
+                echo "<p class='text-danger'>Database error: " . htmlspecialchars($e->getMessage()) . "</p>";
+            }
+        } else {
+            echo "<p class='text-danger'>File upload failed.</p>";
+        }
+    } else {
+        echo "<p class='text-warning'>Invalid file type. Only PDF, DOC, DOCX, JPG, and PNG files are allowed.</p>";
+    }
+}
 ?>
 
 
@@ -242,23 +294,24 @@ input[type="text"] {
 
 
         <div class="flex justify-between mt-2" style="margin-bottom:200px;">
+
             <!-- on the left -->
             <div style="text-align: right;">
                 <h2 class="text-m font-bold text-zinc-900 dark:text-zinc-100">Complete Blood Count</h2>
-                <p>Hemoglobin: <input type="text" name="hemoglobin" ></p>
-                <p>Hematocrit: <input type="text" name="hematocrit" ></p>
-                <p>WBC Count: <input type="text" name="wbc_count" ></p>
-                <p>RBC Count: <input type="text" name="rbc_count" ></p>
+                <p>Hemoglobin: <input type="text" name="hemoglobin"></p>
+                <p>Hematocrit: <input type="text" name="hematocrit"></p>
+                <p>WBC Count: <input type="text" name="wbc_count"></p>
+                <p>RBC Count: <input type="text" name="rbc_count"></p>
                 <h2 class="text-m font-bold text-zinc-900 dark:text-zinc-100">Differential Count</h2>
-                <p>Segmenters: <input type="text" name="segmenters" ></p>
-                <p>Lymphocytes: <input type="text" name="lymphocytes" ></p>
-                <p>Eosinophils: <input type="text" name="eosinophils" ></p>
-                <p>Monocytes: <input type="text" name="monocytes" ></p>
-                <p>Platelet Count: <input type="text" name="platelet_count" ></p>
+                <p>Segmenters: <input type="text" name="segmenters"></p>
+                <p>Lymphocytes: <input type="text" name="lymphocytes"></p>
+                <p>Eosinophils: <input type="text" name="eosinophils"></p>
+                <p>Monocytes: <input type="text" name="monocytes"></p>
+                <p>Platelet Count: <input type="text" name="platelet_count"></p>
                 <h2 class="text-m font-bold text-zinc-900 dark:text-zinc-100">Others</h2>
-                <p>BLOOD TYPE: <input type="text" name="blood_type" ></p>
+                <p>BLOOD TYPE: <input type="text" name="blood_type"></p>
                 <br>
-                <p><?= strtoupper($doctor['firstname']). ' ' . strtoupper($doctor['lastname']). ', '?> RMT</p>
+                <p><?= strtoupper($doctor['firstname']) . ' ' . strtoupper($doctor['lastname']) . ', ' ?> RMT</p>
             </div>
 
             <!-- on the right -->
@@ -281,12 +334,15 @@ input[type="text"] {
             </div>
         </div>
 
+
     </div>
 
     <!-- Action Buttons -->
     <div class="action-buttons noprint">
-        <button type="button" class="btn btn-success" onclick="window.print()">Print</button>
-        <button type="button" class="btn btn-danger" onclick="window.history.back()">Close</button>
+        <form action="POST">
+            <button type="submit" class="btn btn-success" name="submit_findings">Submit findings</button>
+            <button type="button" class="btn btn-danger" onclick="window.history.back()">Close</button>
+        </form>
     </div>
 
 

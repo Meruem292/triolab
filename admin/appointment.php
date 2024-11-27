@@ -522,7 +522,7 @@ ORDER BY appointment.date_added ASC;
                                                                                 data-appointment-id="<?= htmlspecialchars($row['appointment_id']); ?>">
                                                                                 <i class="ri-delete-bin-fill align-bottom me-2"></i> Archive
                                                                             </a>
-                                                                            <a href="javascript:void(0);" class="btn btn-info btn-sm" onclick="printMedicalRecord(<?php echo $row['appointment_id'] ?>)">
+                                                                            <a href="../assets/docs/hematology.php?appointmentId=<?= $row['appointment_id']; ?>" class="btn btn-info btn-sm">
                                                                                 <i class="ri-printer-fill align-bottom me-2"></i> Print Medical Record
                                                                             </a>
                                                                         </td>

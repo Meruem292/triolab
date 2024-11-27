@@ -336,6 +336,9 @@ ORDER BY appointment.date_added ASC;
                                                                                 data-status="<?= htmlspecialchars($row['appointment_status']); ?>">
                                                                                 <i class="ri-edit-fill align-bottom me-2 text-muted"></i> Update
                                                                             </a>
+                                                                            <a href="../doctor/docs/hematology.php?appointmentId=<?= $row['appointment_id']; ?>" class="btn btn-info btn-sm">
+                                                                                <i class="ri-printer-fill align-bottom me-2"></i> Report
+                                                                            </a>
 
                                                                         </td>
                                                                     </tr>
@@ -512,6 +515,9 @@ ORDER BY appointment.date_added ASC;
                                                                                 data-payment-status="<?= htmlspecialchars($paymentStatus); ?>"
                                                                                 data-status="<?= htmlspecialchars($row['appointment_status']); ?>">
                                                                                 <i class="ri-edit-fill align-bottom me-2 text-muted"></i> Update
+                                                                            </a>
+                                                                            <a href="../doctor/docs/hematology.php?appointmentId=<?= $row['appointment_id']; ?>" class="btn btn-info btn-sm">
+                                                                                <i class="ri-printer-fill align-bottom me-2"></i> Report
                                                                             </a>
 
                                                                         </td>
