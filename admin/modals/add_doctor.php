@@ -30,11 +30,8 @@ $departments = getDepartments();
                     <!-- Dynamically generated Employee ID -->
                     <input type="text" class="form-control" name="employee_id" value="<?= generateEmployeeID('TRLB') ?>" readonly required placeholder="Auto-generated employee ID">
                 </div>
-                <div class="mb-3">
-                    <label class="form-label">Employee ID <span class="text-danger">*</span></label>
-                    <!-- Dynamically generated Employee ID -->
-                    <input type="text" class="form-control" name="employee_id" value="<?= generateEmployeeID('TRLB') ?>" readonly required placeholder="Auto-generated employee ID">
-                </div>
+                
+
                 <div class="mb-3">
                     <label class="form-label">Username <span class="text-danger">*</span></label>
                     <input type="text" class="form-control" name="username" required placeholder="Enter username">

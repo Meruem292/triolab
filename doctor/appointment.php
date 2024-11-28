@@ -271,8 +271,8 @@ LEFT JOIN payment_receipts
 LEFT JOIN medical_records 
     ON appointment.id = medical_records.appointment_id  -- Match medical records by appointment ID
 WHERE appointment.is_archive = 0 
-    AND appointment.status = 'Pending'
-    AND medical_records.status = 'Pending'
+AND appointment.status = 'Pending'
+    AND medical_records.status = 'Pending' 
     AND appointment.doctor_id = '$user_id'
 ORDER BY appointment.date_added ASC;
         ");
@@ -516,7 +516,7 @@ ORDER BY appointment.date_added ASC;
                                                                                 data-status="<?= htmlspecialchars($row['appointment_status']); ?>">
                                                                                 <i class="ri-edit-fill align-bottom me-2 text-muted"></i> Update
                                                                             </a>
-                                                                            <a href="../doctor/docs/document_layout.php?appointmentId=<?= $row['appointment_id']; ?>" class="btn btn-info btn-sm">
+                                                                            <a href="../doctor/docs/printing_layout.php?appointmentId=<?= $row['appointment_id']; ?>" class="btn btn-info btn-sm">
                                                                                 <i class="ri-printer-fill align-bottom me-2"></i> Edit PDF
                                                                             </a>
 

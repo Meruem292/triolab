@@ -57,18 +57,42 @@ if (isset($_POST['edit_appointment'])) {
             $insertReceipt->execute([$appointmentId, '', $amount, 'Pending']); // Default values for missing fields
         }
 
+        // Check if a medical record already exists for the appointment
+        $checkMedicalRecord = $pdo->prepare("SELECT id FROM medical_records WHERE appointment_id = ?");
+        $checkMedicalRecord->execute([$appointmentId]);
+        $existingMedicalRecord = $checkMedicalRecord->fetch(PDO::FETCH_ASSOC);
+
+        if ($existingMedicalRecord) {
+            // Update the medical record if it exists
+            $updateMedicalRecord = $pdo->prepare(
+                "UPDATE medical_records 
+                 SET doctor_id = ?, updated_at = NOW() 
+                 WHERE appointment_id = ?"
+            );
+            $updateMedicalRecord->execute([$doctor, $appointmentId]);
+        } else {
+            // Insert a new medical record if it doesn't exist
+            $insertMedicalRecord = $pdo->prepare(
+                "INSERT INTO medical_records (patient_id, appointment_id, doctor_id, status, record_date, created_at) 
+                 SELECT patient_id, id, ?, 'Pending', NOW(), NOW() 
+                 FROM appointment 
+                 WHERE id = ?"
+            );
+            $insertMedicalRecord->execute([$doctor, $appointmentId]);
+        }
+
         // Commit transaction
         $pdo->commit();
 
         // Set success message
-        $_SESSION['message'] = "Appointment and payment details updated successfully!";
+        $_SESSION['message'] = "Appointment, payment, and medical record details updated successfully!";
         $_SESSION['status'] = "success";
     } catch (Exception $e) {
         // Rollback transaction in case of error
         $pdo->rollBack();
 
         // Set error message
-        $_SESSION['message'] = "Error updating appointment or payment details: " . $e->getMessage();
+        $_SESSION['message'] = "Error updating appointment details: " . $e->getMessage();
         $_SESSION['status'] = "error";
     }
 
@@ -76,6 +100,7 @@ if (isset($_POST['edit_appointment'])) {
     header('Location: ../admin/appointment.php');
     exit();
 }
+
 
 
 

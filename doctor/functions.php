@@ -236,16 +236,33 @@ function calendarWeekShowsDoctor()
         $doctor_id = $_SESSION['user_id']; // Retrieve the logged-in doctor's ID from the session
 
         // Fetch appointments for the logged-in doctor
-        $query = "SELECT a.id, a.appointment_date, a.appointment_time, s.service, 
-                     p.firstname AS patient_firstname, p.lastname AS patient_lastname, 
-                     d.firstname AS doctor_firstname, d.lastname AS doctor_lastname, 
-                     dept.name AS department_name, a.status
-              FROM appointment a
-              LEFT JOIN services s ON a.service_id = s.id
-              LEFT JOIN patient p ON a.patient_id = p.id
-              LEFT JOIN doctor d ON a.doctor_id = d.employee_id
-              LEFT JOIN departments dept ON a.department_id = dept.id
-              WHERE a.is_archive = 0 AND a.doctor_id = :doctor_id"; // Filter by doctor ID
+        $query = "SELECT 
+    a.id, 
+    a.appointment_date, 
+    a.appointment_time, 
+    s.service, 
+    p.firstname AS patient_firstname, 
+    p.lastname AS patient_lastname, 
+    d.firstname AS doctor_firstname, 
+    d.lastname AS doctor_lastname, 
+    dept.name AS department_name, 
+    a.status AS appointment_status, 
+    mr.status AS medical_record_status
+FROM 
+    appointment a
+LEFT JOIN 
+    services s ON a.service_id = s.id
+LEFT JOIN 
+    patient p ON a.patient_id = p.id
+LEFT JOIN 
+    doctor d ON a.doctor_id = d.employee_id
+LEFT JOIN 
+    departments dept ON a.department_id = dept.id
+LEFT JOIN 
+    medical_records mr ON a.id = mr.appointment_id
+WHERE 
+    a.is_archive = 0 
+    AND a.doctor_id = :doctor_id;"; // Filter by doctor ID
 
         $stmt = $pdo->prepare($query);
         $stmt->execute(['doctor_id' => $doctor_id]); // Bind the doctor ID
@@ -270,7 +287,7 @@ function calendarWeekShowsDoctor()
                 'patient_name' => $appointment['patient_firstname'] . ' ' . $appointment['patient_lastname'],
                 'doctor_name' => $appointment['doctor_firstname'] . ' ' . $appointment['doctor_lastname'],
                 'department_name' => $appointment['department_name'],
-                'status' => $appointment['status'],
+                'status' => $appointment['medical_record_status'],
                 'appointment_time' => $appointment['appointment_date'] . ' ' . $appointment['appointment_time']
             ]
         ];
@@ -574,5 +591,4 @@ function getDoctor($pdo, $doctorId)
         // Handle any database errors
         return null;
     }
-
 }

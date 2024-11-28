@@ -295,7 +295,7 @@ input[type="text"] {
                         <!-- on the left -->
                         <div style="text-align: right;">
                             <h6 class="text-m font-bold text-zinc-900 dark:text-zinc-100">Complete Blood Count</h6>
-                            <p>Hemoglobin: <input type="text"  name="hemoglobin" value="<?= $hemoglobin ?>"></p>
+                            <p>Hemoglobin: <input type="text" name="hemoglobin" value="<?= $hemoglobin ?>"></p>
                             <p>Hematocrit: <input type="text" name="hematocrit" value="<?= $hematocrit ?>"></p>
                             <p>WBC Count: <input type="text" name="wbc_count" value="<?= $wbc_count ?>"></p>
                             <p>RBC Count: <input type="text" name="rbc_count" value="<?= $rbc_count ?>"></p>
@@ -347,22 +347,24 @@ input[type="text"] {
                     <div class="row">
                         <div class="col-12">
                             <p>Name: <strong><?= strtoupper($patient['lastname']) . ", " . strtoupper($patient['firstname']) ?></strong></p>
-                            <p>Age/Sex: <strong><?= htmlspecialchars($age_sex) ?></strong></p>
+                            <p><strong>Age/Sex:</strong> <?= $patient['age'] . '/' . $patient['sex'] ?></p>
                             <p>Address: <?= $patient['city'] ?></p>
-                            <p>Requsted by: <input type="text"  style="border:none;" name="request_by" value="<?= htmlspecialchars($request_by) ?>"></p>
+                            <p>Requsted by: <input type="text" name="request_by" value="<?= $request_by ?>"></p>
                             <br>
-                            <p>Kind of Examination: <input type="text"  style="border:none;" name="examination" value="<?= htmlspecialchars($examination) ?>"></p>
+                            <p>Kind of Examination: <input type="text" name="examination" value="<?= $examination ?>"></p>
                             <p class="mt-3"> Radiographic Findings:</p>
-                            <textarea class="mb-3 w-100"  style="border:none;" name="findings" id="findings"><?= htmlspecialchars($findings) ?></textarea>
+
+                            <textarea class="mb-3 w-100" name="findings" id="findings"><?= $findings ?></textarea>
                             <p class="mb-2">IMPRESSION: </p>
-                            <textarea class="w-100"  style="border:none;" name="impression" id="impression"><?= htmlspecialchars($impression) ?></textarea>
+
+                            <textarea class="w-100" name="impression" id="impression"><?= $impression ?></textarea>
                         </div>
                     </div>
                     <div class="row mt-5 mb-5">
-                        <div class="col-8"></div>
-                        <div class="col-4">
+                        <div class="col-6"></div>
+                        <div class="col-6 d-flex flex-column align-items-center">
                             <p class="mr-5"><strong><ins><?= strtoupper($doctor['firstname']) . ' ' . strtoupper($doctor['lastname']) . ', ' ?> MD</ins></strong></p>
-                            <p style="margin-left: 20%;">Radiologist</p>
+                            <p>Radiologist</p>
                         </div>
                     </div>
             <?php break;

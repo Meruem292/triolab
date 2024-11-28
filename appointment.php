@@ -3,7 +3,6 @@ require "db.php";
 session_start();
 include "logAction.php";
 
-
 $user_id = $_SESSION['user_id'];
 if (!isset($_SESSION['user_id'])) {
     header('Location: login.php');
@@ -43,6 +42,7 @@ if (isset($_POST['add_appointment'])) {
     $paid = "Pending";
     $slot = 1;
     $date_added = date('Y-m-d H:i:s');
+    
 
     try {
         // Insert appointment data
@@ -74,15 +74,16 @@ if (isset($_POST['add_appointment'])) {
                     $insertReceipt->execute([$appointment_id, $dbReceiptPath, $date_added, $selectedPayment, $amount, $status]);
 
                     // Update appointment as paid
-                    $updateAppointment = $pdo->prepare("UPDATE `appointment` SET `paid` = `Pending` WHERE `id` = ?");
+                    $updateAppointment = $pdo->prepare("UPDATE `appointment` SET `paid` = 'Pending' WHERE `id` = ?");
                     $updateAppointment->execute([$appointment_id]);
 
                     // update slot appointment_slot
                     $updateAppointmentSlot = $pdo->prepare("UPDATE `appointment_slots` SET `slot` = `slot` - 1 WHERE `id` = ?");
                     $updateAppointmentSlot->execute([$selectedSlot]);
 
-                    $insertMedical = $pdo->prepare("INSERT INTO `medical_records` (`patient_id`, `appointment_id`) VALUES (?, ?)");
-                    $insertMedical->execute([$user_id, $appointment_id]);
+                    // Insert into medical_records with content
+                    $insertMedical = $pdo->prepare("INSERT INTO `medical_records` (`patient_id`, `appointment_id`, `content`) VALUES (?, ?, ?)");
+                    $insertMedical->execute([$user_id, $appointment_id, $content]);
 
                     $_SESSION['message'] = "Appointment booked successfully with payment!";
                     $_SESSION['status'] = "success";
@@ -100,8 +101,9 @@ if (isset($_POST['add_appointment'])) {
             $updateAppointmentSlot = $pdo->prepare("UPDATE `appointment_slots` SET `slot` = `slot` - 1 WHERE `id` = ?");
             $updateAppointmentSlot->execute([$selectedSlot]);
 
-            $insertMedical = $pdo->prepare("INSERT INTO `medical_records` (`patient_id`, `appointment_id`) VALUES (?, ?)");
-            $insertMedical->execute([$user_id, $appointment_id]);
+            // Insert into medical_records with content
+            $insertMedical = $pdo->prepare("INSERT INTO `medical_records` (`patient_id`, `appointment_id`, `content`) VALUES (?, ?, ?)");
+            $insertMedical->execute([$user_id, $appointment_id, $content]);
 
             $_SESSION['message'] = "Appointment booked successfully with cash payment!";
             $_SESSION['status'] = "success";
@@ -114,8 +116,6 @@ if (isset($_POST['add_appointment'])) {
         logAction($pdo, 'add appointment error', 'Error booking appointment for patient ID: ' . $user_id . ' - ' . $e->getMessage());
     }
 }
-
-
 ?>
 
 

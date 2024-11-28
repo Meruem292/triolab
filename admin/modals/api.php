@@ -34,7 +34,7 @@ if (isset($_POST['add_doctor'])) {
     $username = htmlspecialchars($_POST['username']);
     $email = htmlspecialchars($_POST['email']);
     $department_id = $_POST['department_id']; // Using department_id now
-    $password = hash($_POST['username'], PASSWORD_DEFAULT); // No hashing as per requirement
+    $password = password_hash($_POST['username'], PASSWORD_DEFAULT); // No hashing as per requirement
 
     $checkQuery = $pdo->prepare("SELECT * FROM doctor WHERE email = :email OR username = :username");
     $checkQuery->bindParam(':email', $email);
