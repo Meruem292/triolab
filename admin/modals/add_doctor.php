@@ -23,6 +23,12 @@ $departments = getDepartments();
                             <input type="text" class="form-control" name="lastname" required placeholder="Enter last name">
                         </div>
                     </div>
+                
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Employee ID <span class="text-danger">*</span></label>
+                    <!-- Dynamically generated Employee ID -->
+                    <input type="text" class="form-control" name="employee_id" value="<?= generateEmployeeID('TRLB') ?>" readonly required placeholder="Auto-generated employee ID">
                 </div>
                 <div class="mb-3">
                     <label class="form-label">Employee ID <span class="text-danger">*</span></label>

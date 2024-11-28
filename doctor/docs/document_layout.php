@@ -18,19 +18,6 @@ if (!$appointment) {
     die('Appointment not found.');
 }
 
-$query = '
-    SELECT COUNT(*) AS appointment_count
-    FROM appointment a
-    JOIN services s ON a.service_id = s.id
-    WHERE s.type = :type
-    AND a.is_archive = 0'; // Optional condition to exclude archived appointments
-
-$stmt = $pdo->prepare($query);
-$stmt->execute(['type' => 'X-ray']);
-$result = $stmt->fetch(PDO::FETCH_ASSOC);
-
-$appointment_count_by_services = $result['appointment_count'] ?? 0;
-
 // Fetch patient details
 $query = 'SELECT * FROM patient WHERE id = :id';
 $stmt = $pdo->prepare($query);
@@ -42,6 +29,12 @@ $query = 'SELECT * FROM doctor WHERE employee_id = :id';
 $stmt = $pdo->prepare($query);
 $stmt->execute(['id' => $appointment['doctor_id']]);
 $doctor = $stmt->fetch();
+
+$query = 'SELECT * FROM services WHERE id = :id';
+$stmt = $pdo->prepare($query);
+$stmt->execute(['id' => $appointment['service_id']]);
+$service = $stmt->fetch();
+$serviceCategory = $service['category'];
 
 $query = '
     SELECT COUNT(*) AS appointment_count
@@ -126,7 +119,7 @@ if (isset($_POST['submit_doc_changes']) && $_POST['type'] == 'laboratory') {
         'date' => date('Y-m-d'),
         'x_ray_number' => 'X-ray No. 24 - ' . $appointment_count_by_services,  // This assumes $appointment_count_by_services is set earlier
         'patient_name' => strtoupper($patient['lastname']) . ", " . strtoupper($patient['firstname']),
-        'age_sex' => '',  // Placeholder for age/sex (no input for this in the form)
+        'age_sex' => $patient['age']. '/' . $patient['sex'],  // Placeholder for age/sex (no input for this in the form)
         'address' => $patient['city'],
         'request_by' => filter_input(INPUT_POST, 'request_by'),
         'examination' => filter_input(INPUT_POST, 'examination'),
@@ -353,8 +346,8 @@ input[type="text"] {
         </div>
 
 
-        <?php switch ($appointment['service_id']) {
-            case 3: ?>
+        <?php switch ($serviceCategory) {
+            case 'Laboratory Services': ?>
                 <div class="flex justify-between">
                     <!-- on the left -->
                     <div>
@@ -368,6 +361,7 @@ input[type="text"] {
 
                     <!-- on the right -->
                     <div style="margin-right: 10%">
+                        <p><strong>Age/Sex:</strong> <?= $patient['age']. '/' . $patient['sex'] ?></p>
                         <p><strong>Date:</strong> <?= date('Y-m-d') ?></p>
                     </div>
                 </div>
@@ -416,7 +410,7 @@ input[type="text"] {
                         </div>
                     </div>
                 <?php break;
-            case 2: ?>
+            case 'Imaging Services': ?>
                     <form action="" method="POST" enctype="multipart/form-data">
                         <input type="hidden" name="type" value="xray">
                         <input type="hidden" name="appointment_id" value="<?= $appointment_id ?>">
@@ -433,7 +427,7 @@ input[type="text"] {
                         <div class="row">
                             <div class="col-12">
                                 <p>Name: <strong><?= strtoupper($patient['lastname']) . ", " . strtoupper($patient['firstname']) ?></strong></p>
-                                <p>Age/Sex: <strong></strong></p>
+                                <p><strong>Age/Sex:</strong> <?= $patient['age']. '/' . $patient['sex'] ?></p>
                                 <p>Address: <?= $patient['city'] ?></p>
                                 <p>Requsted by: <input type="text" name="request_by" value="<?= $request_by ?>"></p>
                                 <br>
@@ -445,51 +439,18 @@ input[type="text"] {
                             </div>
                         </div>
                         <div class="row mt-5 mb-5">
-                            <div class="col-8"></div>
-                            <div class="col-4">
+                            <div class="col-6"></div>
+                            <div class="col-6">
                                 <p class="mr-5"><strong><ins><?= strtoupper($doctor['firstname']) . ' ' . strtoupper($doctor['lastname']) . ', ' ?> MD</ins></strong></p>
                                 <p style="margin-left: 20%;">Radiologist</p>
                             </div>
                         </div>
 
                     <?php break;
-                case 1: ?>
-                        <form action="" method="POST" enctype="multipart/form-data">
-                            <input type="hidden" name="type" value="xray">
-                            <input type="hidden" name="appointment_id" value="<?= $appointment_id ?>">
-                            <h5 class="text-lg font-bold text-center mt-4 text-zinc-900 dark:text-zinc-100">ROENTGENOLOGICAL REPORT</h5>
-                            <div class="row">
-                                <div class="col-9">
-
-                                </div>
-                                <div class="col-auto">
-                                    <p>Date: <?= date('Y-m-d') ?></p>
-                                    <p>X-ray No. 24 - <?= $appointment_count_by_services ?></p>
-                                </div>
-                            </div>
-                            <div class="row">
-                                <div class="col-12">
-                                    <p>Name: <strong><?= strtoupper($patient['lastname']) . ", " . strtoupper($patient['firstname']) ?></strong></p>
-                                    <p>Age/Sex: <strong></strong></p>
-                                    <p>Address: <?= $patient['city'] ?></p>
-                                    <p>Requsted by: <input type="text" name="request_by" value="<?= $request_by ?>"></p>
-                                    <br>
-                                    <p>Kind of Examination: <input type="text" name="examination" value="<?= $examination ?>"></p>
-                                    <p class="mt-3"> Radiographic Findings:</p>
-                                    <textarea class="mb-3 w-100" name="findings" id="findings" value="<?= $findings ?>"></textarea>
-                                    <p class="mb-2">IMPRESSION: </p>
-                                    <textarea class="w-100" name="impression" id="impression" value="<?= $impression ?>"></textarea>
-                                </div>
-                            </div>
-                            <div class="row mt-5 mb-5">
-                                <div class="col-8"></div>
-                                <div class="col-4">
-                                    <p class="mr-5"><strong><ins><?= strtoupper($doctor['firstname']) . ' ' . strtoupper($doctor['lastname']) . ', ' ?> MD</ins></strong></p>
-                                    <p style="margin-left: 20%;">Radiologist</p>
-                                </div>
-                            </div>
-
-                    <?php break;
+                
+            default:
+            "No service category found";
+                break;
             } ?>
 
     </div>

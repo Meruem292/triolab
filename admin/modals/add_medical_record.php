@@ -6,7 +6,7 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <form method="POST" action="../admin/modals/api.php">
+                <form method="POST" action="../admin/modals/api.php" enctype="multipart/form-data">
                     <!-- Hidden input field for patient_id -->
                     <input type="hidden" name="patient_id" id="patient_id" />
                     
@@ -23,9 +23,14 @@
                         <textarea class="form-control" id="prescription" name="prescription" required></textarea>
                     </div>
                     <div class="mb-3">
+                        <label for="medical_doc" class="form-label">Medical Document</label>
+                        <textarea class="form-control" id="content" name="content" required></textarea>
+                    </div>
+                    <div class="mb-3">
                         <label for="record_date" class="form-label">Record Date</label>
                         <input type="date" class="form-control" id="record_date" name="record_date" required>
                     </div>
+                    
                     <button type="submit" class="btn btn-primary" name="submit_medical_record">Save Record</button>
                 </form>
             </div>

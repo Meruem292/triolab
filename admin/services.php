@@ -27,7 +27,7 @@ if (isset($_POST['add_service'])) {
         $_SESSION['status'] = "warning";
     } else {
         // Insert the new service information into the database
-        $insertQuery = $pdo->prepare("INSERT INTO services (category, type, service, department, cost) VALUES (:category, :type, :service, :department, :cost)");
+        $insertQuery = $pdo->prepare("INSERT INTO services (category, type, service, department_id, cost) VALUES (:category, :type, :service, :department, :cost)");
         $insertQuery->bindParam(':category', $category);
         $insertQuery->bindParam(':type', $type);
         $insertQuery->bindParam(':service', $service);
@@ -56,11 +56,11 @@ if (isset($_POST['edit_service'])) {
     $editServicesCost = $_POST['editServicesCost'];
 
     // Update the service information in the database
-    $updateQuery = $pdo->prepare("UPDATE services SET category = :category, type = :type, service = :service, department = :department, cost = :cost WHERE id = :id");
+    $updateQuery = $pdo->prepare("UPDATE services SET category = :category, type = :type, service = :service, department_id= :department_id, cost = :cost WHERE id = :id");
     $updateQuery->bindParam(':category', $editServiceCategory);
     $updateQuery->bindParam(':type', $editServicesType);
     $updateQuery->bindParam(':service', $editServicesService);
-    $updateQuery->bindParam(':department', $editServicesDepartment);
+    $updateQuery->bindParam(':department_id', $editServicesDepartment);
     $updateQuery->bindParam(':cost', $editServicesCost);
     $updateQuery->bindParam(':id', $editServicesId);
 
@@ -207,7 +207,14 @@ if (isset($_POST['archive_service'])) {
                                                         </thead>
                                                         <tbody class="list">
                                                             <?php
-                                                            $selectlaboratory = $pdo->query("SELECT * FROM services WHERE category = 'Laboratory Services' AND is_archive = 0 ORDER BY service ASC");
+                                                            $selectlaboratory = $pdo->query("
+    SELECT s.*, d.name AS department_name 
+    FROM services s
+    LEFT JOIN departments d ON s.department_id = d.id
+    WHERE s.category = 'Laboratory Services' AND s.is_archive = 0
+    ORDER BY s.service ASC
+");
+
                                                             if ($selectlaboratory->rowCount() > 0) {
                                                                 while ($row = $selectlaboratory->fetch(PDO::FETCH_ASSOC)) {
                                                             ?>
@@ -215,7 +222,7 @@ if (isset($_POST['archive_service'])) {
                                                                         <td><?= $row['category']; ?></td>
                                                                         <td><?= $row['type']; ?></td>
                                                                         <td><?= $row['service']; ?></td>
-                                                                        <td><?= $row['department']; ?></td>
+                                                                        <td><?= htmlspecialchars($row['department_name'] ?? 'N/A'); ?></td>
                                                                         <td>₱<?= number_format($row['cost'], 2); ?></td>
                                                                         <td>
                                                                             <div class="dropdown d-inline-block">
@@ -224,7 +231,7 @@ if (isset($_POST['archive_service'])) {
                                                                                 </button>
                                                                                 <ul class="dropdown-menu dropdown-menu-end">
                                                                                     <li>
-                                                                                        <a href="#" class="dropdown-item remove-item-btn edit-btn" data-bs-toggle="modal" data-bs-target="#editService" data-services-id="<?= $row['id'] ?>" data-services-category="<?= $row['category'] ?>" data-services-type="<?= $row['type'] ?>" data-services-service="<?= $row['service'] ?>" data-services-department="<?= $row['department'] ?>" data-services-cost="<?= $row['cost'] ?>">
+                                                                                        <a href="#" class="dropdown-item remove-item-btn edit-btn" data-bs-toggle="modal" data-bs-target="#editService" data-services-id="<?= $row['id'] ?>" data-services-category="<?= $row['category'] ?>" data-services-type="<?= $row['type'] ?>" data-services-service="<?= $row['service'] ?>" data-services-department="<?= htmlspecialchars($row['department_name'] ?? '') ?>" data-services-cost="<?= $row['cost'] ?>">
                                                                                             <i class="ri-edit-fill align-bottom me-2 text-muted"></i> Update
                                                                                         </a>
                                                                                     </li>
@@ -301,7 +308,15 @@ if (isset($_POST['archive_service'])) {
                                                         </thead>
                                                         <tbody class="list">
                                                             <?php
-                                                            $selectlaboratory = $pdo->query("SELECT * FROM services WHERE category = 'Imaging Services' AND is_archive = 0 ORDER BY service ASC");
+                                                            // Fetch services and their associated department names
+                                                            $selectlaboratory = $pdo->query("
+        SELECT s.*, d.name AS department_name 
+        FROM services s
+        LEFT JOIN departments d ON s.department_id = d.id
+        WHERE s.category = 'Imaging Services' AND s.is_archive = 0
+        ORDER BY s.service ASC
+    ");
+
                                                             if ($selectlaboratory->rowCount() > 0) {
                                                                 while ($row = $selectlaboratory->fetch(PDO::FETCH_ASSOC)) {
                                                             ?>
@@ -309,7 +324,7 @@ if (isset($_POST['archive_service'])) {
                                                                         <td><?= $row['category']; ?></td>
                                                                         <td><?= $row['type']; ?></td>
                                                                         <td><?= $row['service']; ?></td>
-                                                                        <td><?= $row['department']; ?></td>
+                                                                        <td><?= htmlspecialchars($row['department_name'] ?? 'N/A'); ?></td>
                                                                         <td>₱<?= number_format($row['cost'], 2); ?></td>
                                                                         <td>
                                                                             <div class="dropdown d-inline-block">
@@ -318,7 +333,7 @@ if (isset($_POST['archive_service'])) {
                                                                                 </button>
                                                                                 <ul class="dropdown-menu dropdown-menu-end">
                                                                                     <li>
-                                                                                        <a href="#" class="dropdown-item remove-item-btn edit-btn" data-bs-toggle="modal" data-bs-target="#editService" data-services-id="<?= $row['id'] ?>" data-services-category="<?= $row['category'] ?>" data-services-type="<?= $row['type'] ?>" data-services-service="<?= $row['service'] ?>" data-services-department="<?= $row['department'] ?>" data-services-cost="<?= $row['cost'] ?>">
+                                                                                        <a href="#" class="dropdown-item remove-item-btn edit-btn" data-bs-toggle="modal" data-bs-target="#editService" data-services-id="<?= $row['id'] ?>" data-services-category="<?= $row['category'] ?>" data-services-type="<?= $row['type'] ?>" data-services-service="<?= $row['service'] ?>" data-services-department="<?= htmlspecialchars($row['department_name'] ?? '') ?>" data-services-cost="<?= $row['cost'] ?>">
                                                                                             <i class="ri-edit-fill align-bottom me-2 text-muted"></i> Update
                                                                                         </a>
                                                                                     </li>
@@ -394,15 +409,24 @@ if (isset($_POST['archive_service'])) {
                                                         </thead>
                                                         <tbody class="list">
                                                             <?php
-                                                            $selectlaboratory = $pdo->query("SELECT * FROM services WHERE category = 'General Services' AND is_archive = 0 ORDER BY service ASC");
+                                                            // Fetch services and their associated department names
+                                                            $selectlaboratory = $pdo->query("
+        SELECT s.*, d.name AS department_name 
+        FROM services s
+        LEFT JOIN departments d ON s.department_id = d.id
+        WHERE s.category = 'General Services' AND s.is_archive = 0
+        ORDER BY s.service ASC
+    ");
                                                             if ($selectlaboratory->rowCount() > 0) {
                                                                 while ($row = $selectlaboratory->fetch(PDO::FETCH_ASSOC)) {
+                                                                    $selectdepartment = $pdo->query("SELECT * FROM departments WHERE id = " . $row['department_id']);
                                                             ?>
                                                                     <tr>
                                                                         <td><?= $row['category']; ?></td>
                                                                         <td><?= $row['type']; ?></td>
                                                                         <td><?= $row['service']; ?></td>
-                                                                        <td><?= $row['department']; ?></td>
+
+                                                                        <td><?= htmlspecialchars($row['department_name'] ?? 'N/A'); ?></td>
                                                                         <td>₱<?= number_format($row['cost'], 2); ?></td>
                                                                         <td>
                                                                             <div class="dropdown d-inline-block">
@@ -411,7 +435,8 @@ if (isset($_POST['archive_service'])) {
                                                                                 </button>
                                                                                 <ul class="dropdown-menu dropdown-menu-end">
                                                                                     <li>
-                                                                                        <a href="#" class="dropdown-item remove-item-btn edit-btn" data-bs-toggle="modal" data-bs-target="#editService" data-services-id="<?= $row['id'] ?>" data-services-category="<?= $row['category'] ?>" data-services-type="<?= $row['type'] ?>" data-services-service="<?= $row['service'] ?>" data-services-department="<?= $row['department'] ?>" data-services-cost="<?= $row['cost'] ?>">
+                                                                                        <a href="#" class="dropdown-item remove-item-btn edit-btn" data-bs-toggle="modal" data-bs-target="#editService" data-services-id="<?= $row['id'] ?>" data-services-category="<?= $row['category'] ?>" data-services-type="<?= $row['type'] ?>" data-services-service="<?= $row['service'] ?>" data-services-department="<?= htmlspecialchars($row['department_name'] ?? '') ?>"
+                                                                                            data-services-cost="<?= $row['cost'] ?>">
                                                                                             <i class="ri-edit-fill align-bottom me-2 text-muted"></i> Update
                                                                                         </a>
                                                                                     </li>
@@ -553,9 +578,10 @@ if (isset($_POST['archive_service'])) {
                     <div class="mb-3">
                         <label class="form-label">Department <span class="text-danger">*</span></label>
                         <select name="editServicesDepartment" id="servicesDepartment" class="form-select" required>
-                            <option value="Doctor/Physician" selected>Doctor/Physician</option>
-                            <option value="Radiological Technologist">Radiological Technologist</option>
-                            <option value="Medical Consultant">Medical Consultant</option>
+                            <option value="1" selected>Doctor/Physician</option>
+                            <option value="2">Radiological Technologist</option>
+                            <option value="3">Medical Technician</option>
+                            <option value="4">Medical Consultant</option>
                         </select>
                     </div>
                     <div class="mb-3">
@@ -568,6 +594,7 @@ if (isset($_POST['archive_service'])) {
                     <button type="submit" name="edit_service" class="btn btn-primary ">Save Changes</button>
                 </div>
             </form>
+            
         </div>
     </div>
 

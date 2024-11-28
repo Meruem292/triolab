@@ -152,7 +152,7 @@ $admin_id = $_SESSION['user_id'];
                                                                         <td>
                                                                             <div>
                                                                                 <img class="image avatar-xs rounded-circle mx-2" alt=""
-                                                                                    src="<?= htmlspecialchars($row['profile_img'] ?: "assets/images/dummy.png") ?>">
+                                                                                    src="../doctor/<?= htmlspecialchars($row['profile_img'] ?: "assets/images/dummy.png") ?>">
                                                                                 <span><?= $fullname; ?></span>
                                                                             </div>
                                                                         </td>
@@ -288,7 +288,7 @@ $admin_id = $_SESSION['user_id'];
                                                                         <td>
                                                                             <div>
                                                                                 <img class="image avatar-xs rounded-circle mx-2" alt=""
-                                                                                    src="<?= htmlspecialchars($row['profile_img'] ?: "assets/images/dummy.png") ?>">
+                                                                                    src="../doctor/<?= htmlspecialchars($row['profile_img'] ?: "assets/images/dummy.png") ?>">
                                                                                 <span><?= $fullname; ?></span>
                                                                             </div>
                                                                         </td>
@@ -416,7 +416,7 @@ $admin_id = $_SESSION['user_id'];
                                                                         <td>
                                                                             <div>
                                                                                 <img class="image avatar-xs rounded-circle mx-2" alt=""
-                                                                                    src="<?= htmlspecialchars($row['profile_img'] ?: "assets/images/dummy.png") ?>">
+                                                                                    src="../doctor/<?= htmlspecialchars($row['profile_img'] ?: "assets/images/dummy.png") ?>">
                                                                                 <span><?= $fullname; ?></span>
                                                                             </div>
                                                                         </td>
@@ -545,7 +545,7 @@ $admin_id = $_SESSION['user_id'];
                                                                         <td>
                                                                             <div>
                                                                                 <img class="image avatar-xs rounded-circle mx-2" alt=""
-                                                                                    src="<?= htmlspecialchars($row['profile_img'] ?: "assets/images/dummy.png") ?>">
+                                                                                    src="../doctor/<?= htmlspecialchars($row['profile_img'] ?: "assets/images/dummy.png") ?>">
                                                                                 <span><?= $fullname; ?></span>
                                                                             </div>
                                                                         </td>

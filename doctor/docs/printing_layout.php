@@ -30,6 +30,11 @@ $stmt = $pdo->prepare($query);
 $stmt->execute(['id' => $appointment['doctor_id']]);
 $doctor = $stmt->fetch();
 
+$query = 'SELECT * FROM services WHERE id = :id';
+$stmt = $pdo->prepare($query);
+$stmt->execute(['id' => $appointment['service_id']]);
+$service = $stmt->fetch();
+$serviceCategory = $service['category'];
 
 $query = '
     SELECT COUNT(*) AS appointment_count
@@ -265,8 +270,8 @@ input[type="text"] {
         </div>
 
 
-        <?php switch ($appointment['service_id']) {
-            case 1: ?>
+        <?php switch ($serviceCategory) {
+            case 'Laboratory Services': ?>
                 <div class="flex justify-between">
                     <!-- on the left -->
                     <div>
@@ -326,7 +331,7 @@ input[type="text"] {
                         </div>
                     </div>
                 <?php break;
-            case 2: ?>
+            case 'Imaging Services': ?>
                     <input type="hidden" name="type" value="xray">
                     <input type="hidden" name="appointment_id" value="<?= $appointment_id ?>">
                     <h5 class="text-lg font-bold text-center mt-4 text-zinc-900 dark:text-zinc-100">ROENTGENOLOGICAL REPORT</h5>
@@ -361,6 +366,8 @@ input[type="text"] {
                         </div>
                     </div>
             <?php break;
+            default:
+                echo 'No service category found.';
         } ?>
 
     </div>
