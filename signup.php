@@ -5,10 +5,19 @@ session_start();
 
 if (isset($_POST['register'])) {
     // Retrieve form data
-    $firstname = $_POST['firstname'];
-    $lastname = $_POST['lastname'];
+    $firstname = ucfirst($_POST['firstname']);
+    $lastname = ucfirst($_POST['lastname']);
     $email = $_POST['email'];
     $password = $_POST['password'];
+    $age = $_POST['age'];
+    $sex = $_POST['sex'];
+    $dob = $_POST['dob'];
+    $province = strtoupper($_POST['province']);
+    $city = strtoupper($_POST['city']);
+    $barangay = strtoupper($_POST['barangay']);
+    $street = strtoupper($_POST['street']);
+    $birthplace = strtoupper($_POST['birthplace']);
+    $contact = $_POST['contact'];
 
     // Hash the password for security
     $hashed_password = password_hash($password, PASSWORD_DEFAULT);
@@ -24,9 +33,9 @@ if (isset($_POST['register'])) {
             $_SESSION['status'] = "error";
         } else {
             // SQL query to insert user data into the database
-            $stmt = $pdo->prepare("INSERT INTO patient (firstname, lastname, email, password)
-                            VALUES (?, ?, ?, ?)");
-            $stmt->execute([$firstname, $lastname, $email, $hashed_password]);
+            $stmt = $pdo->prepare("INSERT INTO patient (firstname, lastname, email, password , age, sex, dob, province, city, barangay, street , birthplace, contact)
+                            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+            $stmt->execute([$firstname, $lastname, $email, $hashed_password, $age, $sex, $dob, $province, $city, $barangay, $street, $birthplace, $contact]);
             $_SESSION['message'] = "Registration successful! You can now sign in.";
             $_SESSION['status'] = "success";
         }
@@ -61,10 +70,10 @@ if (isset($_POST['register'])) {
     <link href="admin/assets/css/custom.min.css" rel="stylesheet" type="text/css" />
     <link rel="stylesheet" href="admin/assets/css/sweetalert.css">
     <script>
-    if ( window.history.replaceState ) {
-        window.history.replaceState( null, null, window.location.href );
-    }
-</script>
+        if (window.history.replaceState) {
+            window.history.replaceState(null, null, window.location.href);
+        }
+    </script>
 
 </head>
 
@@ -99,7 +108,7 @@ if (isset($_POST['register'])) {
                 </div>
 
                 <div class="row justify-content-center">
-                    <div class="col-md-8 col-lg-6 col-xl-5">
+                    <div class="col-md-8 col-lg-6 col-xl-8">
                         <div class="card mt-4 card-bg-fill">
                             <div class="card-body p-4">
                                 <div class="text-center mt-2">
@@ -111,26 +120,84 @@ if (isset($_POST['register'])) {
                                         <div class="row">
                                             <div class="col-md-6">
                                                 <div class="mb-3">
-                                                    <label for="username" class="form-label">First Name <span class="text-danger">*</span></label>
-                                                    <input type="text" class="form-control" name="firstname" id="username" placeholder="Enter first name" required>
+                                                    <label for="firstname" class="form-label">First Name <span class="text-danger">*</span></label>
+                                                    <input type="text" class="form-control" name="firstname" id="firstname" placeholder="Enter first name" required>
                                                     <div class="invalid-feedback">
-                                                        Please enter first name
+                                                        Please enter first name`
                                                     </div>
                                                 </div>
                                             </div>
                                             <div class="col-md-6">
                                                 <div class="mb-3">
-                                                    <label for="username" class="form-label">Last Name <span class="text-danger">*</span></label>
-                                                    <input type="text" class="form-control" name="lastname" id="username" placeholder="Enter last name" required>
+                                                    <label for="lastname" class="form-label">Last Name <span class="text-danger">*</span></label>
+                                                    <input type="text" class="form-control" name="lastname" id="lastname" placeholder="Enter last name" required>
+                                                    <div class="invalid-feedback">
+                                                        Please enter last name
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="mb-3">
+                                                    <label for="age" class="form-label">Age <span class="text-danger">*</span></label>
+                                                    <input type="number" class="form-control" name="age" id="age" placeholder="Enter you age" required>
+                                                    <div class="invalid-feedback">
+                                                        Please enter your age
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="mb-3">
+                                                    <label for="sex" class="form-label">Sex<span class="text-danger">*</span></label>
+                                                    <select name="sex" id="sex" class="form-control" required>
+                                                        <option value="Male">Male</option>
+                                                        <option value="Female">Female</option>
+                                                    </select>
+                                                    <div class="invalid-feedback">
+                                                        Please enter last name
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="mb-3">
+                                                    <label for="dob" class="form-label">Date of Birth<span class="text-danger">*</span></label>
+                                                    <input type="date" name="dob" class="form-control" required>
                                                     <div class="invalid-feedback">
                                                         Please enter last name
                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
+                                        <div class="row">
+                                            <div class="col-md-3">
+                                                <label for="province" class="form-label">Province<span class="text-danger">*</span></label>
+                                                <input type="text" class="form-control" name="province" id="province" required placeholder="ex. Cavite">
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label for="city" class="form-label">City<span class="text-danger">*</span></label>
+                                                <input type="text" class="form-control" name="city" id="city" required placeholder="ex. Dasmariñas">
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label for="barangay" class="form-label">Barangay<span class="text-danger">*</span></label>
+                                                <input type="text" class="form-control" name="barangay" id="barangay" required placeholder="ex. San Luis 1">
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label for="street" class="form-label">Street<span class="text-danger">*</span></label>
+                                                <input type="text" class="form-control" name="street" id="street" required placeholder="ex. Blk A-1 Lot 1">
+                                            </div>
+                                        </div>
+                                        <div class="row mt-2">
+                                            <div class="col-md-6">
+                                                <label for="birthplace" class="form-label">Birthplace<span class="text-danger">*</span></label>
+                                                <input type="text" class="form-control" name="birthplace" id="birthplace" required placeholder="ex. Dasmariñas">
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label for="contact" class="form-label">Contact<span class="text-danger">*</span></label>
+                                                <input type="number" class="form-control" name="contact" id="contact" required placeholder="ex. 09123456789">
+                                            </div>
+                                        </div>
                                         <div class="mb-3">
-                                            <label for="username" class="form-label">Email Address <span class="text-danger">*</span></label>
-                                            <input type="email" class="form-control" name="email" id="username" placeholder="Enter email address" required>
+                                            <label for="email" class="form-label">Email Address <span class="text-danger">*</span></label>
+                                            <input type="email" class="form-control" name="email" id="email" placeholder="Enter email address" required>
                                             <div class="invalid-feedback">
                                                 Please enter email address
                                             </div>
