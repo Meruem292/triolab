@@ -337,7 +337,7 @@ ORDER BY appointment.date_added ASC;
                                                                                 <i class="ri-edit-fill align-bottom me-2 text-muted"></i> Update
                                                                             </a>
                                                                             <a href="../doctor/docs/document_layout.php?appointmentId=<?= $row['appointment_id']; ?>" class="btn btn-info btn-sm">
-                                                                                <i class="ri-printer-fill align-bottom me-2"></i> Edit PDF
+                                                                                <i class="ri-printer-fill align-bottom me-2"></i> EDIT DOCUMENT
                                                                             </a>
 
                                                                         </td>
@@ -517,7 +517,7 @@ ORDER BY appointment.date_added ASC;
                                                                                 <i class="ri-edit-fill align-bottom me-2 text-muted"></i> Update
                                                                             </a>
                                                                             <a href="../doctor/docs/printing_layout.php?appointmentId=<?= $row['appointment_id']; ?>" class="btn btn-info btn-sm">
-                                                                                <i class="ri-printer-fill align-bottom me-2"></i> Edit PDF
+                                                                                <i class="ri-printer-fill align-bottom me-2"></i> PRINT PDF
                                                                             </a>
 
                                                                         </td>

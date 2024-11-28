@@ -685,7 +685,7 @@ ORDER BY appointment.date_added ASC;
                         <!-- Total Bill -->
                         <div class="col-md-12 mb-2">
                             <label class="form-label">Total Bill <span class="text-danger">*</span></label>
-                            <input type="number" step="0.01" name="amount" class="form-control" placeholder="Enter total amount" required>
+                            <input type="float" step="0.01" name="amount" class="form-control" placeholder="Enter total amount" required>
                         </div>
 
                         <!-- Payment Status -->
@@ -784,20 +784,11 @@ ORDER BY appointment.date_added ASC;
 
         // Add event listener to payment status dropdown
         paymentStatus.addEventListener('change', () => {
-            if (paymentStatus.value !== 'Approved') {
-                // Disable "Completed" option if payment is not approved
-                for (let option of appointmentStatus.options) {
-                    if (option.value === 'Completed') {
-                        option.disabled = true;
-                        appointmentStatus.value = 'Pending'; // Reset status if already selected
-                    }
-                }
-            } else {
-                // Enable "Completed" option if payment is approved
-                for (let option of appointmentStatus.options) {
-                    if (option.value === 'Completed') {
-                        option.disabled = false;
-                    }
+            // Disable "Completed" option regardless of payment status
+            for (let option of appointmentStatus.options) {
+                if (option.value === 'Completed') {
+                    option.disabled = true; // Always disable "Completed" option
+                    appointmentStatus.value = 'Pending'; // Reset status if already selected
                 }
             }
         });
@@ -805,6 +796,7 @@ ORDER BY appointment.date_added ASC;
         // Trigger change event to apply initial restrictions on page load
         paymentStatus.dispatchEvent(new Event('change'));
     </script>
+
 
 
     <script>
