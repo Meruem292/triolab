@@ -663,9 +663,6 @@ ORDER BY appointment.date_added ASC;
                                 <?php } ?>
                             </select>
                         </div>
-
-
-
                         <!-- Service -->
                         <div class="col-md-12 mb-2">
                             <p><b>Service: </b> <span id="appointmentService"></span></p>

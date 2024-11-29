@@ -12,6 +12,7 @@ if (isset($_POST['add_slot'])) {
     $schedule = $_POST['schedule'];
     $date = $_POST['date'];
     $slot = $_POST['slot'];
+    $doctor = $_POST['doctor'];
 
 
     $checkQuery = $pdo->prepare("SELECT * FROM appointment_slots WHERE date = :date AND schedule = :schedule");
@@ -25,10 +26,11 @@ if (isset($_POST['add_slot'])) {
         $_SESSION['status'] = "warning";
     } else {
         // Insert the new doctor information into the database
-        $insertQuery = $pdo->prepare("INSERT INTO appointment_slots (schedule, date, slot) VALUES (:schedule, :date, :slot)");
+        $insertQuery = $pdo->prepare("INSERT INTO appointment_slots (schedule, date, slot, doctor_id) VALUES (:schedule, :date, :slot, :doctor)");
         $insertQuery->bindParam(':schedule', $schedule);
         $insertQuery->bindParam(':date', $date);
         $insertQuery->bindParam(':slot', $slot);
+        $insertQuery->bindParam(':doctor', $doctor);
 
         if ($insertQuery->execute()) {
             $_SESSION['message'] = "Appointment slot added successfully.";
@@ -42,14 +44,17 @@ if (isset($_POST['add_slot'])) {
 
 if (isset($_POST['edit_slot'])) {
     $editSlotId = $_POST['editSlotId'];
-    $editSlotSchedule = $_POST['editSlotSchedule'];
+    $editSlotSchedule = $_POST['editSchedule'];
     $editSlotDate = $_POST['editSlotDate'];
     $editSlotsSlot = $_POST['editSlotsSlot'];
+    $editDoctor = $_POST['editDoctor'];
 
-    $updateQuery = $pdo->prepare("UPDATE appointment_slots SET schedule = :editSlotSchedule, date = :editSlotDate, slot = :editSlotsSlot WHERE id = :editSlotId");
+
+    $updateQuery = $pdo->prepare("UPDATE appointment_slots SET schedule = :editSlotSchedule, date = :editSlotDate, slot = :editSlotsSlot, doctor_id = :editDoctor WHERE id = :editSlotId");
     $updateQuery->bindParam(':editSlotSchedule', $editSlotSchedule);
     $updateQuery->bindParam(':editSlotDate', $editSlotDate);
     $updateQuery->bindParam(':editSlotsSlot', $editSlotsSlot);
+    $updateQuery->bindParam(':editDoctor', $editDoctor);
     $updateQuery->bindParam(':editSlotId', $editSlotId);
 
     if ($updateQuery->execute()) {
@@ -169,21 +174,40 @@ if (isset($_POST['archive_slot'])) {
                                                         <th>Schedule</th>
                                                         <th>Date</th>
                                                         <th>Slot</th>
+                                                        <th>Doctor</th>
+                                                        <th>Department</th>
                                                         <th>Action</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody class="list">
                                                     <?php
-                                                    $selectSlot = $pdo->query("SELECT * FROM appointment_slots WHERE is_archive = 0");
+                                                    // Fetch slots with doctor and department information
+                                                    $selectSlot = $pdo->query("
+            SELECT 
+                appointment_slots.id,
+                appointment_slots.schedule,
+                appointment_slots.date,
+                appointment_slots.slot,
+                doctor.firstname,
+                doctor.lastname,
+                departments.name AS department_name
+            FROM appointment_slots
+            JOIN doctor ON appointment_slots.doctor_id = doctor.employee_id
+            JOIN departments ON doctor.department_id = departments.id
+            
+        ");
+
                                                     if ($selectSlot->rowCount() > 0) {
                                                         while ($row = $selectSlot->fetch(PDO::FETCH_ASSOC)) {
                                                             $dateString = $row['date'];
-                                                            $formattedDate = date("F j, Y \a\\t g:i a", strtotime($dateString));
+                                                            $formattedDate = date("F j, Y", strtotime($dateString));
                                                     ?>
                                                             <tr>
-                                                                <td><?= $row['schedule']; ?></td>
-                                                                <td><?= $formattedDate; ?></td>
-                                                                <td><?= $row['slot']; ?></td>
+                                                                <td><?= htmlspecialchars($row['schedule']); ?></td>
+                                                                <td><?= htmlspecialchars($formattedDate); ?></td>
+                                                                <td><?= htmlspecialchars($row['slot']); ?></td>
+                                                                <td><?= htmlspecialchars($row['firstname'] . ' ' . $row['lastname']); ?></td>
+                                                                <td><?= htmlspecialchars($row['department_name']); ?></td>
                                                                 <td>
                                                                     <div class="dropdown d-inline-block">
                                                                         <button class="btn btn-soft-success btn-sm dropdown" type="button" data-bs-toggle="dropdown" aria-expanded="false">
@@ -191,12 +215,19 @@ if (isset($_POST['archive_slot'])) {
                                                                         </button>
                                                                         <ul class="dropdown-menu dropdown-menu-end">
                                                                             <li>
-                                                                                <a href="#" class="dropdown-item remove-item-btn edit-btn" data-bs-toggle="modal" data-bs-target="#editSlot" data-slots-id="<?= $row['id'] ?>" data-slots-schedule="<?= $row['schedule'] ?>" data-slots-date="<?= $row['date'] ?>" data-slots-slot="<?= $row['slot'] ?>">
+                                                                                <a href="#" class="dropdown-item remove-item-btn edit-btn"
+                                                                                    data-bs-toggle="modal" data-bs-target="#editSlot"
+                                                                                    data-slots-id="<?= $row['id'] ?>"
+                                                                                    data-slots-schedule="<?= htmlspecialchars($row['schedule']); ?>"
+                                                                                    data-slots-date="<?= htmlspecialchars($row['date']); ?>"
+                                                                                    data-slots-slot="<?= htmlspecialchars($row['slot']); ?>">
                                                                                     <i class="ri-edit-fill align-bottom me-2 text-muted"></i> Update
                                                                                 </a>
                                                                             </li>
                                                                             <li>
-                                                                                <a href="#" class="dropdown-item remove-item-btn archive-btn" data-bs-toggle="modal" data-bs-target="#archiveSlot" data-slots-id="<?= $row['id'] ?>">
+                                                                                <a href="#" class="dropdown-item remove-item-btn archive-btn"
+                                                                                    data-bs-toggle="modal" data-bs-target="#archiveSlot"
+                                                                                    data-slots-id="<?= $row['id'] ?>">
                                                                                     <i class="ri-delete-bin-fill align-bottom me-2 text-muted"></i> Archive
                                                                                 </a>
                                                                             </li>
@@ -265,31 +296,51 @@ if (isset($_POST['archive_slot'])) {
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <div class="row">
-                        <div class="col-md-12 col-sm-12 mb-3">
-                            <label class="form-label">Schedule <span class="text-danger">*</span></label>
-                            <select name="schedule" class="form-select" required>
-                                <option value="Morning" selected>Morning</option>
-                                <option value="Afternoon">Afternoon</option>
-                            </select>
-                        </div>
-                        <div class="col-md-12 col-sm-12 mb-3">
-                            <label class="form-label">Date <span class="text-danger">*</span></label>
-                            <input type="date" class="form-control" name="date" required>
-                        </div>
-                        <div class="col-md-12 col-sm-12 mb-3">
-                            <label class="form-label">Slot <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" name="slot" required placeholder="Enter how many slot">
-                        </div>
+                    <div class="col-md-12 col-sm-12 mb-3">
+                        <label class="form-label">Schedule <span class="text-danger">*</span></label>
+                        <select name="schedule" id="schedule" class="form-select" required>
+                            <option value="Morning" selected>Morning</option>
+                            <option value="Afternoon">Afternoon</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <?php
+                        // Query to get doctors ordered by their department name
+                        $doctors = $pdo->query("
+                        SELECT doctor.*, departments.name AS department_name 
+                        FROM doctor
+                        JOIN departments ON doctor.department_id = departments.id
+                        ORDER BY departments.name
+                    ");
+                        ?>
+                        <label class="form-label">Assign Doctor</label>
+                        <select name="doctor" id="doctor" class="form-select" required>
+                            <?php foreach ($doctors as $doctor) { ?>
+                                <option value="<?= $doctor['employee_id']; ?>">
+                                    <?= ucfirst(htmlspecialchars($doctor['firstname'])) . ' ' . ucfirst(htmlspecialchars($doctor['lastname'])) . ' - ' . htmlspecialchars($doctor['department_name']); ?>
+                                </option>
+                            <?php } ?>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Date <span class="text-danger">*</span></label>
+                        <input type="date" class="form-control" name="date" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Slot <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" name="slot" required placeholder="Enter how many slots">
                     </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
-                    <button type="submit" name="add_slot" class="btn btn-primary ">Add Slot</button>
+                    <button type="submit" name="add_slot" class="btn btn-primary">Add Slot</button>
                 </div>
             </form>
         </div>
     </div>
+
+
 
     <!-- Edit SLOT -->
     <div id="editSlot" class="modal fade" tabindex="-1" aria-hidden="true">
@@ -304,9 +355,28 @@ if (isset($_POST['archive_slot'])) {
                         <input type="hidden" name="editSlotId" id="slotsId">
                         <div class="col-md-12 col-sm-12 mb-3">
                             <label class="form-label">Schedule <span class="text-danger">*</span></label>
-                            <select name="editSlotSchedule" id="slotsSchedule" class="form-select" required>
-                                <option value="Morning" selected>Morning</option>
+                            <select name="editSchedule" id="slotsSchedule" class="form-select" required>
+                                <option value="Morning">Morning</option>
                                 <option value="Afternoon">Afternoon</option>
+                            </select>
+                        </div>
+                        <div class="col-md-12 col-sm-12 mb-3">
+                            <?php
+                            // Query to get doctors ordered by their department name
+                            $doctors = $pdo->query("
+                            SELECT doctor.*, departments.name AS department_name 
+                            FROM doctor
+                            JOIN departments ON doctor.department_id = departments.id
+                            ORDER BY departments.name
+                        ");
+                            ?>
+                            <label class="form-label">Assign Doctor</label>
+                            <select name="editDoctor" id="editDoctor" class="form-select" required>
+                                <?php foreach ($doctors as $doctor) { ?>
+                                    <option value="<?= $doctor['employee_id']; ?>">
+                                        <?= ucfirst(htmlspecialchars($doctor['firstname'])) . ' ' . ucfirst(htmlspecialchars($doctor['lastname'])) . ' - ' . htmlspecialchars($doctor['department_name']); ?>
+                                    </option>
+                                <?php } ?>
                             </select>
                         </div>
                         <div class="col-md-12 col-sm-12 mb-3">
@@ -321,11 +391,13 @@ if (isset($_POST['archive_slot'])) {
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
-                    <button type="submit" name="edit_slot" class="btn btn-primary ">Save Changes</button>
+                    <button type="submit" name="edit_slot" class="btn btn-primary">Save Changes</button>
                 </div>
             </form>
         </div>
     </div>
+
+
 
     <!-- ARCHIVE SLOT -->
     <div id="archiveSlot" class="modal fade" tabindex="-1" aria-hidden="true">
@@ -391,6 +463,7 @@ if (isset($_POST['archive_slot'])) {
             });
         });
     </script>
+
 
     <script>
         function searchTable() {

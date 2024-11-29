@@ -15,7 +15,6 @@ $serviceId = $_GET['service_id'];
 $selectService = $pdo->prepare("SELECT * FROM services WHERE id = :serviceId");
 $selectService->execute([':serviceId' => $serviceId]);
 $fetchService = $selectService->fetch(PDO::FETCH_ASSOC);
-
 if (isset($_POST['add_appointment'])) {
     // Retrieve form data
     $selectedDate = $_POST['selectedDate'];
@@ -36,29 +35,44 @@ if (isset($_POST['add_appointment'])) {
     $serviceID = $_POST['serviceID'];
     $receipt = $_FILES['receipt']; // File input for receipt
     $amount = $_POST['amount'];
-    $doctor_id = 0;
-    $department_id = 0;
     $status = "Pending";
     $paid = "Pending";
     $slot = 1;
     $date_added = date('Y-m-d H:i:s');
     $content = null;
 
-
     try {
+        // Retrieve doctor and department based on the selected service
+        $getDoctorAndDepartment = $pdo->prepare("
+    SELECT s.department_id AS department_id, d.employee_id AS doctor_id
+    FROM services s
+    INNER JOIN doctor d ON d.department_id = s.department_id
+    WHERE s.id = ? LIMIT 1
+");
+
+        $getDoctorAndDepartment->execute([$serviceID]);
+        $doctorData = $getDoctorAndDepartment->fetch(PDO::FETCH_ASSOC);
+
+        if ($doctorData) {
+            $doctor_id = $doctorData['doctor_id'];
+            $department_id = $doctorData['department_id'];
+        } else {
+            throw new Exception("No doctor found for the selected service.");
+        }
+
         // Insert appointment data
-        $insertAppointment = $pdo->prepare("
-            INSERT INTO `appointment` 
+        $insertAppointment = $pdo->prepare(
+            "INSERT INTO `appointment` 
             (`service_id`, `patient_id`, `appointment_date`, `appointment_time`, `appointment_slot_id`, `doctor_id`, `department_id`, `selectedPayment`, `medical`, `status`, `paid`, `date_added`) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        ");
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+        );
         $insertAppointment->execute([$serviceID, $user_id, $selectedDate, $selectedTime, $selectedSlot, $doctor_id, $department_id, $selectedPayment, $medical, $status, $paid, $date_added]);
         $appointment_id = $pdo->lastInsertId();
 
         // Log the appointment booking action
         logAction($pdo, 'add appointment', 'Appointment booked with ID: ' . $appointment_id . ' for patient ID: ' . $user_id);
 
-        // If payment is not cash, handle the receipt upload
+        // Handle payment receipt or mark as paid
         if (strtolower($selectedPayment) !== '3') {
             if ($_FILES['receipt']['error'] === UPLOAD_ERR_OK) {
                 $uploadDir = '../triolab/admin/modals/uploads/payment_receipts/';
@@ -66,23 +80,19 @@ if (isset($_POST['add_appointment'])) {
                 $uploadFilePath = $uploadDir . $fileName;
 
                 if (move_uploaded_file($_FILES['receipt']['tmp_name'], $uploadFilePath)) {
-                    // Insert payment receipt record
                     $dbReceiptPath = "uploads/payment_receipts/" . $fileName;
-                    $insertReceipt = $pdo->prepare("
-                        INSERT INTO `payment_receipts` (`appointment_id`, `payment_receipt_path`, `date`, `payment_mode_id`, `amount`, `status`) 
-                        VALUES (?, ?, ?, ?, ?, ?)
-                    ");
+                    $insertReceipt = $pdo->prepare(
+                        "INSERT INTO `payment_receipts` (`appointment_id`, `payment_receipt_path`, `date`, `payment_mode_id`, `amount`, `status`) 
+                        VALUES (?, ?, ?, ?, ?, ?)"
+                    );
                     $insertReceipt->execute([$appointment_id, $dbReceiptPath, $date_added, $selectedPayment, $amount, $status]);
 
-                    // Update appointment as paid
                     $updateAppointment = $pdo->prepare("UPDATE `appointment` SET `paid` = 'Pending' WHERE `id` = ?");
                     $updateAppointment->execute([$appointment_id]);
 
-                    // update slot appointment_slot
                     $updateAppointmentSlot = $pdo->prepare("UPDATE `appointment_slots` SET `slot` = `slot` - 1 WHERE `id` = ?");
                     $updateAppointmentSlot->execute([$selectedSlot]);
 
-                    // Insert into medical_records with content
                     $insertMedical = $pdo->prepare("INSERT INTO `medical_records` (`patient_id`, `appointment_id`, `content`) VALUES (?, ?, ?)");
                     $insertMedical->execute([$user_id, $appointment_id, $content]);
 
@@ -95,14 +105,12 @@ if (isset($_POST['add_appointment'])) {
                 throw new Exception("Please upload a valid payment receipt.");
             }
         } else {
-            // For cash payment, no receipt required, set the appointment as paid
             $updateAppointment = $pdo->prepare("UPDATE `appointment` SET `paid` = 'Pending' WHERE `id` = ?");
             $updateAppointment->execute([$appointment_id]);
 
             $updateAppointmentSlot = $pdo->prepare("UPDATE `appointment_slots` SET `slot` = `slot` - 1 WHERE `id` = ?");
             $updateAppointmentSlot->execute([$selectedSlot]);
 
-            // Insert into medical_records with content
             $insertMedical = $pdo->prepare("INSERT INTO `medical_records` (`patient_id`, `appointment_id`, `content`) VALUES (?, ?, ?)");
             $insertMedical->execute([$user_id, $appointment_id, $content]);
 
@@ -113,7 +121,6 @@ if (isset($_POST['add_appointment'])) {
         $_SESSION['message'] = "An error occurred: " . $e->getMessage();
         $_SESSION['status'] = "error";
 
-        // Log the error in case of an exception
         logAction($pdo, 'add appointment error', 'Error booking appointment for patient ID: ' . $user_id . ' - ' . $e->getMessage());
     }
 }
@@ -628,6 +635,7 @@ if (isset($_POST['add_appointment'])) {
                             <div class="tab-pane active" role="tabpanel" id="step1">
                                 <div class="row">
                                     <div class="col-md-7">
+                                        <input type="hidden" name="serviceId" id="serviceId" value="<?= $serviceId ?>">
                                         <input type="hidden" name="serviceName" value="<?= $fetchService['service']; ?>">
                                         <input type="hidden" name="serviceCost" value="<?= $fetchService['cost']; ?>">
                                         <input type="hidden" name="serviceID" value="<?= $fetchService['id']; ?>">
@@ -938,7 +946,6 @@ if (isset($_POST['add_appointment'])) {
             form.addEventListener('submit', function(event) {
                 var selectedSchedule = document.querySelector('input[name="selectedSchedule"]:checked');
 
-
                 // Check if a time slot is selected and if the select field is valid
                 if (!selectedSchedule) {
                     event.preventDefault(); // Prevent form submission
@@ -968,20 +975,18 @@ if (isset($_POST['add_appointment'])) {
                     }
 
                     // Clear the container
-                    timeSlotsContainer.innerHTML = '<i id="notice" >Note: click to select the slot</i>';
+                    timeSlotsContainer.innerHTML = '<i id="notice">Note: click to select the slot</i>';
 
                     if (slotsData.length > 0) {
                         // Loop through each slot data and create the HTML elements dynamically
                         slotsData.forEach(function(slotData) {
                             var slotDiv = document.createElement('div');
                             slotDiv.className = `toggle-block morning`;
-                            // Add 'selected' class if slot is selected
-                            if (slotData['selected']) {
-                                slotDiv.classList.add('selected');
-                            }
+
                             slotDiv.innerHTML = `
-                            <input type="radio" name="selectedSchedule" value="${slotData['id']}" ${slotData['selected'] ? 'checked' : ''}>
-                            ${slotData['schedule']} (${slotData['slot']} slots available)
+                            <input type="radio" name="selectedSchedule" value="${slotData['id']}">
+                            <strong>${slotData['schedule']} (${slotData['slot']} slots available)</strong><br>
+                            Doctor: ${slotData['doctor_name']}
                         `;
                             timeSlotsContainer.appendChild(slotDiv);
 
@@ -1012,10 +1017,12 @@ if (isset($_POST['add_appointment'])) {
                     }
                 }
             };
-            xhttp.open("GET", "fetch_time_slots.php?selectedDate=" + selectedDate, true);
+            const serviceId = document.getElementById("serviceId").value; // Assuming there's an input or element with the service ID
+            xhttp.open("GET", "fetch_time_slots.php?selectedDate=" + selectedDate + "&service_id=" + serviceId, true);
             xhttp.send();
         }
     </script>
+
 
 
     <script>
