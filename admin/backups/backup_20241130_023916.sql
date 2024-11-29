@@ -25,30 +25,35 @@ CREATE TABLE `appointment` (
   `date_added` timestamp NOT NULL DEFAULT current_timestamp(),
   `is_archive` tinyint(4) NOT NULL DEFAULT 0,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=62 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=66 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
-INSERT INTO `appointment` (id, service_id, patient_id, appointment_date, appointment_slot_id, appointment_time, doctor_id, department_id, selectedPayment, medical, status, paid, date_added, is_archive) VALUES ('55', '1', '10', '2024-11-25', '2', '10:29', 'TRLB6874', '1', '3', 'fracture', 'Pending', 'Pending', '2024-11-24 16:29:45', '0');
+INSERT INTO `appointment` (id, service_id, patient_id, appointment_date, appointment_slot_id, appointment_time, doctor_id, department_id, selectedPayment, medical, status, paid, date_added, is_archive) VALUES ('55', '1', '10', '2024-11-25', '2', '10:29', 'TRLB7292', '3', '3', 'fracture', 'Pending', 'Pending', '2024-11-24 16:29:45', '0');
 INSERT INTO `appointment` (id, service_id, patient_id, appointment_date, appointment_slot_id, appointment_time, doctor_id, department_id, selectedPayment, medical, status, paid, date_added, is_archive) VALUES ('56', '2', '10', '2024-11-25', '4', '13:04', 'TRLB7292', '3', '3', 'fracture', 'Pending', 'Pending', '2024-11-25 06:04:56', '0');
-INSERT INTO `appointment` (id, service_id, patient_id, appointment_date, appointment_slot_id, appointment_time, doctor_id, department_id, selectedPayment, medical, status, paid, date_added, is_archive) VALUES ('57', '1', '10', '2024-11-25', '2', '13:46', 'TRLB6874', '1', '3', 'dadczcxz', 'Pending', 'Pending', '2024-11-25 14:47:02', '0');
+INSERT INTO `appointment` (id, service_id, patient_id, appointment_date, appointment_slot_id, appointment_time, doctor_id, department_id, selectedPayment, medical, status, paid, date_added, is_archive) VALUES ('57', '1', '10', '2024-11-25', '2', '13:46', 'TRLB7292', '3', '3', 'dadczcxz', 'Completed', 'Approved', '2024-11-25 14:47:02', '0');
 INSERT INTO `appointment` (id, service_id, patient_id, appointment_date, appointment_slot_id, appointment_time, doctor_id, department_id, selectedPayment, medical, status, paid, date_added, is_archive) VALUES ('58', '1', '10', '2024-11-25', '2', '15:05', 'TRLB7292', '3', '3', 'fracture', 'Pending', 'Pending', '2024-11-28 08:06:07', '0');
 INSERT INTO `appointment` (id, service_id, patient_id, appointment_date, appointment_slot_id, appointment_time, doctor_id, department_id, selectedPayment, medical, status, paid, date_added, is_archive) VALUES ('59', '1', '10', '2024-11-25', '2', '15:10', 'TRLB7292', '3', '3', 'fracture', 'Pending', 'Pending', '2024-11-28 08:11:07', '0');
 INSERT INTO `appointment` (id, service_id, patient_id, appointment_date, appointment_slot_id, appointment_time, doctor_id, department_id, selectedPayment, medical, status, paid, date_added, is_archive) VALUES ('60', '1', '10', '2024-11-25', '2', '15:12', 'TRLB6979', '2', '3', 'fracture', 'Pending', 'Pending', '2024-11-28 08:12:46', '0');
 INSERT INTO `appointment` (id, service_id, patient_id, appointment_date, appointment_slot_id, appointment_time, doctor_id, department_id, selectedPayment, medical, status, paid, date_added, is_archive) VALUES ('61', '1', '10', '2024-11-25', '2', '15:13', '0', '0', '1', 'fracture', 'Pending', 'Pending', '2024-11-28 08:14:19', '0');
+INSERT INTO `appointment` (id, service_id, patient_id, appointment_date, appointment_slot_id, appointment_time, doctor_id, department_id, selectedPayment, medical, status, paid, date_added, is_archive) VALUES ('62', '1', '27', '2024-11-25', '2', '14:25', '0', '0', '3', 'fracture', 'Pending', 'Pending', '2024-11-28 16:25:29', '0');
+INSERT INTO `appointment` (id, service_id, patient_id, appointment_date, appointment_slot_id, appointment_time, doctor_id, department_id, selectedPayment, medical, status, paid, date_added, is_archive) VALUES ('63', '1', '10', '2024-11-25', '2', '16:09', '0', '0', '3', 'qweq', 'Pending', 'Pending', '2024-11-29 15:10:18', '0');
+INSERT INTO `appointment` (id, service_id, patient_id, appointment_date, appointment_slot_id, appointment_time, doctor_id, department_id, selectedPayment, medical, status, paid, date_added, is_archive) VALUES ('64', '2', '10', '2024-11-29', '1', '15:36', '0', '0', '3', 'fracture', 'Pending', 'Pending', '2024-11-29 16:37:10', '0');
+INSERT INTO `appointment` (id, service_id, patient_id, appointment_date, appointment_slot_id, appointment_time, doctor_id, department_id, selectedPayment, medical, status, paid, date_added, is_archive) VALUES ('65', '1', '10', '2024-11-29', '1', '14:52', 'TRLB6979', '2', '3', 'fracture', 'Pending', 'Pending', '2024-11-29 16:52:25', '0');
 
 DROP TABLE IF EXISTS `appointment_slots`;
 CREATE TABLE `appointment_slots` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `schedule` varchar(255) NOT NULL,
+  `doctor_id` varchar(255) NOT NULL,
   `date` datetime(6) NOT NULL DEFAULT current_timestamp(6),
   `slot` varchar(255) NOT NULL,
   `is_archive` tinyint(4) NOT NULL DEFAULT 0,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
-INSERT INTO `appointment_slots` (id, schedule, date, slot, is_archive) VALUES ('1', 'Morning', '2024-05-04 00:00:00.000000', '18', '0');
-INSERT INTO `appointment_slots` (id, schedule, date, slot, is_archive) VALUES ('2', 'Afternoon', '2024-11-25 00:00:00.000000', '77', '0');
-INSERT INTO `appointment_slots` (id, schedule, date, slot, is_archive) VALUES ('3', 'Morning', '2024-11-16 00:00:00.000000', '0', '0');
-INSERT INTO `appointment_slots` (id, schedule, date, slot, is_archive) VALUES ('4', 'Morning', '2024-11-09 00:00:00.000000', '0', '0');
+INSERT INTO `appointment_slots` (id, schedule, doctor_id, date, slot, is_archive) VALUES ('1', 'Morning', 'TRLB7292', '2024-11-29 00:00:00.000000', '18', '0');
+INSERT INTO `appointment_slots` (id, schedule, doctor_id, date, slot, is_archive) VALUES ('2', 'Afternoon', 'TRLB7292', '2024-11-25 00:00:00.000000', '75', '0');
+INSERT INTO `appointment_slots` (id, schedule, doctor_id, date, slot, is_archive) VALUES ('3', 'Morning', 'TRLB7292', '2024-11-16 00:00:00.000000', '0', '0');
+INSERT INTO `appointment_slots` (id, schedule, doctor_id, date, slot, is_archive) VALUES ('4', 'Morning', 'TRLB7292', '2024-11-09 00:00:00.000000', '0', '0');
 
 DROP TABLE IF EXISTS `departments`;
 CREATE TABLE `departments` (
@@ -83,7 +88,7 @@ CREATE TABLE `doctor` (
 
 INSERT INTO `doctor` (employee_id, firstname, lastname, username, email, password, profile_img, department_id, date_added, is_archive) VALUES ('TRLB6874', 'Mherwen Wiel', 'Romero', 'mherwen123', 'mherwen123@gmail.com', '$2y$10$EGS8S58v20zx4qaBs3.hquI1.jlrFp54uTl8zbaC5tu1aGXeXqxym', 'uploads/Gaming_5000x3125.jpg', '1', '2024-05-05 09:35:17', '0');
 INSERT INTO `doctor` (employee_id, firstname, lastname, username, email, password, profile_img, department_id, date_added, is_archive) VALUES ('TRLB6979', 'Ivy', 'Barrios', 'ivy', 'ivy@gmail.com', '$2y$10$IW6QrrhBiJjgCSKegXnueOkgjvqaeIjYzhzZqgLzfjdFn4ZtLVYn.', NULL, '2', '2024-11-28 15:56:13', '0');
-INSERT INTO `doctor` (employee_id, firstname, lastname, username, email, password, profile_img, department_id, date_added, is_archive) VALUES ('TRLB7292', 'Erwin', 'Petil', 'erwin123', 'erwin@gmail.com', '$2y$10$dixFjSuNzEx1Z6XrCwqQh.w60ecMNqqIq3AHDCIU4qwSToctXbro2', NULL, '3', '2024-05-05 10:53:34', '0');
+INSERT INTO `doctor` (employee_id, firstname, lastname, username, email, password, profile_img, department_id, date_added, is_archive) VALUES ('TRLB7292', 'Erwin', 'Petil', 'erwin123', 'erwin@gmail.com', '$2y$10$dixFjSuNzEx1Z6XrCwqQh.w60ecMNqqIq3AHDCIU4qwSToctXbro2', NULL, '2', '2024-05-05 10:53:34', '0');
 
 DROP TABLE IF EXISTS `logs`;
 CREATE TABLE `logs` (
@@ -94,7 +99,7 @@ CREATE TABLE `logs` (
   `details` text DEFAULT NULL,
   `is_archive` tinyint(1) DEFAULT 0,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=33 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=40 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 INSERT INTO `logs` (id, action, user, timestamp, details, is_archive) VALUES ('1', 'Add Patient', '1', '2024-11-16 21:00:01', NULL, '0');
 INSERT INTO `logs` (id, action, user, timestamp, details, is_archive) VALUES ('2', 'Add Patient', '1', '2024-11-16 21:01:07', NULL, '0');
@@ -128,6 +133,13 @@ INSERT INTO `logs` (id, action, user, timestamp, details, is_archive) VALUES ('2
 INSERT INTO `logs` (id, action, user, timestamp, details, is_archive) VALUES ('30', 'update appointment', '0', '2024-11-28 16:20:09', 'Updated appointment with ID: 58 for patient ID: 10', '0');
 INSERT INTO `logs` (id, action, user, timestamp, details, is_archive) VALUES ('31', 'update appointment', '0', '2024-11-28 16:30:57', 'Updated appointment with ID: 58 for patient ID: 10', '0');
 INSERT INTO `logs` (id, action, user, timestamp, details, is_archive) VALUES ('32', 'update appointment', '0', '2024-11-28 16:31:09', 'Updated appointment with ID: 58 for patient ID: 10', '0');
+INSERT INTO `logs` (id, action, user, timestamp, details, is_archive) VALUES ('33', 'add appointment', '27', '2024-11-28 23:25:29', 'Appointment booked with ID: 62 for patient ID: 27', '0');
+INSERT INTO `logs` (id, action, user, timestamp, details, is_archive) VALUES ('34', 'update appointment', '0', '2024-11-29 13:16:27', 'Updated appointment with ID: 57 for patient ID: 10', '0');
+INSERT INTO `logs` (id, action, user, timestamp, details, is_archive) VALUES ('35', 'add appointment', '10', '2024-11-29 22:10:18', 'Appointment booked with ID: 63 for patient ID: 10', '0');
+INSERT INTO `logs` (id, action, user, timestamp, details, is_archive) VALUES ('36', 'add appointment', '10', '2024-11-29 23:37:10', 'Appointment booked with ID: 64 for patient ID: 10', '0');
+INSERT INTO `logs` (id, action, user, timestamp, details, is_archive) VALUES ('37', 'add appointment error', '10', '2024-11-29 23:45:53', 'Error booking appointment for patient ID: 10 - SQLSTATE[42S22]: Column not found: 1054 Unknown column \'s.department\' in \'field list\'', '0');
+INSERT INTO `logs` (id, action, user, timestamp, details, is_archive) VALUES ('38', 'add appointment error', '10', '2024-11-29 23:50:14', 'Error booking appointment for patient ID: 10 - SQLSTATE[42S22]: Column not found: 1054 Unknown column \'s.department\' in \'field list\'', '0');
+INSERT INTO `logs` (id, action, user, timestamp, details, is_archive) VALUES ('39', 'add appointment', '10', '2024-11-29 23:52:25', 'Appointment booked with ID: 65 for patient ID: 10', '0');
 
 DROP TABLE IF EXISTS `medical_records`;
 CREATE TABLE `medical_records` (
@@ -147,15 +159,19 @@ CREATE TABLE `medical_records` (
   KEY `fk_patient_id` (`patient_id`),
   CONSTRAINT `fk_patient_id` FOREIGN KEY (`patient_id`) REFERENCES `patient` (`id`) ON DELETE CASCADE,
   CONSTRAINT `medical_records_ibfk_1` FOREIGN KEY (`patient_id`) REFERENCES `patient` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=20 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=24 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
-INSERT INTO `medical_records` (id, patient_id, appointment_id, doctor_id, diagnosis, treatment, prescription, content, status, record_date, created_at, updated_at) VALUES ('11', '10', '55', 'TRLB6874', 'Diagnosis', 'Treatment', 'Prescription', '{\"hemoglobin\":null,\"hematocrit\":null,\"wbc_count\":null,\"rbc_count\":null,\"segmenters\":null,\"lymphocytes\":null,\"eosinophils\":null,\"monocytes\":null,\"platelet_count\":null,\"blood_type\":null}', 'Pending', '2024-11-26', '2024-11-24 23:29:45', '2024-11-28 16:52:50');
+INSERT INTO `medical_records` (id, patient_id, appointment_id, doctor_id, diagnosis, treatment, prescription, content, status, record_date, created_at, updated_at) VALUES ('11', '10', '55', 'TRLB7292', 'Diagnosis', 'Treatment', 'Prescription', '{\"date\":\"2024-11-29\",\"x_ray_number\":\"09122377\",\"patient_name\":\"ROMERO, MHERWEN WIEL\",\"age_sex\":\"24\\/Male\",\"address\":\"City of Tagaytay\",\"request_by\":\"OP\",\"examination\":\"CHEST PA\",\"findings\":\"SAMPLE FINDINGS\",\"impression\":\"IMPRESSION\",\"doctor_name\":\"ERWIN PETIL\",\"radiologist_signature\":\"ERWIN PETIL\",\"radiologist_position\":\"Radiologist\",\"specialization\":\"Radiologist\",\"doctor_title\":\"MD\",\"header\":\"SAMPLE DOCS\"}', 'Pending', '2024-11-26', '2024-11-24 23:29:45', '2024-11-29 14:07:45');
 INSERT INTO `medical_records` (id, patient_id, appointment_id, doctor_id, diagnosis, treatment, prescription, content, status, record_date, created_at, updated_at) VALUES ('12', '10', '56', 'TRLB7292', 'diagnossis', 'treatment', 'not  yet', '{\"date\":\"2024-11-28\",\"x_ray_number\":\"X-ray No. 24 - 7\",\"patient_name\":\"ROMERO, MHERWEN WIEL\",\"age_sex\":\"24\\/Male\",\"address\":\"City of Tagaytay\",\"request_by\":\"OP\",\"examination\":\"CHEST PA\",\"findings\":\"this is a data\",\"impression\":\"data\",\"doctor_name\":\"ERWIN PETIL\",\"doctor_title\":\"MD\",\"radiologist_signature\":\"ERWIN PETIL, MD\",\"radiologist_position\":\"Radiologist\"}', 'Pending', '2024-11-26', '2024-11-25 13:04:56', '2024-11-28 16:52:52');
-INSERT INTO `medical_records` (id, patient_id, appointment_id, doctor_id, diagnosis, treatment, prescription, content, status, record_date, created_at, updated_at) VALUES ('15', '10', '57', 'TRLB6874', '', '', '', '{\"hemoglobin\":\"2\",\"hematocrit\":\"2\",\"wbc_count\":\"2\",\"rbc_count\":\"2\",\"segmenters\":\"2\",\"lymphocytes\":\"2\",\"eosinophils\":\"2\",\"monocytes\":\"2\",\"platelet_count\":\"2\",\"blood_type\":\"F\"}', 'Pending', '2024-11-27', '2024-11-27 23:07:29', '2024-11-27 23:30:43');
+INSERT INTO `medical_records` (id, patient_id, appointment_id, doctor_id, diagnosis, treatment, prescription, content, status, record_date, created_at, updated_at) VALUES ('15', '10', '57', 'TRLB7292', '', '', '', '{\"date\":\"2024-11-29\",\"x_ray_number\":\"20\",\"patient_name\":\"ROMERO, MHERWEN WIEL\",\"age_sex\":\"24\\/Male\",\"address\":\"City of Tagaytay\",\"request_by\":\"OP\",\"examination\":\"CHEST\",\"findings\":\"May 9mm na bakal sa tagiliran ang laki oh,\",\"impression\":\"SHAKS\",\"doctor_name\":\"MHERWEN WIEL ROMERO\",\"radiologist_signature\":\"MHERWEN WIEL ROMERO\",\"radiologist_position\":\"Radiologist\",\"specialization\":\"Medical Technologist\",\"doctor_title\":\"MD,RN\",\"header\":\"ROENTGENOLOGICAL\"}', 'Approved', '2024-11-27', '2024-11-27 23:07:29', '2024-11-29 13:26:12');
 INSERT INTO `medical_records` (id, patient_id, appointment_id, doctor_id, diagnosis, treatment, prescription, content, status, record_date, created_at, updated_at) VALUES ('16', '10', '60', 'TRLB6979', '', '', '', 'No content provided', 'Pending', '2024-11-28', '2024-11-28 15:12:46', '2024-11-28 16:56:32');
 INSERT INTO `medical_records` (id, patient_id, appointment_id, doctor_id, diagnosis, treatment, prescription, content, status, record_date, created_at, updated_at) VALUES ('17', '10', '61', '', '', '', '', 'No content provided', 'Pending', '2024-11-28', '2024-11-28 15:14:19', '2024-11-28 15:14:19');
 INSERT INTO `medical_records` (id, patient_id, appointment_id, doctor_id, diagnosis, treatment, prescription, content, status, record_date, created_at, updated_at) VALUES ('18', '10', '58', 'TRLB7292', '', '', '', '{\"date\":\"2024-11-28\",\"x_ray_number\":\"X-ray No. 24 - 7\",\"patient_name\":\"ROMERO, MHERWEN WIEL\",\"age_sex\":\"24\\/Male\",\"address\":\"City of Tagaytay\",\"request_by\":\"OP\",\"examination\":\"CHEST PA\",\"findings\":\"CHEST PA\",\"impression\":\"CHEST PA\",\"doctor_name\":\"IVY BARRIOS\",\"doctor_title\":\"MD\",\"radiologist_signature\":\"IVY BARRIOS, MD\",\"radiologist_position\":\"Radiologist\"}', 'Pending', '2024-11-28', '2024-11-28 16:19:06', '2024-11-28 16:52:55');
 INSERT INTO `medical_records` (id, patient_id, appointment_id, doctor_id, diagnosis, treatment, prescription, content, status, record_date, created_at, updated_at) VALUES ('19', '10', '59', 'TRLB7292', '', '', '', NULL, 'Pending', '2024-11-28', '2024-11-28 16:46:50', '2024-11-28 16:47:22');
+INSERT INTO `medical_records` (id, patient_id, appointment_id, doctor_id, diagnosis, treatment, prescription, content, status, record_date, created_at, updated_at) VALUES ('20', '27', '62', '', '', '', '', NULL, 'Pending', '2024-11-28', '2024-11-28 23:25:29', '2024-11-28 23:25:29');
+INSERT INTO `medical_records` (id, patient_id, appointment_id, doctor_id, diagnosis, treatment, prescription, content, status, record_date, created_at, updated_at) VALUES ('21', '10', '63', '', '', '', '', NULL, 'Pending', '2024-11-29', '2024-11-29 22:10:19', '2024-11-29 22:10:19');
+INSERT INTO `medical_records` (id, patient_id, appointment_id, doctor_id, diagnosis, treatment, prescription, content, status, record_date, created_at, updated_at) VALUES ('22', '10', '64', '', '', '', '', NULL, 'Pending', '2024-11-29', '2024-11-29 23:37:10', '2024-11-29 23:37:10');
+INSERT INTO `medical_records` (id, patient_id, appointment_id, doctor_id, diagnosis, treatment, prescription, content, status, record_date, created_at, updated_at) VALUES ('23', '10', '65', '', '', '', '', NULL, 'Pending', '2024-11-29', '2024-11-29 23:52:25', '2024-11-29 23:52:25');
 
 DROP TABLE IF EXISTS `patient`;
 CREATE TABLE `patient` (
@@ -175,12 +191,47 @@ CREATE TABLE `patient` (
   `street` varchar(255) DEFAULT NULL,
   `date_added` timestamp NOT NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=27 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=28 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 INSERT INTO `patient` (id, firstname, lastname, age, sex, email, dob, birthplace, contact, password, province, city, barangay, street, date_added) VALUES ('9', 'Kyle Andre', 'Lim', '24', 'Male', 'kylemastercoder14@gmail.com', '2000-01-14', 'Cavite', '9152479691', '$2y$10$3PCQfGLAMDsHHnCjAH2np.2rBEr3XF.h6TlmZ9fdc4BtqyLoOioCq', 'Cavite', 'City of Dasmariñas', 'Santa Lucia', 'B111 L4 Ruby Street', '2024-05-04 21:34:34');
 INSERT INTO `patient` (id, firstname, lastname, age, sex, email, dob, birthplace, contact, password, province, city, barangay, street, date_added) VALUES ('10', 'Mherwen Wiel', 'Romero', '24', 'Male', 'romeroqmherwen@gmail.com', '2024-11-16', 'Dasma', '09553471926', '$2y$10$Kd4wh.OShR1hgpORWodxVu/HDR3MVn.kbzPbaErn4R.pXXaAetj3K', 'Cavite', 'City of Tagaytay', 'Tolentino West', 'BLK D 8 LOT 16 SAN LUIS 1 DASMARIÑAS CAV', '2024-11-15 19:33:41');
 INSERT INTO `patient` (id, firstname, lastname, age, sex, email, dob, birthplace, contact, password, province, city, barangay, street, date_added) VALUES ('25', 'Lindaxxx', 'Romero', '70', 'Female', 'Linda@gmail.com', '2024-11-17', NULL, '0955237123', '', 'cavite', 'dasmarinas', 'SABUTAN', 'blk d8 lot 15', '2024-11-17 10:55:36');
 INSERT INTO `patient` (id, firstname, lastname, age, sex, email, dob, birthplace, contact, password, province, city, barangay, street, date_added) VALUES ('26', 'Marlyn', 'Leano', '32', 'Female', 'marlyn@gmail.com', '2024-11-26', NULL, '09123823123', '$2y$10$xZpeDN7g64ZGcDFwcf8nauDdRzS06q5XUJCS1ldllNgpoqhJ7ZWl.', 'CAVITE', 'City of DASMARIÑAS', 'San Luis 1', 'BLK D 8 LOT 16 SAN LUIS 1 DASMARIÑAS CAV', '2024-11-26 13:39:30');
+INSERT INTO `patient` (id, firstname, lastname, age, sex, email, dob, birthplace, contact, password, province, city, barangay, street, date_added) VALUES ('27', 'Kian ', 'Torzar', '23', 'Male', 'kian@gmail.com', '2024-11-28', 'CITY OF DASMARIÑAS', '9152479692', '$2y$10$lSmZEqqQAz3UgZLpnQKOzu7rvCmQ7gM13Xr0dkfjX6uM6mXuqSJ8u', 'CAVITE', 'CITY OF DASMARIÑAS', 'SAN LUIS 1', 'BLK D 8 LOT 16 SAN LUIS 1 DASMARIÑAS CAV', '2024-11-28 23:24:06');
+
+DROP TABLE IF EXISTS `patient_files`;
+CREATE TABLE `patient_files` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `patient_id` int(11) NOT NULL,
+  `directory` varchar(255) NOT NULL,
+  `file_name` varchar(255) NOT NULL,
+  `uploaded_at` datetime DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=24 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+INSERT INTO `patient_files` (id, patient_id, directory, file_name, uploaded_at) VALUES ('1', '10', 'uploads\\user_10', 'Gaming_5000x3125.jpg', '2024-11-30 00:51:57');
+INSERT INTO `patient_files` (id, patient_id, directory, file_name, uploaded_at) VALUES ('2', '10', 'uploads\\user_10', 'plannn.pdf', '2024-11-30 00:52:22');
+INSERT INTO `patient_files` (id, patient_id, directory, file_name, uploaded_at) VALUES ('3', '10', 'uploads\\user_10', 'plannn.pdf', '2024-11-30 00:55:27');
+INSERT INTO `patient_files` (id, patient_id, directory, file_name, uploaded_at) VALUES ('4', '10', 'uploads\\user_10', 'plannn.pdf', '2024-11-30 00:56:01');
+INSERT INTO `patient_files` (id, patient_id, directory, file_name, uploaded_at) VALUES ('5', '10', 'uploads\\user_10', 'plannn.pdf', '2024-11-30 00:56:15');
+INSERT INTO `patient_files` (id, patient_id, directory, file_name, uploaded_at) VALUES ('6', '9', 'uploads\\user_9', 'Screenshot 2024-03-18 220354.png', '2024-11-30 00:57:44');
+INSERT INTO `patient_files` (id, patient_id, directory, file_name, uploaded_at) VALUES ('7', '9', 'uploads\\user_9', 'Screenshot 2024-03-18 220354.png', '2024-11-30 00:57:48');
+INSERT INTO `patient_files` (id, patient_id, directory, file_name, uploaded_at) VALUES ('8', '10', 'uploads\\user_10', 'plannn.pdf', '2024-11-30 01:00:14');
+INSERT INTO `patient_files` (id, patient_id, directory, file_name, uploaded_at) VALUES ('9', '9', 'uploads\\user_9', 'Screenshot 2024-03-18 220354.png', '2024-11-30 01:22:13');
+INSERT INTO `patient_files` (id, patient_id, directory, file_name, uploaded_at) VALUES ('10', '9', 'uploads\\user_9', 'Screenshot 2024-03-18 230310.png', '2024-11-30 01:22:13');
+INSERT INTO `patient_files` (id, patient_id, directory, file_name, uploaded_at) VALUES ('11', '9', 'uploads\\user_9', 'Screenshot 2024-03-18 230310.png', '2024-11-30 01:27:30');
+INSERT INTO `patient_files` (id, patient_id, directory, file_name, uploaded_at) VALUES ('12', '9', 'uploads\\user_9', 'Screenshot 2024-03-25 171439.png', '2024-11-30 01:27:30');
+INSERT INTO `patient_files` (id, patient_id, directory, file_name, uploaded_at) VALUES ('13', '9', 'uploads\\user_9', 'Screenshot 2024-03-28 135809.png', '2024-11-30 01:27:30');
+INSERT INTO `patient_files` (id, patient_id, directory, file_name, uploaded_at) VALUES ('14', '9', 'uploads\\user_9', 'Screenshot 2024-03-18 230310.png', '2024-11-30 01:29:48');
+INSERT INTO `patient_files` (id, patient_id, directory, file_name, uploaded_at) VALUES ('15', '9', 'uploads\\user_9', 'Screenshot 2024-03-25 171439.png', '2024-11-30 01:29:49');
+INSERT INTO `patient_files` (id, patient_id, directory, file_name, uploaded_at) VALUES ('16', '9', 'uploads\\user_9', 'Screenshot 2024-03-28 135809.png', '2024-11-30 01:29:49');
+INSERT INTO `patient_files` (id, patient_id, directory, file_name, uploaded_at) VALUES ('17', '10', 'uploads\\user_10', 'Gaming_5000x3125.jpg', '2024-11-30 01:47:28');
+INSERT INTO `patient_files` (id, patient_id, directory, file_name, uploaded_at) VALUES ('18', '10', 'uploads\\user_10', 'Doc1.docx', '2024-11-30 01:51:43');
+INSERT INTO `patient_files` (id, patient_id, directory, file_name, uploaded_at) VALUES ('19', '27', 'uploads\\user_27', 'Doc1.docx', '2024-11-30 01:56:49');
+INSERT INTO `patient_files` (id, patient_id, directory, file_name, uploaded_at) VALUES ('20', '27', 'uploads\\user_27', 'Romero.docx', '2024-11-30 01:56:49');
+INSERT INTO `patient_files` (id, patient_id, directory, file_name, uploaded_at) VALUES ('21', '10', 'uploads\\user_10', 'Romero_assessment1.pdf', '2024-11-30 02:09:20');
+INSERT INTO `patient_files` (id, patient_id, directory, file_name, uploaded_at) VALUES ('22', '25', 'uploads\\user_25', 'Doc1.docx', '2024-11-30 02:16:52');
+INSERT INTO `patient_files` (id, patient_id, directory, file_name, uploaded_at) VALUES ('23', '25', 'uploads\\user_25', 'Romero.docx', '2024-11-30 02:16:52');
 
 DROP TABLE IF EXISTS `payment_mode`;
 CREATE TABLE `payment_mode` (
@@ -210,9 +261,9 @@ CREATE TABLE `payment_receipts` (
   CONSTRAINT `payment_receipts_ibfk_2` FOREIGN KEY (`payment_mode_id`) REFERENCES `payment_mode` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB AUTO_INCREMENT=17 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
-INSERT INTO `payment_receipts` (id, appointment_id, payment_receipt_path, date, payment_mode_id, amount, status) VALUES ('10', '55', '', '2024-11-24', '3', '300.50', 'Approved');
+INSERT INTO `payment_receipts` (id, appointment_id, payment_receipt_path, date, payment_mode_id, amount, status) VALUES ('10', '55', '', '2024-11-24', '3', '300.50', 'Pending');
 INSERT INTO `payment_receipts` (id, appointment_id, payment_receipt_path, date, payment_mode_id, amount, status) VALUES ('11', '56', '', '2024-11-26', '3', '400.50', 'Approved');
-INSERT INTO `payment_receipts` (id, appointment_id, payment_receipt_path, date, payment_mode_id, amount, status) VALUES ('12', '57', '', '2024-11-26', '3', '300.50', 'Pending');
+INSERT INTO `payment_receipts` (id, appointment_id, payment_receipt_path, date, payment_mode_id, amount, status) VALUES ('12', '57', '', '2024-11-26', '3', '300.50', 'Approved');
 INSERT INTO `payment_receipts` (id, appointment_id, payment_receipt_path, date, payment_mode_id, amount, status) VALUES ('13', '61', 'uploads/payment_receipts/1732778059_Gaming_5000x3125.jpg', '2024-11-28', '1', '300.00', 'Pending');
 INSERT INTO `payment_receipts` (id, appointment_id, payment_receipt_path, date, payment_mode_id, amount, status) VALUES ('14', '58', '', '2024-11-28', '3', '300.50', 'Pending');
 INSERT INTO `payment_receipts` (id, appointment_id, payment_receipt_path, date, payment_mode_id, amount, status) VALUES ('15', '59', '', '2024-11-28', '3', '300.50', 'Pending');
@@ -233,6 +284,6 @@ CREATE TABLE `services` (
 
 INSERT INTO `services` (id, category, type, service, department_id, cost, date_added, is_archive) VALUES ('1', 'Imaging Services', 'X-Ray', 'Spot Film', '2', '300.50', '2024-05-03 15:44:15', '0');
 INSERT INTO `services` (id, category, type, service, department_id, cost, date_added, is_archive) VALUES ('2', 'Imaging Services', 'X-Ray', 'T-Cage', '2', '250.80', '2024-05-03 15:44:54', '0');
-INSERT INTO `services` (id, category, type, service, department_id, cost, date_added, is_archive) VALUES ('3', 'Laboratory Services', 'CBC', 'Red Blood Cell', '2', '200', '2024-05-03 15:53:00', '0');
+INSERT INTO `services` (id, category, type, service, department_id, cost, date_added, is_archive) VALUES ('3', 'Laboratory Services', 'CBC', 'Red Blood Cell', '1', '200', '2024-05-03 15:53:00', '0');
 INSERT INTO `services` (id, category, type, service, department_id, cost, date_added, is_archive) VALUES ('4', 'Imaging Services', 'CT SCAN', 'PELVIC', '2', '100', '2024-11-16 11:17:58', '0');
 
