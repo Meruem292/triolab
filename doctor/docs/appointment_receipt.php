@@ -13,6 +13,19 @@ if (!$appointment) {
     die('Appointment not found.');
 }
 
+$patientId = $appointment['patient_id'];
+$queryPatient = "SELECT * FROM patient WHERE id = ?";
+$stmtPatient = $pdo->prepare($queryPatient);
+$stmtPatient->execute([$patientId]);
+$patient = $stmtPatient->fetch(PDO::FETCH_ASSOC);
+
+$email = $patient['email'];
+$fname = $patient['firstname'];
+$lname = $patient['lastname'];
+$age = $patient['age'];
+$sex = $patient['sex'];
+
+
 $appointmentDate = $appointment['appointment_date'];
 $appointmentTime = $appointment['appointment_time'];
 $appointmentNote = $appointment['medical'];
@@ -43,17 +56,14 @@ if ($doctorDepartmentId) {
     $stmtDepartment->execute([$doctorDepartmentId]);
     $doctorDepartment = $stmtDepartment->fetchColumn();
 
-    
+
     if (!$doctorDepartment) {
         $doctorDepartment = 'Unknown Department';
     }
 }
 
 
-$email = $_SESSION['user_email'];
-$fname = $_SESSION['user_firstname'];
-$lname = $_SESSION['user_lastname'];
-$phone = $_SESSION['user_phone'];
+
 ?>
 
 <!DOCTYPE html>
@@ -227,23 +237,35 @@ $phone = $_SESSION['user_phone'];
 <body>
     <div class="max-w-2xl mx-auto p-6 bg-white rounded-lg shadow-lg dark:bg-zinc-800">
         <div class="flex items-center">
-            <img src="../images/triolab_header.png" alt="Clinic Logo" />
+            <img src="../assets/images/triolab_header.png" alt="Clinic Logo" />
 
         </div>
 
         <h4 class="text-xl font-bold text-center mt-4 text-zinc-900 dark:text-zinc-100">APPOINTMENT RECEIPT</h4>
-        <div class="mt-1 flex justify-end flex-col items-end space-y-0">
+        <div class="mt-1 flex justify-end flex-col items-end space-y-0 mt-3">
             <p class="text-sm text-zinc-600 dark:text-zinc-300">Appointment Date: <?php echo $appointmentDate; ?></p>
             <p class="text-sm text-zinc-600 dark:text-zinc-300">Appointment Time: <?php echo $appointmentTime; ?></p>
         </div>
 
         <div class="mt-2">
+            <p class="font-bold text-zinc-900 dark:text-zinc-100">Patiend ID: <span class="font-normal text-zinc-800 dark:text-zinc-300">
+                    <?php echo $patientId; ?>
+            </span></p>
             <p class="font-bold text-zinc-900 dark:text-zinc-100">Name: <span class="font-normal text-zinc-800 dark:text-zinc-300"><?php echo strtoupper($lname) . ', ' . ucfirst($fname); ?></span></p>
-            <p class="font-bold text-zinc-900 dark:text-zinc-100">Age/Sex: <span class="font-normal text-zinc-800 dark:text-zinc-300">22/M</span></p> <!-- You can dynamically change age/sex if available -->
+            <p class="font-bold text-zinc-900 dark:text-zinc-100">Age/Sex: <span class="font-normal text-zinc-800 dark:text-zinc-300">
+                    <?php echo $age . '/' . $sex; ?>
+            </span></p> <!-- You can dynamically change age/sex if available -->
             <p class="font-bold text-zinc-900 dark:text-zinc-100">Address: <span class="font-normal text-zinc-800 dark:text-zinc-300"><?php echo $email; ?></span></p>
             <p class="font-bold text-zinc-900 dark:text-zinc-100">Requested Service: <span class="font-normal text-zinc-800 dark:text-zinc-300"><?php echo $serviceName; ?></span></p>
             <p class="font-bold text-zinc-900 dark:text-zinc-100 mt-4">Note: <span class="font-normal text-zinc-800 dark:text-zinc-300"><?php echo $appointmentNote; ?></span></p>
         </div>
+
+        <div class="row mt-5">
+            <div class="col-12 d-flex justify-content-center align-items-center">
+                <h1 class="font-bold text-zinc-900 dark:text-zinc-100">Appointment ID: <?= $appointmentId ?></h1>
+            </div>
+        </div>
+
 
         <div class="row">
             <div class="col-8">

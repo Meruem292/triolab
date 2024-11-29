@@ -76,7 +76,10 @@ $examination = $medical_data['examination'] ?? '';
 $findings = $medical_data['findings'] ?? '';
 $impression = $medical_data['impression'] ?? '';
 $age_sex = $medical_data['age_sex'] ?? '';  // Assuming 'age_sex' is a key in your medical data
-
+$header = $medical_data['header'] ?? '';  // Assuming 'header' is a key in your medical data
+$xrayno = $medical_data['x_ray_number'] ?? '';  // Assuming 'x_ray_number' is a key in your medical data
+$doctor_title = $medical_data['doctor_title'] ?? '';  // Assuming 'doctor_title' is a key in your medical data
+$specialization = $medical_data['specialization'] ?? '';  // Assuming 'specialization' is a key in your medical data
 ?>
 
 
@@ -332,42 +335,50 @@ input[type="text"] {
                     </div>
                 <?php break;
             case 'Imaging Services': ?>
-                    <input type="hidden" name="type" value="xray">
-                    <input type="hidden" name="appointment_id" value="<?= $appointment_id ?>">
-                    <h5 class="text-lg font-bold text-center mt-4 text-zinc-900 dark:text-zinc-100">ROENTGENOLOGICAL REPORT</h5>
-                    <div class="row">
-                        <div class="col-9">
+                    <form action="" method="POST" enctype="multipart/form-data">
+                        <input type="hidden" name="type" value="xray">
+                        <input type="hidden" name="appointment_id" value="<?= $appointment_id ?>">
+                        <h1 class="text-lg font-bold text-center mt-4 text-zinc-900 dark:text-zinc-100">
+                            <input type="text" style="border: none"  style="border:none;" class="text-xl w-50 h-100" name="header" value="<?= $header ?>">
+                        </h1>
+                        <div class="row mt-2">
+                            <div class="col-9">
+                                <!-- Left-side content -->
+                            </div>
 
+                            <!-- Right-side content -->
+                            <div class="col-auto ms-auto">
+                                <p>Date: <?= date('Y-m-d') ?></p>
+                                <p>X-ray No.:<input type="text" style="border: none" name="xrayno" id="xrayno" value="<?= $xrayno ?>"></p>
+                                
+                            </div>
                         </div>
-                        <div class="col-auto">
-                            <p>Date: <?= date('Y-m-d') ?></p>
-                            <p>X-ray No. 24 - <?= $appointment_count_by_services ?></p>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-12">
-                            <p>Name: <strong><?= strtoupper($patient['lastname']) . ", " . strtoupper($patient['firstname']) ?></strong></p>
-                            <p><strong>Age/Sex:</strong> <?= $patient['age'] . '/' . $patient['sex'] ?></p>
-                            <p>Address: <?= $patient['city'] ?></p>
-                            <p>Requsted by: <input type="text" name="request_by" value="<?= $request_by ?>"></p>
-                            <br>
-                            <p>Kind of Examination: <input type="text" name="examination" value="<?= $examination ?>"></p>
-                            <p class="mt-3"> Radiographic Findings:</p>
+                        <div class="row">
+                            <div class="col-12">
+                                <p>Name: <strong><?= strtoupper($patient['lastname']) . ", " . strtoupper($patient['firstname']) ?></strong></p>
+                                <p><strong>Age/Sex:</strong> <?= $patient['age'] . '/' . $patient['sex'] ?></p>
+                                <p>Address: <?= $patient['city'] ?></p>
+                                <p>Requsted by: <input  style="border:none;" type="text" name="request_by" value="<?= $request_by ?>"></p>
+                                <br>
+                                <p>Kind of Examination: <input  style="border:none;" type="text" name="examination" value="<?= $examination ?>"></p>
+                                <p class="mt-3"> Radiographic Findings:</p>
 
-                            <textarea class="mb-3 w-100" name="findings" id="findings"><?= $findings ?></textarea>
-                            <p class="mb-2">IMPRESSION: </p>
+                                <textarea class="mb-3 w-100"  style="border:none;" name="findings" id="findings"><?= $findings ?></textarea>
+                                <p class="mb-2">IMPRESSION: </p>
 
-                            <textarea class="w-100" name="impression" id="impression"><?= $impression ?></textarea>
+                                <textarea class="w-100"  style="border:none;" name="impression" id="impression"><?= $impression ?></textarea>
+                            </div>
                         </div>
-                    </div>
-                    <div class="row mt-5 mb-5">
-                        <div class="col-6"></div>
-                        <div class="col-6 d-flex flex-column align-items-center">
-                            <p class="mr-5"><strong><ins><?= strtoupper($doctor['firstname']) . ' ' . strtoupper($doctor['lastname']) . ', ' ?> MD</ins></strong></p>
-                            <p>Radiologist</p>
+                        <div class="row mt-5 mb-5">
+                            <div class="col-4"></div>
+                            <div class="col-8 d-flex flex-column align-items-center">
+                                <p class=""><strong><ins><?= strtoupper($doctor['firstname']) . ' ' . strtoupper($doctor['lastname']) . ', ' ?>
+                                            <input type="text" style="border:none; text-align: left"  name="doctor_title" value="<?= $doctor_title ?>"></ins></strong></p>
+                                <p><input type="text" style="border:none; width:250px" name="specialization" value="<?= $specialization ?>"></p>
+                            </div>
                         </div>
-                    </div>
-            <?php break;
+
+                <?php break;
             default:
                 echo 'No service category found.';
         } ?>

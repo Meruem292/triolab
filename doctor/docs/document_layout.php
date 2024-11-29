@@ -76,6 +76,10 @@ $examination = $medical_data['examination'] ?? '';
 $findings = $medical_data['findings'] ?? '';
 $impression = $medical_data['impression'] ?? '';
 $age_sex = $medical_data['age_sex'] ?? '';  // Assuming 'age_sex' is a key in your medical data
+$header = $medical_data['header'] ?? '';  // Assuming 'header' is a key in your medical data
+$xrayno = $medical_data['x_ray_number'] ?? '';  // Assuming 'x_ray_number' is a key in your medical data
+$doctor_title = $medical_data['doctor_title'] ?? '';  // Assuming 'doctor_title' is a key in your medical data
+$specialization = $medical_data['specialization'] ?? '';  // Assuming 'specialization' is a key in your medical data
 
 if (isset($_POST['submit_doc_changes']) && $_POST['type'] == 'laboratory') {
     $form_data = [
@@ -88,7 +92,9 @@ if (isset($_POST['submit_doc_changes']) && $_POST['type'] == 'laboratory') {
         'eosinophils' => filter_input(INPUT_POST, 'eosinophils', FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION),
         'monocytes' => filter_input(INPUT_POST, 'monocytes', FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION),
         'platelet_count' => filter_input(INPUT_POST, 'platelet_count', FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION),
-        'blood_type' => filter_input(INPUT_POST, 'blood_type')
+        'blood_type' => filter_input(INPUT_POST, 'blood_type'),
+        'doctor_name' => strtoupper($doctor['firstname']) . ' ' . strtoupper($doctor['lastname']),
+
     ];
     // Convert the form data to JSON
     $json_data = json_encode($form_data);
@@ -114,11 +120,11 @@ if (isset($_POST['submit_doc_changes']) && $_POST['type'] == 'laboratory') {
     $_SESSION['message'] = 'Action completed successfully.';
     $_SESSION['status'] = 'success'; // Use 'error', 'warning', etc., as needed
 
-    header("Location: ../medical-records.php");
+    header("Location: ../docs/appointment_receipt.php?appointment_id=$appointment_id");
 } elseif (isset($_POST['submit_doc_changes']) && $_POST['type'] == 'xray') {
     $form_data = [
         'date' => date('Y-m-d'),
-        'x_ray_number' => 'X-ray No. 24 - ' . $appointment_count_by_services,  // This assumes $appointment_count_by_services is set earlier
+        'x_ray_number' => filter_input(INPUT_POST, 'xrayno'), // This assumes $appointment_count_by_services is set earlier
         'patient_name' => strtoupper($patient['lastname']) . ", " . strtoupper($patient['firstname']),
         'age_sex' => $patient['age'] . '/' . $patient['sex'],  // Placeholder for age/sex (no input for this in the form)
         'address' => $patient['city'],
@@ -126,10 +132,13 @@ if (isset($_POST['submit_doc_changes']) && $_POST['type'] == 'laboratory') {
         'examination' => filter_input(INPUT_POST, 'examination'),
         'findings' => filter_input(INPUT_POST, 'findings'),
         'impression' => filter_input(INPUT_POST, 'impression'),
-        'doctor_name' => strtoupper($doctor['firstname']) . ' ' . strtoupper($doctor['lastname']),
-        'doctor_title' => 'MD',  // Assuming "MD" is the title of the doctor
-        'radiologist_signature' => strtoupper($doctor['firstname']) . ' ' . strtoupper($doctor['lastname']) . ', MD',
-        'radiologist_position' => 'Radiologist'
+        'doctor_name' => strtoupper($doctor['firstname']) . ' ' . strtoupper($doctor['lastname']),  // Assuming "MD" is the title of the doctor
+        'radiologist_signature' => strtoupper($doctor['firstname']) . ' ' . strtoupper($doctor['lastname']),
+        'radiologist_position' => 'Radiologist',
+        'specialization' => filter_input(INPUT_POST, 'specialization'),
+        'doctor_title' => filter_input(INPUT_POST, 'doctor_title'),
+        'header' => filter_input(INPUT_POST, 'header'),
+
     ];
     // Convert the form data to JSON
     $json_data = json_encode($form_data);
@@ -154,7 +163,7 @@ if (isset($_POST['submit_doc_changes']) && $_POST['type'] == 'laboratory') {
 
     $_SESSION['message'] = 'Action completed successfully.';
     $_SESSION['status'] = 'success'; // Use 'error', 'warning', etc., as needed
-    header("Location: ../medical-records.php");
+    header("Location: ../docs/appointment_receipt.php?appointment_id=$appointment_id");
 }
 ?>
 
@@ -415,14 +424,17 @@ input[type="text"] {
                     <form action="" method="POST" enctype="multipart/form-data">
                         <input type="hidden" name="type" value="xray">
                         <input type="hidden" name="appointment_id" value="<?= $appointment_id ?>">
-                        <h5 class="text-lg font-bold text-center mt-4 text-zinc-900 dark:text-zinc-100">ROENTGENOLOGICAL REPORT</h5>
-                        <div class="row">
+                        <h1 class="text-lg font-bold text-center mt-4 text-zinc-900 dark:text-zinc-100">
+                            <input type="text" class="text-xl w-50 h-100" name="header" value="<?= $header ?>">
+                        </h1>
+                        <div class="row mt-2">
                             <div class="col-9">
-
+                                <!-- Left-side content -->
                             </div>
-                            <div class="col-auto">
+                            <!-- Right-side content -->
+                            <div class="col-auto ms-auto">
                                 <p>Date: <?= date('Y-m-d') ?></p>
-                                <p>X-ray No. 24 - <?= $appointment_count_by_services ?></p>
+                                <p>X-ray No.:<input type="text" name="xrayno" id="xrayno" value="<?= $xrayno ?>"></p>
                             </div>
                         </div>
                         <div class="row">
@@ -442,10 +454,11 @@ input[type="text"] {
                             </div>
                         </div>
                         <div class="row mt-5 mb-5">
-                            <div class="col-6"></div>
-                            <div class="col-6 d-flex flex-column align-items-center">
-                                <p class="mr-5"><strong><ins><?= strtoupper($doctor['firstname']) . ' ' . strtoupper($doctor['lastname']) . ', ' ?> MD</ins></strong></p>
-                                <p>Radiologist</p>
+                            <div class="col-4"></div>
+                            <div class="col-8 d-flex flex-column align-items-center">
+                                <p class=""><strong><ins><?= strtoupper($doctor['firstname']) . ' ' . strtoupper($doctor['lastname']) . ', ' ?>
+                                            <input type="text" style="text-align: left;" name="doctor_title" value="<?= $doctor_title ?>"></ins></strong></p>
+                                <p><input type="text" style="width:250px" name="specialization" value="<?= $specialization ?>"></p>
                             </div>
                         </div>
 

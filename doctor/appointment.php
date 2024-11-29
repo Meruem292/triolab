@@ -547,7 +547,6 @@ ORDER BY appointment.date_added ASC;
                                                         </tbody>
                                                     </table>
                                                 </div>
-
                                                 <div class="d-flex justify-content-end">
                                                     <div class="pagination-wrap hstack gap-2" style="display: flex;">
                                                         <a class="page-item pagination-prev disabled" href="javascript:void(0);">
@@ -645,17 +644,15 @@ ORDER BY appointment.date_added ASC;
                             <textarea name="prescription" id="prescription" class="form-control"></textarea>
                         </div>
 
-
                         <!-- Medical Status -->
                         <div class="col-md-12 mb-2">
                             <label class="form-label">Service Status <span class="text-danger">*</span></label>
                             <input type="hidden" id="medicalStatus">
                             <select name="medicalStatus" id="medicalStatus" class="form-select" required>
                                 <option value="Pending">Pending</option>
-                                <option value="Completed">Completed</option>
+                                <option value="Approved">Approved</option>
                             </select>
                         </div>
-
                     </div>
                 </div>
 
@@ -667,7 +664,6 @@ ORDER BY appointment.date_added ASC;
             </form>
         </div>
     </div>
-
 
     <!-- ARCHIVE APPOINTMENT -->
     <div id="archiveAppointment" class="modal fade" tabindex="-1" aria-hidden="true">

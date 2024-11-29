@@ -42,6 +42,7 @@ if (isset($_POST['add_appointment'])) {
     $paid = "Pending";
     $slot = 1;
     $date_added = date('Y-m-d H:i:s');
+    $content = null;
     
 
     try {

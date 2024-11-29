@@ -14,7 +14,16 @@ if (isset($_POST['edit_appointment'])) {
     $paymentStatus = $_POST['paymentStatus'];  // Payment Status (Pending, Approved, Disapproved)
     $status = $_POST['appointmentStatus'];     // Appointment Status (Pending, Completed)
     $doctor = $_POST['doctor'];                // Doctor ID
-    $amount = $_POST['amount'];                // Payment amount
+    $amount = $_POST['amount'];              // Payment amount
+    $medicalStatus = $_POST['medicalStatus'];  // Medical Status (Pending, Approved)
+    
+
+    if ($status === "Completed" && ($medicalStatus !== "Approved" || $paymentStatus !== "Approved")) {
+        $_SESSION['message'] = "Cannot mark as Completed. Both Medical Status and Payment Status must be Approved.";
+        $_SESSION['status'] = "error";
+        header('Location: ../admin/appointment.php');
+        exit();
+    }
 
     try {
         // Begin transaction
@@ -317,7 +326,7 @@ ORDER BY appointment.date_added ASC;
                                                                         case 'Pending':
                                                                             $medicalStatusClass = 'bg-warning text-dark'; // Yellow background with dark text for Pending
                                                                             break;
-                                                                        case 'Completed':
+                                                                        case 'Approved':
                                                                             $medicalStatusClass = 'bg-success text-white'; // Green background with white text for Approved
                                                                             break;
                                                                         default:
@@ -362,6 +371,7 @@ ORDER BY appointment.date_added ASC;
                                                                                 data-appointment-id="<?= htmlspecialchars($row['appointment_id']); ?>"
                                                                                 data-patient-name="<?= htmlspecialchars($fullnamePatient); ?>"
                                                                                 data-doctor-name="<?= htmlspecialchars($fullnameDoctor); ?>"
+                                                                                data-medical-status="<?= htmlspecialchars($medicalStatus); ?>"
                                                                                 data-service="<?= htmlspecialchars($row['service']); ?>"
                                                                                 data-cost="<?= htmlspecialchars($row['cost']); ?>"
                                                                                 data-payment-amount="<?= htmlspecialchars($row['payment_amount']); ?>"
@@ -687,6 +697,14 @@ ORDER BY appointment.date_added ASC;
                             <label class="form-label">Total Bill <span class="text-danger">*</span></label>
                             <input type="float" step="0.01" name="amount" class="form-control" placeholder="Enter total amount" required>
                         </div>
+                        <!-- Medical Status -->
+                        <div class="col-md-12 mb-2">
+                            <label class="form-label">Medical Status <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="medicalStatus" name="medicalStatus" readonly
+                                data-bs-toggle="tooltip" data-bs-placement="top"
+                                title="This field shows the medical clearance status of the appointment and is not editable. Please consult assigned the doctor for approval!">
+                        </div>
+
 
                         <!-- Payment Status -->
                         <div class="col-md-12 mb-2">
@@ -766,6 +784,14 @@ ORDER BY appointment.date_added ASC;
     <script>
         flatpickr("#datePicker");
     </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            var tooltipList = tooltipTriggerList.map(function(tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
+            });
+        });
+    </script>
 
     <script type="text/javascript">
         function printMedicalRecord(appointmentId) {
@@ -814,6 +840,7 @@ ORDER BY appointment.date_added ASC;
                     const appointmentDate = this.getAttribute('data-appointment-date');
                     const appointmentTime = this.getAttribute('data-appointment-time');
                     const status = this.getAttribute('data-status');
+                    const medicalStatus = this.getAttribute('data-medical-status');
                     const paymentStatus = this.getAttribute('data-payment-status');
 
                     document.getElementById('appointmentId').value = appointmentId;
@@ -826,10 +853,19 @@ ORDER BY appointment.date_added ASC;
                     document.getElementById('appointmentDate').textContent = appointmentDate;
                     document.getElementById('appointmentTime').textContent = appointmentTime;
                     document.getElementById('appointmentStatus').value = status;
+                    document.getElementById('medicalStatus').value = medicalStatus;
                     document.getElementById('paymentStatus').value = paymentStatus;
 
-
                     document.querySelector('input[name="amount"]').value = paymentAmount;
+
+                    const appointmentStatus = document.getElementById('appointmentStatus');
+                    const completeOption = Array.from(appointmentStatus.options).find(option => option.value === "Completed");
+
+                    if (medicalStatus !== "Approved" || paymentStatus !== "Approved") {
+                        completeOption.disabled = true;
+                    } else {
+                        completeOption.disabled = false;
+                    }
                 });
             });
         });

@@ -13,6 +13,19 @@ if (!$appointment) {
     die('Appointment not found.');
 }
 
+$patientId = $appointment['patient_id'];
+$queryPatient = "SELECT * FROM patient WHERE id = ?";
+$stmtPatient = $pdo->prepare($queryPatient);
+$stmtPatient->execute([$patientId]);
+$patient = $stmtPatient->fetch(PDO::FETCH_ASSOC);
+
+$email = $patient['email'];
+$fname = $patient['firstname'];
+$lname = $patient['lastname'];
+$age = $patient['age'];
+$sex = $patient['sex'];
+
+
 $appointmentDate = $appointment['appointment_date'];
 $appointmentTime = $appointment['appointment_time'];
 $appointmentNote = $appointment['medical'];
@@ -43,17 +56,14 @@ if ($doctorDepartmentId) {
     $stmtDepartment->execute([$doctorDepartmentId]);
     $doctorDepartment = $stmtDepartment->fetchColumn();
 
-    
+
     if (!$doctorDepartment) {
         $doctorDepartment = 'Unknown Department';
     }
 }
 
 
-$email = $_SESSION['user_email'];
-$fname = $_SESSION['user_firstname'];
-$lname = $_SESSION['user_lastname'];
-$phone = $_SESSION['user_phone'];
+
 ?>
 
 <!DOCTYPE html>
@@ -238,12 +248,24 @@ $phone = $_SESSION['user_phone'];
         </div>
 
         <div class="mt-2">
+            <p class="font-bold text-zinc-900 dark:text-zinc-100">Patiend ID: <span class="font-normal text-zinc-800 dark:text-zinc-300">
+                    <?php echo $patientId; ?>
+            </span></p>
             <p class="font-bold text-zinc-900 dark:text-zinc-100">Name: <span class="font-normal text-zinc-800 dark:text-zinc-300"><?php echo strtoupper($lname) . ', ' . ucfirst($fname); ?></span></p>
-            <p class="font-bold text-zinc-900 dark:text-zinc-100">Age/Sex: <span class="font-normal text-zinc-800 dark:text-zinc-300">22/M</span></p> <!-- You can dynamically change age/sex if available -->
+            <p class="font-bold text-zinc-900 dark:text-zinc-100">Age/Sex: <span class="font-normal text-zinc-800 dark:text-zinc-300">
+                    <?php echo $age . '/' . $sex; ?>
+            </span></p> <!-- You can dynamically change age/sex if available -->
             <p class="font-bold text-zinc-900 dark:text-zinc-100">Address: <span class="font-normal text-zinc-800 dark:text-zinc-300"><?php echo $email; ?></span></p>
             <p class="font-bold text-zinc-900 dark:text-zinc-100">Requested Service: <span class="font-normal text-zinc-800 dark:text-zinc-300"><?php echo $serviceName; ?></span></p>
             <p class="font-bold text-zinc-900 dark:text-zinc-100 mt-4">Note: <span class="font-normal text-zinc-800 dark:text-zinc-300"><?php echo $appointmentNote; ?></span></p>
         </div>
+
+        <div class="row mt-5">
+            <div class="col-12 d-flex justify-content-center align-items-center">
+                <h1 class="font-bold text-zinc-900 dark:text-zinc-100">Appointment ID: <?= $appointmentId ?></h1>
+            </div>
+        </div>
+
 
         <div class="row">
             <div class="col-8">
