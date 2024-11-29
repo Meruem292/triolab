@@ -8,6 +8,19 @@ if (!isset($_SESSION['user_id'])) {
     header('Location: signin.php');
 };
 
+
+// Fetch departments from the database
+$departments = [];
+try {
+    $stmt = $pdo->prepare("SELECT id, name FROM departments WHERE is_archive = 0 ORDER BY id ASC");
+    $stmt->execute();
+    $departments = $stmt->fetchAll(PDO::FETCH_ASSOC);
+} catch (Exception $e) {
+    echo "Error fetching departments: " . $e->getMessage();
+}
+
+
+
 if (isset($_POST['add_service'])) {
     $category = $_POST['category'];
     $type = $_POST['type'];
@@ -531,11 +544,15 @@ if (isset($_POST['archive_service'])) {
                     <div class="mb-3">
                         <label class="form-label">Department <span class="text-danger">*</span></label>
                         <select name="department" class="form-select" required>
-                            <option value="Doctor/Physician" selected>Doctor/Physician</option>
-                            <option value="Radiological Technologist">Radiological Technologist</option>
-                            <option value="Medical Consultant">Medical Consultant</option>
+                            <option value="" disabled selected>Select a department</option>
+                            <?php foreach ($departments as $department): ?>
+                                <option value="<?= htmlspecialchars($department['id']) ?>">
+                                    <?= htmlspecialchars($department['name']) ?>
+                                </option>
+                            <?php endforeach; ?>
                         </select>
                     </div>
+
                     <div class="mb-3">
                         <label class="form-label">Cost (₱) <span class="text-danger">*</span></label>
                         <input type="number" class="form-control" name="cost" required placeholder="eg. 300, 799.80">
@@ -577,11 +594,13 @@ if (isset($_POST['archive_service'])) {
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Department <span class="text-danger">*</span></label>
-                        <select name="editServicesDepartment" id="servicesDepartment" class="form-select" required>
-                            <option value="1" selected>Doctor/Physician</option>
-                            <option value="2">Radiological Technologist</option>
-                            <option value="3">Medical Technician</option>
-                            <option value="4">Medical Consultant</option>
+                        <select name="department" class="form-select" required>
+                            <option value="" disabled selected>Select a department</option>
+                            <?php foreach ($departments as $department): ?>
+                                <option value="<?= htmlspecialchars($department['id']) ?>">
+                                    <?= htmlspecialchars($department['name']) ?>
+                                </option>
+                            <?php endforeach; ?>
                         </select>
                     </div>
                     <div class="mb-3">
@@ -594,7 +613,7 @@ if (isset($_POST['archive_service'])) {
                     <button type="submit" name="edit_service" class="btn btn-primary ">Save Changes</button>
                 </div>
             </form>
-            
+
         </div>
     </div>
 

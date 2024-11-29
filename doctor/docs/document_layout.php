@@ -461,7 +461,7 @@ input[type="text"] {
                                 <p><input type="text" style="width:250px" name="specialization" value="<?= $specialization ?>"></p>
                             </div>
                         </div>
-
+ 
                 <?php break;
             default:
                 "No service category found";

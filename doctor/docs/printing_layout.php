@@ -352,7 +352,7 @@ input[type="text"] {
                                 <p>X-ray No.:<input type="text" style="border: none" name="xrayno" id="xrayno" value="<?= $xrayno ?>"></p>
                                 
                             </div>
-                        </div>
+                        </div> 
                         <div class="row">
                             <div class="col-12">
                                 <p>Name: <strong><?= strtoupper($patient['lastname']) . ", " . strtoupper($patient['firstname']) ?></strong></p>
