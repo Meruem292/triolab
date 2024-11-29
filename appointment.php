@@ -43,7 +43,7 @@ if (isset($_POST['add_appointment'])) {
     $slot = 1;
     $date_added = date('Y-m-d H:i:s');
     $content = null;
-    
+
 
     try {
         // Insert appointment data
@@ -354,6 +354,8 @@ if (isset($_POST['add_appointment'])) {
             margin-top: 0;
         }
 
+
+
         .prev-step,
         .next-step {
             font-size: 13px;
@@ -653,6 +655,7 @@ if (isset($_POST['add_appointment'])) {
                                                 <p>2. Enter your preferred time* (8:00 AM to 5:00 PM)</p>
                                                 <div id="error-time" class="bg-danger p-2 text-white my-3" style="display: none;">Please select a time between 8:00 AM and 5:00 PM</div>
                                                 <input type="time" name="selectedTime" id="preferred-time" min="08:00" max="16:30" required class="form-control">
+
                                                 <button type="button" class="default-btn next-step">Next</button>
                                             </div>
                                         </div>
@@ -722,7 +725,7 @@ if (isset($_POST['add_appointment'])) {
                                         <div class="form-group">
                                             <label>Barangay <span class="text-danger">*</span></label>
                                             <select id="barangay" class="form-control" required></select>
-                                            <input type="hidden" id="barangayName" class="form-control" name="barangay" placeholder="Barangay Name" readonly>
+                                            <input type="hidden" id="barangayName" class="form-control" name="barangay" placeholder="Barangay Name" readonly required>
                                         </div>
                                     </div>
                                     <div class="col-md-12">
@@ -732,6 +735,7 @@ if (isset($_POST['add_appointment'])) {
                                         </div>
                                     </div>
                                 </div>
+
                                 <button type="button" class="default-btn next-step">Next</button>
                             </div>
                             <div class="tab-pane" role="tabpanel" id="step3">
@@ -777,6 +781,7 @@ if (isset($_POST['add_appointment'])) {
                                         </div>
                                     </div>
                                 </div>
+
                                 <button type="submit" name="add_appointment" class="default-btn next-step">Submit</button>
                             </div>
                             <div class="clearfix"></div>
@@ -816,8 +821,78 @@ if (isset($_POST['add_appointment'])) {
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Get all tab panels and "Next" buttons
+            const tabs = document.querySelectorAll('.tab-pane');
+            const nextButtons = document.querySelectorAll('.next-step');
 
+            // Function to validate the current tab
+            function validateTab(tab) {
+                const requiredFields = tab.querySelectorAll('[required]');
+                let isValid = true;
 
+                requiredFields.forEach(field => {
+                    if (!field.value.trim()) {
+                        isValid = false;
+                        field.classList.add('is-invalid'); // Add invalid class
+                    } else {
+                        field.classList.remove('is-invalid'); // Remove invalid class
+                    }
+                });
+
+                return isValid;
+            }
+
+            // Add validation for "Next" buttons
+            nextButtons.forEach((button, index) => {
+                button.addEventListener('click', function() {
+                    const currentTab = tabs[index];
+
+                    // Validate the current tab
+                    if (validateTab(currentTab)) {
+                        // Move to the next tab if valid
+                        const nextTab = tabs[index + 1];
+                        if (nextTab) {
+                            currentTab.classList.remove('active');
+                            nextTab.classList.add('active');
+                        }
+                    } else {
+                        // Show error message for invalid fields
+                        Swal.fire({
+                            title: 'Incomplete Form',
+                            text: 'Please fill out all required fields.',
+                            icon: 'error',
+                            confirmButtonText: 'OK'
+                        });
+                    }
+                });
+            });
+
+            // Add real-time validation for all required fields
+            document.querySelectorAll('[required]').forEach(field => {
+                field.addEventListener('input', function() {
+                    const currentTab = field.closest('.tab-pane');
+                    const currentButton = currentTab.querySelector('.next-step');
+
+                    // Enable or disable the "Next" button based on validation
+                    if (validateTab(currentTab)) {
+                        currentButton.removeAttribute('disabled');
+                    } else {
+                        currentButton.setAttribute('disabled', 'true');
+                    }
+                });
+            });
+
+            // Initial check to disable buttons on page load
+            tabs.forEach(tab => {
+                const button = tab.querySelector('.next-step');
+                if (button) {
+                    button.setAttribute('disabled', 'true');
+                }
+            });
+        });
+    </script>
     <script>
         function handlePaymentChange(input) {
             const method = input.getAttribute('data-method');
@@ -1028,6 +1103,7 @@ if (isset($_POST['add_appointment'])) {
         function fetchBarangays(cityCode) {
             $.getJSON(`https://psgc.gitlab.io/api/cities-municipalities/${cityCode}/barangays/`, function(data) {
                 $('#barangay').empty(); // Clear existing options
+
                 // Loop through the data and append options to the barangay dropdown
                 $.each(data, function(index, barangay) {
                     $('#barangay').append($('<option>', {
@@ -1035,11 +1111,17 @@ if (isset($_POST['add_appointment'])) {
                         text: barangay.name
                     }));
                 });
+
+                // Automatically select the first option if available
+                if (data.length > 0) {
+                    $('#barangay').prop('selectedIndex', 0).change();
+                }
             }).fail(function(jqxhr, textStatus, error) {
                 var err = textStatus + ", " + error;
                 console.log("Request Failed: " + err);
             });
         }
+
 
         // Wait for the document to be ready
         $(document).ready(function() {
