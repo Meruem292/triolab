@@ -592,3 +592,67 @@ function getDoctor($pdo, $doctorId)
         return null;
     }
 }
+
+// Function to get total sales
+function getTotalSales($pdo)
+{
+    $sql = "SELECT SUM(amount) AS total_sales FROM payment_receipts";
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute();
+    $result = $stmt->fetch(PDO::FETCH_ASSOC);
+    return $result['total_sales'] ? $result['total_sales'] : 0; // Return 0 if no sales
+}
+
+// Function to get total number of patients
+function getTotalPatients($pdo)
+{
+    $sql = "SELECT COUNT(*) AS total_patients FROM patient";
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute();
+    $result = $stmt->fetch(PDO::FETCH_ASSOC);
+    return $result['total_patients'];
+}
+
+// Function to get total number of appointments
+function getTotalAppointments($pdo)
+{
+    $sql = "SELECT COUNT(*) AS total_appointments FROM appointment";
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute();
+    $result = $stmt->fetch(PDO::FETCH_ASSOC);
+    return $result['total_appointments'];
+}
+
+function getTotalPendingAppointments($pdo)
+{
+    $sql = "SELECT COUNT(*) AS total_pending_appointments FROM appointment WHERE status = 'Pending'";
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute();
+    $result = $stmt->fetch(PDO::FETCH_ASSOC);
+    return $result['total_pending_appointments'];
+}
+
+function getCompletedAppointments($pdo){
+    $sql = "SELECT COUNT(*) AS total_completed_appointments FROM appointment WHERE status = 'Completed'";
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute();
+    $result = $stmt->fetch(PDO::FETCH_ASSOC);
+    return $result['total_completed_appointments'];
+}
+
+function getTotalAppointmentSlots($pdo)
+{
+    $sql = "SELECT COUNT(*) AS total_slots FROM appointment_slots";
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute();
+    $result = $stmt->fetch(PDO::FETCH_ASSOC);
+    return $result['total_slots'];
+}
+function getTotalDoctors($pdo)
+{
+    $sql = "SELECT COUNT(*) AS total_doctors FROM doctor";
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute();
+    $result = $stmt->fetch(PDO::FETCH_ASSOC);
+    return $result['total_doctors'];
+}

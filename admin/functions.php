@@ -524,3 +524,37 @@ function getTotalAppointments($pdo)
     $result = $stmt->fetch(PDO::FETCH_ASSOC);
     return $result['total_appointments'];
 }
+
+function getTotalPendingAppointments($pdo)
+{
+    $sql = "SELECT COUNT(*) AS total_pending_appointments FROM appointment WHERE status = 'Pending'";
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute();
+    $result = $stmt->fetch(PDO::FETCH_ASSOC);
+    return $result['total_pending_appointments'];
+}
+
+function getCompletedAppointments($pdo){
+    $sql = "SELECT COUNT(*) AS total_completed_appointments FROM appointment WHERE status = 'Completed'";
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute();
+    $result = $stmt->fetch(PDO::FETCH_ASSOC);
+    return $result['total_completed_appointments'];
+}
+
+function getTotalAppointmentSlots($pdo)
+{
+    $sql = "SELECT COUNT(*) AS total_slots FROM appointment_slots";
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute();
+    $result = $stmt->fetch(PDO::FETCH_ASSOC);
+    return $result['total_slots'];
+}
+function getTotalDoctors($pdo)
+{
+    $sql = "SELECT COUNT(*) AS total_doctors FROM doctor";
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute();
+    $result = $stmt->fetch(PDO::FETCH_ASSOC);
+    return $result['total_doctors'];
+}

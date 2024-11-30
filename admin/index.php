@@ -9,9 +9,14 @@ if (!isset($_SESSION['user_id'])) {
     header('Location: signin.php');
 };
 
-$totalSales = getTotalSales($pdo);
+
 $totalPatients = getTotalPatients($pdo);
 $totalAppointments = getTotalAppointments($pdo);
+$totalDoctors = getTotalDoctors($pdo);
+$totalComepletedAppointments = getCompletedAppointments($pdo);
+$totalAppointmentSlots = getTotalAppointmentSlots($pdo);
+$totalPendingAppointments = getTotalPendingAppointments($pdo);
+
 ?>
 
 <!doctype html>
@@ -36,7 +41,12 @@ $totalAppointments = getTotalAppointments($pdo);
     <link href="assets/css/app.min.css" rel="stylesheet" type="text/css" />
     <!-- custom Css-->
     <link href="assets/css/custom.min.css" rel="stylesheet" type="text/css" />
-
+    <style>
+        body {
+            overflow: hidden;
+            /* Hides any overflowing content */
+        }
+    </style>
 </head>
 
 <body style="background-color: #F2FFF1">
@@ -63,7 +73,7 @@ $totalAppointments = getTotalAppointments($pdo);
                         </div>
                     </div>
                     <div class="row">
-                        <div class="col-xxl-3">
+                        <div class="col-xxl-4">
                             <div class="card card-height-100">
                                 <div class="card-header border-0 align-items-center d-flex">
                                     <h4 class="card-title mb-0 flex-grow-1">Top Laboratory Services</h4>
@@ -112,64 +122,122 @@ $totalAppointments = getTotalAppointments($pdo);
                             </div>
                         </div>
 
-                        <div class="col-xxl-9 order-xxl-0 order-first">
+                        <div class="col-xxl-8 order-xxl-0 order-first">
                             <div class="d-flex flex-column h-100">
-                                <div class="row h-100">
-                                    <div class="col-lg-4 col-md-6">
-                                        <div class="card">
+                                <div class="row mb-1">
+                                    <div class="col-lg-6">
+                                        <div class="card h-90">
                                             <div class="card-body">
                                                 <div class="d-flex align-items-center">
-                                                    <div class="avatar-sm flex-shrink-0">
-                                                        <span class="avatar-title bg-light text-primary rounded-circle fs-3 material-shadow">
-                                                            <i class="ri-wallet-2-fill align-middle"></i>
+                                                    <!-- Logo Section -->
+                                                    <div class="avatar-xl flex-shrink-0">
+                                                        <span class="avatar-title bg-light text-primary rounded-circle fs-1 material-shadow">
+                                                            <i class="ri-calendar-check-line align-middle"></i> <!-- Icon for Appointments -->
                                                         </span>
                                                     </div>
-                                                    <div class="flex-grow-1 ms-3">
-                                                        <p class="text-uppercase fw-semibold fs-12 text-muted mb-1"> Total Sales</p>
-                                                        <h4 class=" mb-0">₱<span class="counter-value" data-target="<?= $totalSales; ?>">0</span></h4>
-                                                    </div>
-                                                    <div class="flex-shrink-0 align-self-end">
-                                                        <span class="badge bg-success-subtle text-success"><i class="ri-arrow-up-s-fill align-middle me-1"></i>6.24 %<span> </span></span>
+                                                    <!-- Text Content -->
+                                                    <div class="flex-grow-1 ms-4 text-end">
+                                                        <p class="text-uppercase fw-semibold fs-16 text mb-1">NEW APPOINTMENTS</p>
+                                                        <h4 class="mb-0"><span class="counter-value" data-target="<?= $totalPendingAppointments ?>">0</span></h4>
                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="col-lg-4 col-md-6">
-                                        <div class="card">
+                                    <div class="col-lg-6">
+                                        <div class="card h-90">
                                             <div class="card-body">
                                                 <div class="d-flex align-items-center">
-                                                    <div class="avatar-sm flex-shrink-0">
-                                                        <span class="avatar-title bg-light text-primary rounded-circle fs-3">
-                                                            <i class="ri-team-fill align-middle"></i>
+                                                    <!-- Logo Section -->
+                                                    <div class="avatar-xl flex-shrink-0">
+                                                        <span class="avatar-title bg-light text-primary rounded-circle fs-1 material-shadow">
+                                                            <i class="ri-stack-line align-middle"></i> <!-- Icon for Total Appointments -->
                                                         </span>
                                                     </div>
-                                                    <div class="flex-grow-1 ms-3">
-                                                        <p class="text-uppercase fw-semibold fs-12 text-muted mb-1"> Total Patient</p>
-                                                        <h4 class=" mb-0"><span class="counter-value" data-target="<?= $totalPatients; ?>">0</span></h4>
-                                                    </div>
-                                                    <div class="flex-shrink-0 align-self-end">
-                                                        <span class="badge bg-success-subtle text-success"><i class="ri-arrow-up-s-fill align-middle me-1"></i>3.67 %<span> </span></span>
+                                                    <!-- Text Content -->
+                                                    <div class="flex-grow-1 ms-4 text-end">
+                                                        <p class="text-uppercase fw-semibold fs-16 text mb-1">TOTAL APPOINTMENTS</p>
+                                                        <h4 class="mb-0"><span class="counter-value" data-target="<?= $totalAppointments; ?>">0</span></h4>
                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="col-lg-4 col-md-6">
-                                        <div class="card">
+                                </div>
+                                <div class="row mb-1">
+                                    <div class="col-lg-6">
+                                        <div class="card h-90">
                                             <div class="card-body">
                                                 <div class="d-flex align-items-center">
-                                                    <div class="avatar-sm flex-shrink-0">
-                                                        <span class="avatar-title bg-light text-primary rounded-circle fs-3 material-shadow">
-                                                            <i class="ri-hospital-fill align-middle"></i>
+                                                    <!-- Logo Section -->
+                                                    <div class="avatar-xl flex-shrink-0">
+                                                        <span class="avatar-title bg-light text-primary rounded-circle fs-1 material-shadow">
+                                                            <i class="ri-checkbox-circle-line align-middle"></i> <!-- Icon for Completed Appointments -->
                                                         </span>
                                                     </div>
-                                                    <div class="flex-grow-1 ms-3">
-                                                        <p class="text-uppercase fw-semibold fs-12 text-muted mb-1">Total Doctors</p>
-                                                        <h4 class=" mb-0"><span class="counter-value" data-target="<?= $totalAppointments; ?>">0</span></h4>
+                                                    <!-- Text Content -->
+                                                    <div class="flex-grow-1 ms-4 text-end">
+                                                        <p class="text-uppercase fw-semibold fs-16 text mb-1">COMPLETED APPOINTMENTS</p>
+                                                        <h4 class="mb-0"><span class="counter-value" data-target="<?= $totalComepletedAppointments; ?>">0</span></h4>
                                                     </div>
-                                                    <div class="flex-shrink-0 align-self-end">
-                                                        <span class="badge bg-danger-subtle text-danger"><i class="ri-arrow-down-s-fill align-middle me-1"></i>4.80 %<span> </span></span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-6">
+                                        <div class="card h-90">
+                                            <div class="card-body">
+                                                <div class="d-flex align-items-center">
+                                                    <!-- Logo Section -->
+                                                    <div class="avatar-xl flex-shrink-0">
+                                                        <span class="avatar-title bg-light text-primary rounded-circle fs-1 material-shadow">
+                                                            <i class="ri-group-line align-middle"></i> <!-- Icon for Total Patients -->
+                                                        </span>
+                                                    </div>
+                                                    <!-- Text Content -->
+                                                    <div class="flex-grow-1 ms-4 text-end">
+                                                        <p class="text-uppercase fw-semibold fs-16 text mb-1">TOTAL PATIENTS</p>
+                                                        <h4 class="mb-0"><span class="counter-value" data-target="<?= $totalPatients; ?>">0</span></h4>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row mb-1">
+                                    <div class="col-lg-6">
+                                        <div class="card h-90">
+                                            <div class="card-body">
+                                                <div class="d-flex align-items-center">
+                                                    <!-- Logo Section -->
+                                                    <div class="avatar-xl flex-shrink-0">
+                                                        <span class="avatar-title bg-light text-primary rounded-circle fs-1 material-shadow">
+                                                            <i class="ri-time-line align-middle"></i> <!-- Icon for Appointment Slots -->
+                                                        </span>
+                                                    </div>
+                                                    <!-- Text Content -->
+                                                    <div class="flex-grow-1 ms-4 text-end">
+                                                        <p class="text-uppercase fw-semibold fs-16 text mb-1">APPOINTMENT SLOTS</p>
+                                                        <h4 class="mb-0"><span class="counter-value" data-target="<?= $totalAppointmentSlots; ?>">0</span></h4>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-6">
+                                        <div class="card h-90">
+                                            <div class="card-body">
+                                                <div class="d-flex align-items-center">
+                                                    <!-- Logo Section -->
+                                                    <div class="avatar-xl flex-shrink-0">
+                                                        <span class="avatar-title bg-light text-primary rounded-circle fs-1 material-shadow">
+                                                            <i class="ri-user-3-line align-middle"></i> <!-- Icon for Total Doctors -->
+                                                        </span>
+                                                    </div>
+                                                    <!-- Text Content -->
+                                                    <div class="flex-grow-1 ms-4 text-end">
+                                                        <p class="text-uppercase fw-semibold fs-16 text mb-1">TOTAL DOCTORS</p>
+                                                        <h4 class="mb-0"><span class="counter-value" data-target="<?= $totalDoctors; ?>">0</span></h4>
                                                     </div>
                                                 </div>
                                             </div>
@@ -183,17 +251,12 @@ $totalAppointments = getTotalAppointments($pdo);
             </div>
         </div>
     </div>
-
-    </div>
-    <!-- container-fluid -->
-    </div>
+    
     <!-- End Page-content -->
 
     <!-- FOOTER -->
     <?php require "footer.php"; ?>
-    </div>
-    </div>
-
+   
     <!--start back-to-top-->
     <button onclick="topFunction()" class="btn btn-danger btn-icon" id="back-to-top">
         <i class="ri-arrow-up-line"></i>
