@@ -674,8 +674,9 @@ if (isset($_POST['add_appointment'])) {
                                 <h4 class="text-center">Update Account</h4>
                                 <p class="text-center mb-3">Complete your account details to continue with booking.</p>
                                 <?php
-                                $user_email = $_SESSION['user_email'];
-                                $selectPatient = $pdo->query("SELECT * FROM patient WHERE email = '$user_email'");
+                                $selectPatient = $pdo->prepare("SELECT * FROM patient WHERE id = :user_id");
+                                $selectPatient->bindParam(':user_id', $user_id, PDO::PARAM_INT);
+                                $selectPatient->execute();
                                 $fetchPatient = $selectPatient->fetch(PDO::FETCH_ASSOC);
                                 ?>
                                 <div class="row">

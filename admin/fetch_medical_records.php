@@ -9,7 +9,7 @@ if (isset($_GET['patient_id'])) {
     $patient_id = intval($_GET['patient_id']);  // Sanitize input
 
     // Prepare and execute the query to fetch medical records for the given patient_id
-    $query = "SELECT * FROM medical_records WHERE patient_id = :patient_id";
+    $query = "SELECT * FROM medical_records WHERE patient_id = :patient_id ";
     $stmt = $pdo->prepare($query);
     $stmt->bindParam(':patient_id', $patient_id, PDO::PARAM_INT);
     $stmt->execute();

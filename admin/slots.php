@@ -194,6 +194,7 @@ if (isset($_POST['archive_slot'])) {
             FROM appointment_slots
             JOIN doctor ON appointment_slots.doctor_id = doctor.employee_id
             JOIN departments ON doctor.department_id = departments.id
+            WHERE appointment_slots.is_archive = 0
             
         ");
 

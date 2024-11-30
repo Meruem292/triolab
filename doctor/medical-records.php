@@ -105,7 +105,7 @@ $admin_id = $_SESSION['user_id'];
                                             $selectPatient = $pdo->prepare("
                                                 SELECT * 
                                                 FROM patient 
-                                                ORDER BY firstname ASC
+                                                ORDER BY firstname ASC 
                                             ");
                                             $selectPatient->execute();
 

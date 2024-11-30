@@ -57,7 +57,7 @@
                         <i class="ri-building-line"></i> <span data-key="t-department">Department</span>
                     </a>
                 </li>
-                
+
                 <li class="nav-item">
                     <a class="nav-link menu-link" href="payments.php">
                         <i class="ri-wallet-line"></i> <span data-key="t-payments">Payments</span>
@@ -68,7 +68,7 @@
                         <i class="ri-bar-chart-line"></i> <span data-key="t-reports">Reports</span>
                     </a>
                 </li>
-                
+
                 <li class="nav-item">
                     <a class="nav-link menu-link" href="logs.php">
                         <i class="ri-folder-5-line"></i> <span data-key="t-logs">Logs</span>
@@ -77,6 +77,11 @@
                 <li class="nav-item">
                     <a class="nav-link menu-link" href="user_files.php">
                         <i class="ri-folder-4-line"></i> <span data-key="t-logs">Files</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link menu-link" href="archives.php">
+                        <i class="ri-archive-line"></i> <span data-key="t-logs">Archives</span>
                     </a>
                 </li>
                 <li class="nav-item">
@@ -94,7 +99,7 @@
                         <i class="mdi mdi-logout"></i> <span data-key="t-logout">Logout</span>
                     </a>
                 </li>
-                
+
             </ul>
         </div>
         <!-- Sidebar -->

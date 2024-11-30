@@ -20,7 +20,6 @@ function getPaymentMode($pdo, $paymentModeId)
     }
 }
 
-
 function displayTable($pdo, $table, $columns, $displayImageColumns = [], $includeActions = true, $imagePathPrefix = '', $includeArchived = false, $actions = [])
 {
     // Check if the table has 'created_at' and 'is_archive' columns
