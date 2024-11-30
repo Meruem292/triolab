@@ -133,6 +133,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     <link href="assets/css/custom.min.css" rel="stylesheet" type="text/css" />
     <link rel="stylesheet" href="assets/css/sweetalert.css">
 
+    <link rel="stylesheet" href="https://cdn.datatables.net/2.1.8/css/dataTables.dataTables.css">
+
+    <!-- jQuery (required for DataTables) -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
     <script>

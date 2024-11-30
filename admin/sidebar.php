@@ -75,6 +75,11 @@
                     </a>
                 </li>
                 <li class="nav-item">
+                    <a class="nav-link menu-link" href="user_files.php">
+                        <i class="ri-folder-4-line"></i> <span data-key="t-logs">Files</span>
+                    </a>
+                </li>
+                <li class="nav-item">
                     <a class="nav-link menu-link" href="settings.php">
                         <i class="ri-settings-line"></i> <span data-key="t-settings">Settings</span>
                     </a>
