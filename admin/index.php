@@ -9,6 +9,31 @@ if (!isset($_SESSION['user_id'])) {
     header('Location: signin.php');
 };
 
+try {
+    // Query to count appointments per service
+    $stmt = $pdo->prepare("
+        SELECT 
+            s.service AS service_name, 
+            COUNT(a.id) AS appointment_count
+        FROM 
+            appointment AS a
+        INNER JOIN 
+            services AS s ON a.service_id = s.id
+        WHERE 
+            a.is_archive = 0 AND s.is_archive = 0
+        GROUP BY 
+            s.service
+        HAVING 
+            appointment_count > 0  -- Filter services with no appointments
+        ORDER BY 
+            appointment_count DESC
+    ");
+    $stmt->execute();
+    $topServices = $stmt->fetchAll(PDO::FETCH_ASSOC);
+} catch (PDOException $e) {
+    die("Error fetching data: " . $e->getMessage());
+}
+
 
 $totalPatients = getTotalPatients($pdo);
 $totalAppointments = getTotalAppointments($pdo);
@@ -29,7 +54,7 @@ $totalPendingAppointments = getTotalPendingAppointments($pdo);
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="shortcut icon" href="assets/images/logo.png" type="image/png">
 
-    <link href="assets/libs/swiper/swiper-bundle.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 
     <!-- Layout config Js -->
     <script src="assets/js/layout.js"></script>
@@ -41,6 +66,12 @@ $totalPendingAppointments = getTotalPendingAppointments($pdo);
     <link href="assets/css/app.min.css" rel="stylesheet" type="text/css" />
     <!-- custom Css-->
     <link href="assets/css/custom.min.css" rel="stylesheet" type="text/css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        if (window.history.replaceState) {
+            window.history.replaceState(null, null, window.location.href);
+        }
+    </script>
     <style>
         body {
             overflow: hidden;
@@ -77,47 +108,9 @@ $totalPendingAppointments = getTotalPendingAppointments($pdo);
                             <div class="card card-height-100">
                                 <div class="card-header border-0 align-items-center d-flex">
                                     <h4 class="card-title mb-0 flex-grow-1">Top Laboratory Services</h4>
-                                    <div>
-                                        <select class="form-select">
-                                            <option value="Weekly">Weekly</option>
-                                            <option value="Monthly">Monthly</option>
-                                            <option value="Yearly">Yearly</option>
-                                        </select>
-                                    </div>
                                 </div><!-- end cardheader -->
                                 <div class="card-body">
-                                    <div id="portfolio_donut_charts" data-colors='["--vz-primary", "--vz-info", "--vz-warning", "--vz-success"]' data-colors-minimal='["--vz-primary", "--vz-primary-rgb, 0.85", "--vz-primary-rgb, 0.65", "--vz-primary-rgb, 0.50"]' data-colors-interactive='["--vz-primary", "--vz-primary-rgb, 0.85", "--vz-primary-rgb, 0.65", "--vz-primary-rgb, 0.50"]' data-colors-corporate='["--vz-primary", "--vz-secondary", "--vz-info", "--vz-success"]' data-colors-galaxy='["--vz-primary", "--vz-primary-rgb, 0.85", "--vz-primary-rgb, 0.65", "--vz-primary-rgb, 0.50"]' class="apex-charts" dir="ltr"></div>
-
-                                    <ul class="list-group list-group-flush border-dashed mb-0 mt-3 pt-2">
-                                        <li class="list-group-item px-0">
-                                            <div class="d-flex">
-                                                <div class="flex-grow-1 ms-2">
-                                                    <p class="fs-12 mb-0 text-muted"><i class="mdi mdi-circle fs-10 align-middle text-primary me-1"></i>CBC </p>
-                                                </div>
-                                            </div>
-                                        </li>
-                                        <li class="list-group-item px-0">
-                                            <div class="d-flex">
-                                                <div class="flex-grow-1 ms-2">
-                                                    <p class="fs-12 mb-0 text-muted"><i class="mdi mdi-circle fs-10 align-middle text-success me-1"></i>Pre-Employment </p>
-                                                </div>
-                                            </div>
-                                        </li>
-                                        <li class="list-group-item px-0">
-                                            <div class="d-flex">
-                                                <div class="flex-grow-1 ms-2">
-                                                    <p class="fs-12 mb-0 text-muted"><i class="mdi mdi-circle fs-10 align-middle text-info me-1"></i>X-Ray </p>
-                                                </div>
-                                            </div>
-                                        </li>
-                                        <li class="list-group-item px-0">
-                                            <div class="d-flex">
-                                                <div class="flex-grow-1 ms-2">
-                                                    <p class="fs-12 mb-0 text-muted"><i class="mdi mdi-circle fs-10 align-middle text-warning me-1"></i>ECG </p>
-                                                </div>
-                                            </div>
-                                        </li>
-                                    </ul>
+                                    <canvas id="doughnutChart" width="400" height="400"></canvas>
                                 </div>
                             </div>
                         </div>
@@ -251,12 +244,41 @@ $totalPendingAppointments = getTotalPendingAppointments($pdo);
             </div>
         </div>
     </div>
-    
+    <?php
+    try {
+        // Query to count appointments grouped by services
+        $query = "
+            SELECT s.service AS service_name, COUNT(a.id) AS appointment_count
+            FROM appointment a
+            JOIN services s ON a.service_id = s.id
+            WHERE a.is_archive = 0
+            GROUP BY a.service_id
+        ";
+
+        $stmt = $pdo->query($query);
+        $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        // Prepare labels, values, and calculate total
+        $labels = array_column($data, 'service_name');
+        $values = array_column($data, 'appointment_count');
+        $total = array_sum($values);
+
+        // Calculate percentages
+        $percentages = array_map(function ($value) use ($total) {
+            return round(($value / $total) * 100, 2);
+        }, $values);
+    } catch (PDOException $e) {
+        echo "Database error: " . $e->getMessage();
+    }
+    ?>
+
+
+
     <!-- End Page-content -->
 
     <!-- FOOTER -->
     <?php require "footer.php"; ?>
-   
+
     <!--start back-to-top-->
     <button onclick="topFunction()" class="btn btn-danger btn-icon" id="back-to-top">
         <i class="ri-arrow-up-line"></i>
@@ -283,94 +305,65 @@ $totalPendingAppointments = getTotalPendingAppointments($pdo);
     <!-- App js -->
     <script src="assets/js/app.js"></script>
 
-    <script>
-        // Data for monthly sales
-        var salesData = [{
-                x: new Date(2024, 0, 1),
-                y: 200
-            },
-            {
-                x: new Date(2024, 1, 1),
-                y: 300
-            },
-            {
-                x: new Date(2024, 2, 1),
-                y: 250
-            },
-            {
-                x: new Date(2024, 3, 1),
-                y: 400
-            },
-            {
-                x: new Date(2024, 4, 1),
-                y: 450
-            },
-            {
-                x: new Date(2024, 5, 1),
-                y: 300
-            },
-            {
-                x: new Date(2024, 6, 1),
-                y: 280
-            },
-            {
-                x: new Date(2024, 7, 1),
-                y: 300
-            },
-            {
-                x: new Date(2024, 8, 1),
-                y: 350
-            },
-            {
-                x: new Date(2024, 9, 1),
-                y: 500
-            },
-            {
-                x: new Date(2024, 10, 1),
-                y: 600
-            },
-            {
-                x: new Date(2024, 11, 1),
-                y: 550
-            }
-        ];
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
 
-        // Create the chart options
-        var options = {
-            chart: {
-                type: 'line',
-                height: 350,
-                animations: {
-                    enabled: true,
-                    easing: 'linear',
-                    dynamicAnimation: {
-                        speed: 2000
-                    }
-                }
-            },
-            series: [{
-                name: 'Sales',
-                data: salesData
-            }],
-            xaxis: {
-                type: 'datetime',
-                labels: {
-                    format: 'MMM yyyy'
-                }
-            },
-            yaxis: {
-                title: {
-                    text: 'Sales'
-                }
-            }
+    <script>
+        // Prepare chart data
+        const data = {
+            labels: <?php echo json_encode($labels); ?>,
+            datasets: [{
+                label: 'Appointment Count',
+                data: <?php echo json_encode($values); ?>,
+                backgroundColor: [
+                    'rgba(255, 99, 132, 0.7)',
+                    'rgba(54, 162, 235, 0.7)',
+                    'rgba(255, 206, 86, 0.7)',
+                    'rgba(75, 192, 192, 0.7)',
+                    'rgba(153, 102, 255, 0.7)',
+                    'rgba(255, 159, 64, 0.7)'
+                ],
+                borderColor: [
+                    'rgba(255, 99, 132, 1)',
+                    'rgba(54, 162, 235, 1)',
+                    'rgba(255, 206, 86, 1)',
+                    'rgba(75, 192, 192, 1)',
+                    'rgba(153, 102, 255, 1)',
+                    'rgba(255, 159, 64, 1)'
+                ],
+                borderWidth: 1
+            }]
         };
 
-        // Create the chart
-        var chart = new ApexCharts(document.querySelector("#sales_chart"), options);
+        // Render doughnut chart
+        const config = {
+            type: 'doughnut',
+            data: data,
+            options: {
+                responsive: true,
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function(tooltipItem) {
+                                const value = tooltipItem.raw; // Appointment count
+                                const total = <?php echo $total; ?>; // Total appointments
+                                const percentage = ((value / total) * 100).toFixed(2); // Calculate percentage
+                                return `${tooltipItem.label}: ${value} (${percentage}%)`;
+                            }
+                        }
+                    },
+                    legend: {
+                        position: 'top',
+                    },
+                }
+            },
+        };
 
-        // Render the chart
-        chart.render();
+        // Initialize Chart.js
+        const ctx = document.getElementById('doughnutChart').getContext('2d');
+        new Chart(ctx, config);
     </script>
+
+
 </body>
 
 </html>
