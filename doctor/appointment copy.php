@@ -1,112 +1,78 @@
 <?php
-
-require "db.php";
 session_start();
+require "db.php";
+include "logAction.php";
 
-$admin_id = $_SESSION['user_id'];
+$user_id = $_SESSION['user_id'];
 if (!isset($_SESSION['user_id'])) {
     header('Location: signin.php');
 };
 
 if (isset($_POST['edit_appointment'])) {
     // Extract form inputs
-    $appointmentId = $_POST['appointmentId'];  // Appointment ID
-    $paymentStatus = $_POST['paymentStatus'];  // Payment Status (Pending, Approved, Disapproved)
-    $status = $_POST['appointmentStatus'];     // Appointment Status (Pending, Completed)
-    $doctor = $_POST['doctor'];                // Doctor ID
-    $amount = $_POST['amount'];              // Payment amount
-    $medicalStatus = $_POST['medicalStatus'];  // Medical Status (Pending, Approved)
-    
+    $appointmentId = $_POST['appointmentId'];
+    $medicalStatus = $_POST['medicalStatus'];
+    $doctor = $user_id;
+    $diagnosis = $_POST['diagnosis'];
+    $treatment = $_POST['treatment'];
+    $prescription = $_POST['prescription'];
 
-    if ($status === "Completed" && ($medicalStatus !== "Approved" || $paymentStatus !== "Approved")) {
-        $_SESSION['message'] = "Cannot mark as Completed. Both Medical Status and Payment Status must be Approved.";
-        $_SESSION['status'] = "error";
-        header('Location: ../admin/appointment.php');
-        exit();
-    }
+    // Fetch patient_id from the appointment table
+    $stmt = $pdo->prepare("SELECT patient_id FROM appointment WHERE id = ?");
+    $stmt->execute([$appointmentId]);
+    $appointment = $stmt->fetch(PDO::FETCH_ASSOC);
 
-    try {
-        // Begin transaction
-        $pdo->beginTransaction();
+    if ($appointment && isset($appointment['patient_id'])) {
+        $patientId = $appointment['patient_id'];
 
-        // Get the department ID of the selected doctor
-        $queryDoctorDepartment = $pdo->prepare("SELECT department_id FROM doctor WHERE employee_id = ?");
-        $queryDoctorDepartment->execute([$doctor]);
-        $doctorDepartment = $queryDoctorDepartment->fetch(PDO::FETCH_ASSOC);
+        // Check if the appointment already exists in medical_records
+        $checkRecord = $pdo->prepare("SELECT id FROM medical_records WHERE appointment_id = ?");
+        $checkRecord->execute([$appointmentId]);
+        $existingRecord = $checkRecord->fetch(PDO::FETCH_ASSOC);
 
-        if (!$doctorDepartment) {
-            throw new Exception("Invalid doctor selected.");
-        }
+        if ($existingRecord) {
+            // Update the existing record
+            $updateMedicalRecord = $pdo->prepare("UPDATE medical_records SET patient_id = ?, doctor_id = ?, diagnosis = ?, treatment = ?, prescription = ?, status = ? WHERE appointment_id = ?");
+            if ($updateMedicalRecord->execute([$patientId, $doctor, $diagnosis, $treatment, $prescription, $medicalStatus, $appointmentId])) {
+                // Log success action
+                logAction($pdo, 'update appointment', 'Updated appointment with ID: ' . $appointmentId . ' for patient ID: ' . $patientId);
 
-        $doctorDepartmentId = $doctorDepartment['department_id'];
+                $_SESSION['message'] = "Appointment updated successfully.";
+                $_SESSION['status'] = "success";
+            } else {
+                // Log error action
+                logAction($pdo, 'update appointment error', 'Failed to update appointment with ID: ' . $appointmentId);
 
-        // Update `appointment` table
-        $updateAppointment = $pdo->prepare(
-            "UPDATE appointment 
-             SET status = ?, paid = ?, doctor_id = ?, department_id = ? 
-             WHERE id = ?"
-        );
-        $updateAppointment->execute([$status, $paymentStatus, $doctor, $doctorDepartmentId, $appointmentId]);
-
-        // Check if a payment receipt already exists for the appointment
-        $checkReceipt = $pdo->prepare("SELECT id FROM payment_receipts WHERE appointment_id = ?");
-        $checkReceipt->execute([$appointmentId]);
-        $existingReceipt = $checkReceipt->fetch(PDO::FETCH_ASSOC);
-
-        if ($existingReceipt) {
-            // Update the amount in `payment_receipts` if it exists
-            $updateReceipt = $pdo->prepare("UPDATE payment_receipts SET amount = ?, status = ? WHERE appointment_id = ?");
-            $updateReceipt->execute([$amount, $paymentStatus, $appointmentId]);
+                $_SESSION['message'] = "Error updating appointment.";
+                $_SESSION['status'] = "error";
+            }
         } else {
-            // Insert a new payment receipt if it doesn't exist
-            $insertReceipt = $pdo->prepare(
-                "INSERT INTO payment_receipts (appointment_id, payment_receipt_path, date, payment_mode_id, amount, status) 
-                 VALUES (?, ?, NOW(), 3, ?, ?)"
-            );
-            $insertReceipt->execute([$appointmentId, '', $amount, 'Pending']); // Default values for missing fields
+            // Insert a new record
+            $insertMedicalRecord = $pdo->prepare("INSERT INTO medical_records (appointment_id, patient_id, doctor_id, diagnosis, treatment, prescription, status) VALUES (?, ?, ?, ?, ?, ?, ?)");
+            if ($insertMedicalRecord->execute([$appointmentId, $patientId, $doctor, $diagnosis, $treatment, $prescription, $medicalStatus])) {
+                // Log success action
+                logAction($pdo, 'create appointment', 'Created new medical record for appointment ID: ' . $appointmentId . ' for patient ID: ' . $patientId);
+
+                $_SESSION['message'] = "Appointment created successfully.";
+                $_SESSION['status'] = "success";
+            } else {
+                // Log error action
+                logAction($pdo, 'create appointment error', 'Failed to create new medical record for appointment ID: ' . $appointmentId);
+
+                $_SESSION['message'] = "Error creating appointment.";
+                $_SESSION['status'] = "error";
+            }
         }
+    } else {
+        // Log error action for invalid appointment ID or patient not found
+        logAction($pdo, 'invalid appointment', 'Invalid appointment ID or patient not found for appointment ID: ' . $appointmentId);
 
-        // Check if a medical record already exists for the appointment
-        $checkMedicalRecord = $pdo->prepare("SELECT id FROM medical_records WHERE appointment_id = ?");
-        $checkMedicalRecord->execute([$appointmentId]);
-        $existingMedicalRecord = $checkMedicalRecord->fetch(PDO::FETCH_ASSOC);
-
-        if ($existingMedicalRecord) {
-            // Update the medical record if it exists
-            $updateMedicalRecord = $pdo->prepare(
-                "UPDATE medical_records 
-                 SET doctor_id = ?, updated_at = NOW() 
-                 WHERE appointment_id = ?"
-            );
-            $updateMedicalRecord->execute([$doctor, $appointmentId]);
-        } else {
-            // Insert a new medical record if it doesn't exist
-            $insertMedicalRecord = $pdo->prepare(
-                "INSERT INTO medical_records (patient_id, appointment_id, doctor_id, status, record_date, created_at) 
-                 SELECT patient_id, id, ?, 'Pending', NOW(), NOW() 
-                 FROM appointment 
-                 WHERE id = ?"
-            );
-            $insertMedicalRecord->execute([$doctor, $appointmentId]);
-        }
-
-        // Commit transaction
-        $pdo->commit();
-
-        // Set success message
-        $_SESSION['message'] = "Appointment, payment, and medical record details updated successfully!";
-        $_SESSION['status'] = "success";
-    } catch (Exception $e) {
-        // Rollback transaction in case of error
-        $pdo->rollBack();
-
-        // Set error message
-        $_SESSION['message'] = "Error updating appointment details: " . $e->getMessage();
+        $_SESSION['message'] = "Invalid appointment ID or patient not found.";
         $_SESSION['status'] = "error";
     }
 
     // Redirect to the appointment page
-    header('Location: ../admin/appointment.php');
+    header('Location: ../doctor/appointment.php');
     exit();
 }
 
@@ -123,13 +89,20 @@ if (isset($_POST['archive_appointment'])) {
     $archiveQuery->bindParam(':id', $appointmentIdDelete);
 
     if ($archiveQuery->execute()) {
+        // Log the successful archive action
+        logAction($pdo, 'archive appointment', 'Archived appointment with ID: ' . $appointmentIdDelete);
+
         $_SESSION['message'] = "Appointment archived successfully.";
         $_SESSION['status'] = "success";
     } else {
+        // Log the error action
+        logAction($pdo, 'archive appointment error', 'Failed to archive appointment with ID: ' . $appointmentIdDelete);
+
         $_SESSION['message'] = "Error archiving appointment.";
         $_SESSION['status'] = "error";
     }
 }
+
 
 ?>
 
@@ -201,10 +174,6 @@ if (isset($_POST['archive_appointment'])) {
                             <div class="card">
 
                                 <div class="card-body">
-                                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addAppointmentModal">
-                                        + Add New Appointment
-                                    </button>
-                                    <?php include "modals/appointment.php" ?>
                                     <!-- Nav tabs -->
                                     <ul class="nav nav-tabs nav-tabs-custom nav-success nav-justified mb-3" role="tablist">
                                         <li class="nav-item">
@@ -228,14 +197,13 @@ if (isset($_POST['archive_appointment'])) {
                                     <div class="tab-content text-muted">
                                         <div class="tab-pane active" id="calendarTab" role="tabpanel">
                                             <div class="row">
-                                                <div class="col-xxl-8">
-                                                    <?php calendarMonthShowsAdmin(); ?>
+                                                <div class="col-md-8">
+                                                    <?= calendarMonthShowsDoctor(); ?>
                                                 </div>
-                                                <div class="col-xxl-4">
-                                                    <?php calendarWeekShowsAdmin(); ?>
+                                                <div class="col-md-4">
+                                                    <?= calendarWeekShowsDoctor(); ?>
                                                 </div>
                                             </div>
-
                                         </div>
                                         <div class="tab-pane" id="new" role="tabpanel">
                                             <div class="d-flex align-items-center gap-3">
@@ -262,15 +230,14 @@ if (isset($_POST['archive_appointment'])) {
                                                                 <th>Patient Name</th>
                                                                 <th>Service</th>
                                                                 <th>Doctor</th>
-                                                                <th>Service Status</th>
-                                                                <th>Payment Status</th> <!-- New Column -->
+                                                                <th>Service Status</th> <!-- New Column -->
                                                                 <th>Action</th>
                                                             </tr>
                                                         </thead>
                                                         <tbody class="list">
                                                             <?php
                                                             $selectAppointment = $pdo->query("
-           SELECT 
+            SELECT 
     appointment.id AS appointment_id, 
     patient.firstname AS patient_firstname, 
     patient.lastname AS patient_lastname, 
@@ -283,24 +250,30 @@ if (isset($_POST['archive_appointment'])) {
     appointment.appointment_date, 
     appointment.doctor_id, 
     appointment.selectedPayment, 
-    appointment.status, 
+    appointment.status AS appointment_status, 
     appointment.paid,  -- Include the payment status
     payment_receipts.amount AS payment_amount,  -- Amount from payment_receipts
     payment_receipts.status AS payment_status,  -- Payment status
     payment_receipts.date AS payment_date,  -- Payment receipt date
-    medical_records.diagnosis,  -- Include the diagnosis from medical_records
-    medical_records.treatment,  -- Include the treatment from medical_records
-    medical_records.prescription,  -- Include the prescription from medical_records
-    medical_records.status AS medical_status,  -- Include the status from medical_records
-    medical_records.record_date  -- Include the record date from medical_records
+    medical_records.diagnosis,  -- Diagnosis from medical_records
+    medical_records.treatment,  -- Treatment from medical_records
+    medical_records.prescription,  -- Prescription from medical_records
+    medical_records.status AS medical_status  -- Status from medical_records
 FROM appointment 
-INNER JOIN patient ON appointment.patient_id = patient.id 
-INNER JOIN services ON appointment.service_id = services.id 
-LEFT JOIN doctor ON appointment.doctor_id = doctor.employee_id 
-LEFT JOIN payment_receipts ON appointment.id = payment_receipts.appointment_id  -- Join payment_receipts
-LEFT JOIN medical_records ON appointment.id = medical_records.appointment_id  -- Join medical_records
+INNER JOIN patient 
+    ON appointment.patient_id = patient.id 
+INNER JOIN services 
+    ON appointment.service_id = services.id 
+LEFT JOIN doctor 
+    ON appointment.doctor_id = doctor.employee_id 
+LEFT JOIN payment_receipts 
+    ON appointment.id = payment_receipts.appointment_id  -- Join payment_receipts
+LEFT JOIN medical_records 
+    ON appointment.id = medical_records.appointment_id  -- Match medical records by appointment ID
 WHERE appointment.is_archive = 0 
-    AND appointment.status = 'Pending' 
+AND appointment.status = 'Pending'
+    AND medical_records.status = 'Pending' 
+    AND appointment.doctor_id = '$user_id'
 ORDER BY appointment.date_added ASC;
         ");
 
@@ -319,39 +292,20 @@ ORDER BY appointment.date_added ASC;
                                                                     // Service details
                                                                     $serviceName = $row['service'] . " (" . $row['type'] . ")";
 
-                                                                    $medicalStatus = $row['medical_status']; // Reflect the actual medical status
-                                                                    $medicalStatusClass = '';
-
-                                                                    switch ($medicalStatus) {
-                                                                        case 'Pending':
-                                                                            $medicalStatusClass = 'bg-warning text-dark'; // Yellow background with dark text for Pending
-                                                                            break;
-                                                                        case 'Approved':
-                                                                            $medicalStatusClass = 'bg-success text-white'; // Green background with white text for Approved
-                                                                            break;
-                                                                        default:
-                                                                            $medicalStatusClass = 'bg-secondary text-white'; // Default grey background for other statuses
-                                                                    }
-
                                                                     // Determine the Bootstrap class based on the payment status
-                                                                    $paymentStatus = $row['paid']; // Reflect the actual payment status
+                                                                    $serviceStatus = $row['medical_status']; // Reflect the actual payment status
                                                                     $statusClass = '';
 
-                                                                    switch ($paymentStatus) {
+                                                                    switch ($serviceStatus) {
                                                                         case 'Pending':
                                                                             $statusClass = 'bg-warning text-dark'; // Yellow background with dark text for Pending
                                                                             break;
-                                                                        case 'Approved':
+                                                                        case 'Completed':
                                                                             $statusClass = 'bg-success text-white'; // Green background with white text for Approved
-                                                                            break;
-                                                                        case 'Disapproved':
-                                                                            $statusClass = 'bg-danger text-white'; // Red background with white text for Disapproved
                                                                             break;
                                                                         default:
                                                                             $statusClass = 'bg-secondary text-white'; // Default grey background for other statuses
                                                                     }
-
-
 
                                                             ?>
                                                                     <tr>
@@ -360,32 +314,32 @@ ORDER BY appointment.date_added ASC;
                                                                         <td class="patient_name"><?= htmlspecialchars($fullnamePatient); ?></td>
                                                                         <td class="service"><?= htmlspecialchars($serviceName); ?></td>
                                                                         <td class="doctor"><?= htmlspecialchars($fullnameDoctor); ?></td>
-                                                                        <td class="service_status">
-                                                                            <span class="badge <?= $medicalStatusClass; ?>"><?= htmlspecialchars($medicalStatus); ?></span>
-                                                                        </td> <!-- New Column -->
                                                                         <td class="payment_status">
-                                                                            <span class="badge <?= $statusClass; ?>"><?= htmlspecialchars($paymentStatus); ?></span>
+                                                                            <span class="badge <?= $statusClass; ?>"><?= htmlspecialchars($serviceStatus); ?></span>
                                                                         </td> <!-- New Column -->
                                                                         <td>
                                                                             <a href="#" class="btn btn-light btn-sm edit-btn" data-bs-toggle="modal" data-bs-target="#editAppointment"
                                                                                 data-appointment-id="<?= htmlspecialchars($row['appointment_id']); ?>"
                                                                                 data-patient-name="<?= htmlspecialchars($fullnamePatient); ?>"
                                                                                 data-doctor-name="<?= htmlspecialchars($fullnameDoctor); ?>"
-                                                                                data-medical-status="<?= htmlspecialchars($medicalStatus); ?>"
                                                                                 data-service="<?= htmlspecialchars($row['service']); ?>"
                                                                                 data-cost="<?= htmlspecialchars($row['cost']); ?>"
+                                                                                data-diagnosis="<?= htmlspecialchars($row['diagnosis']); ?>"
+                                                                                data-treatment="<?= htmlspecialchars($row['treatment']); ?>"
+                                                                                data-prescription="<?= htmlspecialchars($row['prescription']); ?>"
+                                                                                data-medical-status="<?= htmlspecialchars($row['medical_status']); ?>"
                                                                                 data-payment-amount="<?= htmlspecialchars($row['payment_amount']); ?>"
                                                                                 data-payment-method="<?= htmlspecialchars(getPaymentMode($pdo, $row['selectedPayment'])); ?>"
                                                                                 data-appointment-date="<?= htmlspecialchars($row['appointment_date']); ?>"
                                                                                 data-appointment-time="<?= htmlspecialchars($row['appointment_time']); ?>"
                                                                                 data-payment-status="<?= htmlspecialchars($paymentStatus); ?>"
-                                                                                data-status="<?= htmlspecialchars($row['status']); ?>">
+                                                                                data-status="<?= htmlspecialchars($row['appointment_status']); ?>">
                                                                                 <i class="ri-edit-fill align-bottom me-2 text-muted"></i> Update
                                                                             </a>
-                                                                            <a href="#" class="btn btn-danger btn-sm archive-btn" data-bs-toggle="modal" data-bs-target="#archiveAppointment"
-                                                                                data-appointment-id="<?= htmlspecialchars($row['appointment_id']); ?>">
-                                                                                <i class="ri-delete-bin-fill align-bottom me-2"></i> Archive
+                                                                            <a href="../doctor/docs/document_layout.php?appointmentId=<?= $row['appointment_id']; ?>" class="btn btn-info btn-sm">
+                                                                                <i class="ri-printer-fill align-bottom me-2"></i> EDIT DOCUMENT
                                                                             </a>
+
                                                                         </td>
                                                                     </tr>
                                                                 <?php
@@ -457,7 +411,7 @@ ORDER BY appointment.date_added ASC;
                                                                 <th>Patient Name</th>
                                                                 <th>Service</th>
                                                                 <th>Doctor</th>
-                                                                <th>Payment Status</th> <!-- New Column -->
+                                                                <th>Service Status</th> <!-- New Column -->
                                                                 <th>Action</th>
                                                             </tr>
                                                         </thead>
@@ -477,22 +431,30 @@ ORDER BY appointment.date_added ASC;
     appointment.appointment_date, 
     appointment.doctor_id, 
     appointment.selectedPayment, 
-    appointment.status, 
+    appointment.status AS appointment_status, 
     appointment.paid,  -- Include the payment status
     payment_receipts.amount AS payment_amount,  -- Amount from payment_receipts
     payment_receipts.status AS payment_status,  -- Payment status
-    payment_receipts.date AS payment_date  -- Payment receipt date
+    payment_receipts.date AS payment_date,  -- Payment receipt date
+    medical_records.diagnosis,  -- Diagnosis from medical_records
+    medical_records.treatment,  -- Treatment from medical_records
+    medical_records.prescription,  -- Prescription from medical_records
+    medical_records.status AS medical_status  -- Status from medical_records
 FROM appointment 
-INNER JOIN patient ON appointment.patient_id = patient.id 
-INNER JOIN services ON appointment.service_id = services.id 
-LEFT JOIN doctor ON appointment.doctor_id = doctor.employee_id 
-LEFT JOIN payment_receipts ON appointment.id = payment_receipts.appointment_id  -- Join payment_receipts
-WHERE appointment.is_archive = 0
-
-    AND appointment.status = 'Completed' 
-    AND appointment.paid = 'Approved'
+INNER JOIN patient 
+    ON appointment.patient_id = patient.id 
+INNER JOIN services 
+    ON appointment.service_id = services.id 
+LEFT JOIN doctor 
+    ON appointment.doctor_id = doctor.employee_id 
+LEFT JOIN payment_receipts 
+    ON appointment.id = payment_receipts.appointment_id  -- Join payment_receipts
+LEFT JOIN medical_records 
+    ON appointment.id = medical_records.appointment_id  -- Match medical records by appointment ID
+WHERE appointment.is_archive = 0 
+    AND medical_records.status = 'Completed' 
+    AND appointment.doctor_id = '$user_id'
 ORDER BY appointment.date_added ASC;
-
         ");
 
                                                             if ($selectAppointment->rowCount() > 0) {
@@ -511,18 +473,15 @@ ORDER BY appointment.date_added ASC;
                                                                     $serviceName = $row['service'] . " (" . $row['type'] . ")";
 
                                                                     // Determine the Bootstrap class based on the payment status
-                                                                    $paymentStatus = $row['paid']; // Reflect the actual payment status
+                                                                    $serviceStatus = $row['medical_status']; // Reflect the actual payment status
                                                                     $statusClass = '';
 
-                                                                    switch ($paymentStatus) {
+                                                                    switch ($serviceStatus) {
                                                                         case 'Pending':
                                                                             $statusClass = 'bg-warning text-dark'; // Yellow background with dark text for Pending
                                                                             break;
-                                                                        case 'Approved':
+                                                                        case 'Completed':
                                                                             $statusClass = 'bg-success text-white'; // Green background with white text for Approved
-                                                                            break;
-                                                                        case 'Disapproved':
-                                                                            $statusClass = 'bg-danger text-white'; // Red background with white text for Disapproved
                                                                             break;
                                                                         default:
                                                                             $statusClass = 'bg-secondary text-white'; // Default grey background for other statuses
@@ -536,7 +495,7 @@ ORDER BY appointment.date_added ASC;
                                                                         <td class="service"><?= htmlspecialchars($serviceName); ?></td>
                                                                         <td class="doctor"><?= htmlspecialchars($fullnameDoctor); ?></td>
                                                                         <td class="payment_status">
-                                                                            <span class="badge <?= $statusClass; ?>"><?= htmlspecialchars($paymentStatus); ?></span>
+                                                                            <span class="badge <?= $statusClass; ?>"><?= htmlspecialchars($serviceStatus); ?></span>
                                                                         </td> <!-- New Column -->
                                                                         <td>
                                                                             <a href="#" class="btn btn-light btn-sm edit-btn" data-bs-toggle="modal" data-bs-target="#editAppointment"
@@ -545,21 +504,22 @@ ORDER BY appointment.date_added ASC;
                                                                                 data-doctor-name="<?= htmlspecialchars($fullnameDoctor); ?>"
                                                                                 data-service="<?= htmlspecialchars($row['service']); ?>"
                                                                                 data-cost="<?= htmlspecialchars($row['cost']); ?>"
+                                                                                data-diagnosis="<?= htmlspecialchars($row['diagnosis']); ?>"
+                                                                                data-treatment="<?= htmlspecialchars($row['treatment']); ?>"
+                                                                                data-prescription="<?= htmlspecialchars($row['prescription']); ?>"
+                                                                                data-medical-status="<?= htmlspecialchars($row['medical_status']); ?>"
                                                                                 data-payment-amount="<?= htmlspecialchars($row['payment_amount']); ?>"
                                                                                 data-payment-method="<?= htmlspecialchars(getPaymentMode($pdo, $row['selectedPayment'])); ?>"
                                                                                 data-appointment-date="<?= htmlspecialchars($row['appointment_date']); ?>"
                                                                                 data-appointment-time="<?= htmlspecialchars($row['appointment_time']); ?>"
                                                                                 data-payment-status="<?= htmlspecialchars($paymentStatus); ?>"
-                                                                                data-status="<?= htmlspecialchars($row['status']); ?>">
+                                                                                data-status="<?= htmlspecialchars($row['appointment_status']); ?>">
                                                                                 <i class="ri-edit-fill align-bottom me-2 text-muted"></i> Update
                                                                             </a>
-                                                                            <a href="#" class="btn btn-danger btn-sm archive-btn" data-bs-toggle="modal" data-bs-target="#archiveAppointment"
-                                                                                data-appointment-id="<?= htmlspecialchars($row['appointment_id']); ?>">
-                                                                                <i class="ri-delete-bin-fill align-bottom me-2"></i> Archive
-                                                                            </a>
                                                                             <a href="../doctor/docs/printing_layout.php?appointmentId=<?= $row['appointment_id']; ?>" class="btn btn-info btn-sm">
-                                                                                <i class="ri-printer-fill align-bottom me-2"></i> Print Medical Record
+                                                                                <i class="ri-printer-fill align-bottom me-2"></i> PRINT PDF
                                                                             </a>
+
                                                                         </td>
                                                                     </tr>
                                                                 <?php
@@ -587,7 +547,6 @@ ORDER BY appointment.date_added ASC;
                                                         </tbody>
                                                     </table>
                                                 </div>
-
                                                 <div class="d-flex justify-content-end">
                                                     <div class="pagination-wrap hstack gap-2" style="display: flex;">
                                                         <a class="page-item pagination-prev disabled" href="javascript:void(0);">
@@ -645,31 +604,15 @@ ORDER BY appointment.date_added ASC;
                         <!-- Assigned Doctor -->
                         <div class="col-md-12 mb-2">
                             <p><b>Assigned Doctor: </b> <span id="appointmentDoctor"></span></p>
-                            <?php
-                            // Order doctors by their department name
-                            $doctors = $pdo->query("
-            SELECT doctor.*, departments.name AS department_name 
-            FROM doctor
-            JOIN departments ON doctor.department_id = departments.id
-            ORDER BY departments.name
-        ");
-                            ?>
-                            <label class="form-label">Change Doctor</label>
-                            <select name="doctor" id="doctor" class="form-select" required>
-                                <?php foreach ($doctors as $doctor) { ?>
-                                    <option value="<?= $doctor['employee_id']; ?>">
-                                        <?= ucfirst(htmlspecialchars($doctor['firstname']) . ' ' . ucfirst($doctor['lastname']) . ' - ' . $doctor['department_name']); ?>
-                                    </option>
-                                <?php } ?>
-                            </select>
                         </div>
+
                         <!-- Service -->
                         <div class="col-md-12 mb-2">
                             <p><b>Service: </b> <span id="appointmentService"></span></p>
                         </div>
 
                         <!-- Payment Method -->
-                        <div class="col-md-12 mb-2">
+                        <div class="col-md-12 mb-2" style="display: none;">
                             <p><b>Payment Method: </b> <span id="appointmentPayment"></span></p>
                         </div>
 
@@ -688,38 +631,26 @@ ORDER BY appointment.date_added ASC;
                             <p><b>Service Cost: </b> <span id="appointmentCost"></span></p>
                             <input type="hidden" id="appointmentPaymentAmount">
                         </div>
-
-                        <!-- Total Bill -->
                         <div class="col-md-12 mb-2">
-                            <label class="form-label">Total Bill <span class="text-danger">*</span></label>
-                            <input type="float" step="0.01" name="amount" class="form-control" placeholder="Enter total amount" required>
+                            <p><b>Diagnosis: </b></p>
+                            <textarea name="diagnosis" id="diagnosis" class="form-control"></textarea>
                         </div>
+                        <div class="col-md-12 mb-2">
+                            <p><b>Treatment: </b></p>
+                            <textarea name="treatment" id="treatment" class="form-control"></textarea>
+                        </div>
+                        <div class="col-md-12 mb-2">
+                            <p><b>Prescription: </b></p>
+                            <textarea name="prescription" id="prescription" class="form-control"></textarea>
+                        </div>
+
                         <!-- Medical Status -->
                         <div class="col-md-12 mb-2">
-                            <label class="form-label">Medical Status <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="medicalStatus" name="medicalStatus" readonly
-                                data-bs-toggle="tooltip" data-bs-placement="top"
-                                title="This field shows the medical clearance status of the appointment and is not editable. Please consult assigned the doctor for approval!">
-                        </div>
-
-
-                        <!-- Payment Status -->
-                        <div class="col-md-12 mb-2">
-                            <label class="form-label">Payment Status <span class="text-danger">*</span></label>
-                            <select name="paymentStatus" id="paymentStatus" class="form-select" required>
+                            <label class="form-label">Service Status <span class="text-danger">*</span></label>
+                            <input type="hidden" id="medicalStatus">
+                            <select name="medicalStatus" id="medicalStatus" class="form-select" required>
                                 <option value="Pending">Pending</option>
                                 <option value="Approved">Approved</option>
-                                <option value="Disapproved">Disapproved</option>
-                            </select>
-                        </div>
-
-                        <!-- Appointment Status -->
-                        <div class="col-md-12 mb-2">
-                            <label class="form-label">Appointment Status <span class="text-danger">*</span></label>
-                            <select name="appointmentStatus" id="appointmentStatus" class="form-select" required>
-                                <option value="Pending">Pending</option>
-                                <option value="Completed">Mark as Complete</option>
-                                <option value="Cancelled">Cancelled</option>
                             </select>
                         </div>
                     </div>
@@ -733,7 +664,6 @@ ORDER BY appointment.date_added ASC;
             </form>
         </div>
     </div>
-
 
     <!-- ARCHIVE APPOINTMENT -->
     <div id="archiveAppointment" class="modal fade" tabindex="-1" aria-hidden="true">
@@ -781,24 +711,6 @@ ORDER BY appointment.date_added ASC;
     <script>
         flatpickr("#datePicker");
     </script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-            var tooltipList = tooltipTriggerList.map(function(tooltipTriggerEl) {
-                return new bootstrap.Tooltip(tooltipTriggerEl);
-            });
-        });
-    </script>
-
-    <script type="text/javascript">
-        function printMedicalRecord(appointmentId) {
-            var printWindow = window.open("../assets/docs/hematology.php?appointmentId=" + appointmentId, "_blank", "width=800,height=600");
-            printWindow.onload = function() {
-                printWindow.print();
-            };
-        }
-    </script>
-
 
     <script>
         // Get references to the dropdowns

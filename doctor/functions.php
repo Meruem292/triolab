@@ -656,3 +656,266 @@ function getTotalDoctors($pdo)
     $result = $stmt->fetch(PDO::FETCH_ASSOC);
     return $result['total_doctors'];
 }
+
+
+function calendarWeekShowsAdmin()
+{
+    require 'db.php'; // Include the database connection
+
+    try {
+        // Fetch appointments from the database
+        $query = "SELECT a.id, a.appointment_date, a.appointment_time, s.service, 
+                     p.firstname AS patient_firstname, p.lastname AS patient_lastname, 
+                     d.firstname AS doctor_firstname, d.lastname AS doctor_lastname, 
+                     dept.name AS department_name, a.status
+              FROM appointment a
+              LEFT JOIN services s ON a.service_id = s.id
+              LEFT JOIN patient p ON a.patient_id = p.id
+              LEFT JOIN doctor d ON a.doctor_id = d.employee_id
+              LEFT JOIN departments dept ON a.department_id = dept.id
+              WHERE a.is_archive = 0";
+        $stmt = $pdo->prepare($query);
+        $stmt->execute();
+        $appointments = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    } catch (PDOException $e) {
+        echo "Error: " . $e->getMessage();
+        exit;
+    }
+
+    // Prepare data for FullCalendar
+    $events = [];
+    foreach ($appointments as $appointment) {
+        // Combine appointment_date and appointment_time for FullCalendar's start time
+        $start_time = $appointment['appointment_date'] . 'T' . $appointment['appointment_time'];
+
+        // Assuming the appointment lasts 1 hour, calculate end time
+        $end_time = date('Y-m-d\TH:i:s', strtotime($start_time) + 3600); // Add 1 hour (3600 seconds)
+
+        // Prepare event array
+        $events[] = [
+            'title' => $appointment['service'] . ' - ' . $appointment['patient_firstname'] . ' ' . $appointment['patient_lastname'],
+            'start' => $start_time, // FullCalendar expects 'start' as a full date-time string
+            'end' => $end_time,     // End time, assuming 1 hour duration
+            'extendedProps' => [
+                'service' => $appointment['service'],
+                'patient_name' => $appointment['patient_firstname'] . ' ' . $appointment['patient_lastname'],
+                'doctor_name' => $appointment['doctor_firstname'] . ' ' . $appointment['doctor_lastname'],
+                'department_name' => $appointment['department_name'],
+                'status' => $appointment['status'],
+                'appointment_time' => $appointment['appointment_date'] . ' ' . $appointment['appointment_time']
+            ]
+        ];
+    }
+?>
+
+    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var calendarEl = document.getElementById('calendarWeek');
+            var calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'listWeek', // Set the view to listWeek
+                events: <?php echo json_encode($events); ?>, // Pass PHP events to JavaScript
+
+                eventClick: function(info) {
+                    // Show appointment details in a modal
+                    var appointment = info.event.extendedProps;
+                    var modalContent = ` 
+                        <p><strong>Service:</strong> ${appointment.service}</p>
+                        <p><strong>Patient:</strong> ${appointment.patient_name}</p>
+                        <p><strong>Assigned Doctor:</strong> ${appointment.doctor_name}</p>
+                        <p><strong>Department:</strong> ${appointment.department_name}</p>
+                        <p><strong>Status:</strong> ${appointment.status}</p>
+                        <p><strong>Appointment Time:</strong> ${new Date(info.event.start).toLocaleString()}</p>
+                    `;
+                    document.getElementById('appointmentModalBodyWeek').innerHTML = modalContent;
+                    var myModal = new bootstrap.Modal(document.getElementById('appointmentModalWeek'));
+                    myModal.show();
+                },
+
+                eventContent: function(arg) {
+                    // Modify event rendering to show only time and service name
+                    var time = document.createElement('div');
+                    time.style.paddingLeft = "5px";
+                    time.style.fontWeight = 'bold';
+                    time.style.fontSize = '0.9em';
+                    time.innerText = new Date(arg.event.start).toLocaleTimeString(); // Display time
+
+                    var service = document.createElement('div');
+                    service.style.fontSize = '0.9em';
+                    service.style.fontWeight = 'bold';
+                    service.innerText = arg.event.extendedProps.service; // Correct property name for service
+
+                    return {
+                        domNodes: [service, time]
+                    };
+                },
+
+                eventDidMount: function(info) {
+                    // Assign colors based on status directly
+                    var status = info.event.extendedProps.status;
+                    if (status === 'Completed') {
+                        info.el.style.backgroundColor = '#8FD14F'; // Green
+                    } else if (status === 'Pending') {
+                        var appointmentTime = new Date(info.event.start);
+                        var now = new Date();
+
+                        if (appointmentTime < now) {
+                            info.el.style.backgroundColor = '#FF6600    '; // Expired
+                        } else {
+                            info.el.style.backgroundColor = 'blue'; // Pending and not expired
+                        }
+                    } else if (status === 'Cancelled') {
+                        info.el.style.backgroundColor = 'gray';
+                    }
+                }
+            });
+            calendar.render();
+        });
+    </script>
+
+    <div id="calendarWeek"></div>
+
+    <!-- Modal HTML structure for week view -->
+    <div id="appointmentModalWeek" class="modal" tabindex="-1" aria-labelledby="appointmentModalLabelWeek" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="appointmentModalLabelWeek">Appointment Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="appointmentModalBodyWeek">
+                    <!-- Appointment details will be injected here -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<?php
+}
+
+
+
+function calendarMonthShowsAdmin()
+{
+?>
+    <script src="https://cdn.jsdelivr.net/npm/@fullcalendar/core@6.1.15/index.global.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@fullcalendar/daygrid@6.1.15/index.global.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+
+    <style>
+        .fc-event-title {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+    </style>
+
+    <div id="calendarMonth"></div>
+
+    <!-- Modal HTML structure for month view -->
+    <div id="appointmentModalMonth" class="modal" tabindex="-1" aria-labelledby="appointmentModalLabelMonth" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="appointmentModalLabelMonth">Appointment Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p><strong>Service:</strong> <span id="serviceName"></span></p>
+                    <p><strong>Patient:</strong> <span id="patientId"></span></p>
+                    <p><strong>Assigned Doctor:</strong> <span id="doctorId"></span></p>
+                    <p><strong>Status:</strong> <span id="appointmentStatus"></span></p>
+                    <p><strong>Appointment Time:</strong> <span id="appointmentTime"></span></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var calendarEl = document.getElementById('calendarMonth');
+            var calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'dayGridMonth',
+                selectable: true,
+                events: function(info, successCallback, failureCallback) {
+                    fetch('fetch_appointments.php') // Endpoint to fetch event data
+                        .then(response => response.json())
+                        .then(data => {
+                            successCallback(data);
+                        })
+                        .catch(error => {
+                            failureCallback(error);
+                        });
+                },
+                eventClick: function(info) {
+                    var appointment = info.event.extendedProps;
+
+                    if (appointment) {
+                        document.getElementById('serviceName').innerText = appointment.service_name || 'N/A';
+                        document.getElementById('patientId').innerText = appointment.patient_name || 'N/A';
+                        document.getElementById('doctorId').innerText = appointment.doctor_name || 'N/A';
+                        document.getElementById('appointmentStatus').innerText = appointment.status || 'N/A';
+                        document.getElementById('appointmentTime').innerText = new Date(info.event.start).toLocaleString() || 'N/A';
+
+                        var myModal = new bootstrap.Modal(document.getElementById('appointmentModalMonth'));
+                        myModal.show();
+                    } else {
+                        console.error('Extended properties are missing for this event.');
+                    }
+                },
+
+                eventContent: function(arg) {
+                    // Modify event rendering to show only time and service name
+                    var time = document.createElement('div');
+                    time.style.paddingLeft = "5px";
+                    time.style.fontWeight = 'bold';
+                    time.style.fontSize = '0.9em';
+                    time.innerText = new Date(arg.event.start).toLocaleTimeString(); // Display time
+
+                    var service = document.createElement('div');
+                    service.style.fontSize = '0.9em';
+                    service.style.fontWeight = 'bold';
+                    service.innerText = arg.event.extendedProps.service_name; // Correct property name for service
+
+                    return {
+                        domNodes: [service, time]
+                    };
+                },
+                eventDidMount: function(info) {
+                    // Assign colors based on status directly
+                    var status = info.event.extendedProps.status;
+                    if (status === 'Completed') {
+                        info.el.style.backgroundColor = '#8FD14F';
+                    } else if (status === 'Pending') {
+                        var appointmentTime = new Date(info.event.start);
+                        var now = new Date();
+
+                        if (appointmentTime < now) {
+                            info.el.style.backgroundColor = '#FF6600'; // Expired
+                        } else {
+                            info.el.style.backgroundColor = 'blue'; // Pending and not expired
+                        }
+                    } else if (status === 'Cancelled') {
+                        info.el.style.backgroundColor = 'gray';
+                    }
+                },
+                eventOverlap: true, // Allow events to overlap
+                displayEventEnd: true, // Display event end time if needed
+                eventDisplay: 'block', // Make sure each event is rendered as a block element
+                eventOrder: "start,title", // Order events by start time and title for clarity
+            });
+
+            calendar.render();
+        });
+    </script>
+
+<?php
+}
