@@ -1,7 +1,7 @@
 <?php
 session_start();
 require 'db.php';
-
+require 'functions.php';
 $uploadBaseDir = 'uploads';
 
 // Check if user is logged in
@@ -21,21 +21,23 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     } else {
         $_SESSION['message'] = "Error: User ID is required!";
         $_SESSION['status'] = "error";
-        header("Location: your-page.php"); // Redirect back to the form page
+        header("Location: user_files.php"); // Redirect back to the form page
         exit;
     }
 
-    if (isset($_FILES['fileToUpload'])) {
+    // Check if the form contains files
+    if (isset($_FILES['fileToUpload']) && !empty($_FILES['fileToUpload']['name'][0])) {
         $files = $_FILES['fileToUpload'];
         $uploadOk = true;
 
-        foreach ($files['name'] as $index => $fileName) {
+        // Iterate over each file in the array
+        for ($i = 0; $i < count($files['name']); $i++) {
             $file = [
-                'name' => $fileName,
-                'type' => $files['type'][$index],
-                'tmp_name' => $files['tmp_name'][$index],
-                'error' => $files['error'][$index],
-                'size' => $files['size'][$index]
+                'name' => $files['name'][$i],
+                'type' => $files['type'][$i],
+                'tmp_name' => $files['tmp_name'][$i],
+                'error' => $files['error'][$i],
+                'size' => $files['size'][$i]
             ];
 
             if ($file['error'] !== UPLOAD_ERR_OK) {
@@ -45,14 +47,53 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 break;
             }
 
-            // Create directory if it doesn't exist
+            // Fetch patient last name and other details for renaming
+            try {
+                // Assuming you have a 'patients' table to get the patient's details
+                $stmt = $pdo->prepare("SELECT lastname FROM patient WHERE id = :userId");
+                $stmt->execute(['userId' => $userId]);
+                $patient = $stmt->fetch(PDO::FETCH_ASSOC);
+
+                if ($patient) {
+                    $lastname = $patient['lastname'];
+                } else {
+                    $_SESSION['message'] = "Patient not found!";
+                    $_SESSION['status'] = "error";
+                    $uploadOk = false;
+                    break;
+                }
+            } catch (PDOException $e) {
+                $_SESSION['message'] = "Error: " . $e->getMessage();
+                $_SESSION['status'] = "error";
+                $uploadOk = false;
+                break;
+            }
+
+            // Get service and date from the form
+            $serviceType = $_POST['service_type'];  // e.g., 'checkup', 'consultation'
+            $serviceName = $_POST['service_name'];  // e.g., 'medical', 'dental'
+            $date = $_POST['date'];  // e.g., '2024-12-01'
+
+            // Create the new base file name in the format lastname_type_service_date
+            $fileExt = pathinfo($file['name'], PATHINFO_EXTENSION);
+            $baseFileName = strtolower($lastname) . '_' . strtolower($serviceType) . '_' . strtolower($serviceName) . '_' . date('Y-m-d', strtotime($date));
+
+            // Check if a file with the same name already exists and add a postfix number if it does
             $uploadBaseDir = 'uploads';  // Assuming a base upload directory
             $userDir = $uploadBaseDir . DIRECTORY_SEPARATOR . 'user_' . $userId;
             if (!is_dir($userDir)) {
                 mkdir($userDir, 0755, true);
             }
 
-            $targetFile = $userDir . DIRECTORY_SEPARATOR . basename($file['name']);
+            // Generate a unique filename with a number postfix if needed
+            $newFileName = $baseFileName . '.' . $fileExt;
+            $filePath = $userDir . DIRECTORY_SEPARATOR . $newFileName;
+            $counter = 1;
+            while (file_exists($filePath)) {
+                $newFileName = $baseFileName . '_' . $counter . '.' . $fileExt;
+                $filePath = $userDir . DIRECTORY_SEPARATOR . $newFileName;
+                $counter++;
+            }
 
             // Allowed file types
             $allowedTypes = [
@@ -83,12 +124,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             }
 
             if ($uploadOk) {
-                if (move_uploaded_file($file['tmp_name'], $targetFile)) {
-                    // Save file details to database
+                if (move_uploaded_file($file['tmp_name'], $filePath)) {
+                    // Save file details to the database
                     try {
                         $stmt = $pdo->prepare("INSERT INTO patient_files (patient_id, directory, file_name) VALUES (?, ?, ?)");
-                        if ($stmt->execute([$userId, $userDir, $file['name']])) {
-                            $_SESSION['message'] = "The file " . htmlspecialchars(basename($file['name'])) . " has been uploaded and saved!";
+                        if ($stmt->execute([$userId, $userDir, $newFileName])) {
+                            $_SESSION['message'] = "The file " . htmlspecialchars(basename($newFileName)) . " has been uploaded and saved!";
                             $_SESSION['status'] = "success";
                         } else {
                             $_SESSION['message'] = "Failed to save file details to the database.";
@@ -108,6 +149,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     header("Location: user_files.php"); // Redirect back to the form page
     exit;
 }
+
 ?>
 
 <!DOCTYPE html>
@@ -245,7 +287,38 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                                         <span id="selectedUserId"></span>
                                         <form action="" method="post" enctype="multipart/form-data">
                                             <!-- Hidden user ID field -->
-                                            <input type="hidden" name="user_id" id="user_id">
+                                            <?php
+                                            // Fetch distinct service types and services
+                                            $serviceTypes = getDistinctServiceTypes();
+                                            $services = getDistinctServices();
+                                            ?>
+
+                                            <div class="row">
+                                                <div class="col-4">
+                                                    <!-- Service Type Dropdown -->
+                                                    <select class="form-control" name="service_name" id="service_name" required>
+                                                        <option value="" disabled selected>Select Service Type</option>
+                                                        <?php foreach ($serviceTypes as $serviceType): ?>
+                                                            <option value="<?php echo $serviceType; ?>"><?php echo $serviceType; ?></option>
+                                                        <?php endforeach; ?>
+                                                    </select>
+                                                </div>
+                                                <div class="col-4">
+                                                    <select class="form-control" name="service_type" id="service_type" required>
+                                                        <option value="" disabled selected>Select Service</option>
+                                                        <?php foreach ($services as $service): ?>
+                                                            <option value="<?php echo $service; ?>"><?php echo $service; ?></option>
+                                                        <?php endforeach; ?>
+                                                    </select>
+                                                </div>
+                                                <div class="col-4">
+                                                    <input class="form-control" type="date" name="date" id="date" required>
+                                                    <input type="hidden" name="user_id" id="user_id">
+                                                </div>
+                                            </div>
+
+
+
                                             <div class="row mt-3 mb-3">
                                                 <div class="col-12">
                                                     <label for="fileToUpload" class="form-label">Select file(s) to upload:</label>
@@ -258,6 +331,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                                             </div>
 
                                         </form>
+
 
                                         <!-- Display Files for the Selected User -->
                                         <h1>Patients Files</h1>
