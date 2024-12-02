@@ -27,8 +27,8 @@
                         <i class="ri-calendar-line"></i> <span data-key="t-appointment">Appointment</span>
                     </a>
                 </li>
-                
-                
+
+
                 <li class="nav-item">
                     <a class="nav-link menu-link" href="patients.php">
                         <i class="ri-team-line"></i> <span data-key="t-patients">Patients</span>
@@ -39,17 +39,17 @@
                         <i class="ri-file-list-3-line"></i> <span data-key="t-medical-records">Medical Records</span>
                     </a>
                 </li>
-                
+
                 <li class="nav-item">
                     <a class="nav-link menu-link" href="settings.php">
                         <i class="ri-settings-line"></i> <span data-key="t-settings">Settings</span>
                     </a>
                 </li>
-                <!-- <li class="nav-item">
-                    <a class="nav-link menu-link" href="logs.php">
-                        <i class="ri-folder-5-line"></i> <span data-key="t-logs">Logs</span>
+                <li class="nav-item">
+                    <a class="nav-link menu-link" href="user_files.php">
+                        <i class="ri-folder-4-line"></i> <span data-key="t-logs">Files</span>
                     </a>
-                </li> -->
+                </li>
                 <li class="nav-item">
                     <a class="nav-link menu-link" href="logout.php">
                         <i class="mdi mdi-logout"></i> <span data-key="t-logout">Logout</span>

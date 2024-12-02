@@ -2,75 +2,61 @@
 session_start();
 require_once 'db.php';
 
-$appointment_id = $_GET['appointmentId'] ?? null;
+$appointment_id = $_GET['appointment_id'] ?? null;
 
 if (!$appointment_id) {
-    // Handle invalid appointment ID gracefully
-    $appointment = '';
-    $patient = '';
-    $doctor = '';
-    $service = '';
-    $serviceCategory = '';
-    $medical_record = '';
-    $appointment_count_by_services = 0;
-} else {
-    // Fetch appointment details
-    $query = 'SELECT * FROM appointment WHERE id = :id';
-    $stmt = $pdo->prepare($query);
-    $stmt->execute(['id' => $appointment_id]);
-    $appointment = $stmt->fetch();
-
-    if ($appointment) {
-        // Fetch patient details
-        $query = 'SELECT * FROM patient WHERE id = :id';
-        $stmt = $pdo->prepare($query);
-        $stmt->execute(['id' => $appointment['patient_id']]);
-        $patient = $stmt->fetch();
-
-        // Fetch doctor details
-        $query = 'SELECT * FROM doctor WHERE employee_id = :id';
-        $stmt = $pdo->prepare($query);
-        $stmt->execute(['id' => $appointment['doctor_id']]);
-        $doctor = $stmt->fetch();
-
-        // Fetch service details
-        $query = 'SELECT * FROM services WHERE id = :id';
-        $stmt = $pdo->prepare($query);
-        $stmt->execute(['id' => $appointment['service_id']]);
-        $service = $stmt->fetch();
-        $serviceCategory = $service['category'] ?? '';
-
-        // Count appointments by service type
-        $query = '
-            SELECT COUNT(*) AS appointment_count
-            FROM appointment a
-            JOIN services s ON a.service_id = s.id
-            WHERE s.type = :type
-            AND a.is_archive = 0'; // Optional condition to exclude archived appointments
-
-        $stmt = $pdo->prepare($query);
-        $stmt->execute(['type' => 'X-ray']);
-        $result = $stmt->fetch(PDO::FETCH_ASSOC);
-        $appointment_count_by_services = $result['appointment_count'] ?? 0;
-
-        // Fetch medical records
-        $query = 'SELECT * FROM medical_records WHERE appointment_id = :id';
-        $stmt = $pdo->prepare($query);
-        $stmt->execute(['id' => $appointment_id]);
-        $medical_record = $stmt->fetch();
-    } else {
-        // If appointment not found, set dependent variables to ''
-        $patient = '';
-        $doctor = '';
-        $service = '';
-        $serviceCategory = '';
-        $medical_record = '';
-        $appointment_count_by_services = 0;
-    }
+    die('Invalid appointment ID.');
 }
+
+// Fetch appointment details
+$query = 'SELECT * FROM appointment WHERE id = :id';
+$stmt = $pdo->prepare($query);
+$stmt->execute(['id' => $appointment_id]);
+$appointment = $stmt->fetch();
+
+if (!$appointment) {
+    die('Appointment not found.');
+}
+
+// Fetch patient details
+$query = 'SELECT * FROM patient WHERE id = :id';
+$stmt = $pdo->prepare($query);
+$stmt->execute(['id' => $appointment['patient_id']]);
+$patient = $stmt->fetch();
+
+// Fetch doctor details
+$query = 'SELECT * FROM doctor WHERE employee_id = :id';
+$stmt = $pdo->prepare($query);
+$stmt->execute(['id' => $appointment['doctor_id']]);
+$doctor = $stmt->fetch();
+
+$query = 'SELECT * FROM services WHERE id = :id';
+$stmt = $pdo->prepare($query);
+$stmt->execute(['id' => $appointment['service_id']]);
+$service = $stmt->fetch();
+$serviceCategory = $service['category'];
+
+$query = '
+    SELECT COUNT(*) AS appointment_count
+    FROM appointment a
+    JOIN services s ON a.service_id = s.id
+    WHERE s.type = :type
+    AND a.is_archive = 0'; // Optional condition to exclude archived appointments
+
+$stmt = $pdo->prepare($query);
+$stmt->execute(['type' => 'X-ray']);
+$result = $stmt->fetch(PDO::FETCH_ASSOC);
+
+$appointment_count_by_services = $result['appointment_count'] ?? 0;
+
+$query = 'SELECT * FROM medical_records WHERE appointment_id = :id';
+$stmt = $pdo->prepare($query);
+$stmt->execute(['id' => $appointment_id]);
+$medical_record = $stmt->fetch();
 
 $medical_data = json_decode($medical_record['content'], true);
 
+// Set default values if they exist in the JSON data
 $hemoglobin = $medical_data['hemoglobin'] ?? '';
 $hematocrit = $medical_data['hematocrit'] ?? '';
 $wbc_count = $medical_data['wbc_count'] ?? '';
@@ -94,91 +80,6 @@ $header = $medical_data['header'] ?? '';  // Assuming 'header' is a key in your 
 $xrayno = $medical_data['x_ray_number'] ?? '';  // Assuming 'x_ray_number' is a key in your medical data
 $doctor_title = $medical_data['doctor_title'] ?? '';  // Assuming 'doctor_title' is a key in your medical data
 $specialization = $medical_data['specialization'] ?? '';  // Assuming 'specialization' is a key in your medical data
-
-if (isset($_POST['submit_doc_changes']) && $_POST['type'] == 'laboratory') {
-    $form_data = [
-        'hemoglobin' => filter_input(INPUT_POST, 'hemoglobin', FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION),
-        'hematocrit' => filter_input(INPUT_POST, 'hematocrit', FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION),
-        'wbc_count' => filter_input(INPUT_POST, 'wbc_count', FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION),
-        'rbc_count' => filter_input(INPUT_POST, 'rbc_count', FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION),
-        'segmenters' => filter_input(INPUT_POST, 'segmenters', FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION),
-        'lymphocytes' => filter_input(INPUT_POST, 'lymphocytes', FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION),
-        'eosinophils' => filter_input(INPUT_POST, 'eosinophils', FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION),
-        'monocytes' => filter_input(INPUT_POST, 'monocytes', FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION),
-        'platelet_count' => filter_input(INPUT_POST, 'platelet_count', FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION),
-        'blood_type' => filter_input(INPUT_POST, 'blood_type'),
-        'doctor_name' => strtoupper($doctor['firstname']) . ' ' . strtoupper($doctor['lastname']),
-
-    ];
-    // Convert the form data to JSON
-    $json_data = json_encode($form_data);
-
-    // Check if the appointment already has a medical record
-    $query = 'SELECT id FROM medical_records WHERE appointment_id = :appointment_id';
-    $stmt = $pdo->prepare($query);
-    $stmt->execute(['appointment_id' => $appointment_id]);
-    $existing_record = $stmt->fetch();
-
-    if ($existing_record) {
-        // If the record exists, update it
-        $update_query = 'UPDATE medical_records SET content = :content WHERE appointment_id = :appointment_id';
-        $stmt = $pdo->prepare($update_query);
-        $stmt->execute(['content' => $json_data, 'appointment_id' => $appointment_id]);
-    } else {
-        // If the record does not exist, insert a new one
-        $insert_query = 'INSERT INTO medical_records (appointment_id, content, record_date) VALUES (:appointment_id, :content, NOW())';
-        $stmt = $pdo->prepare($insert_query);
-        $stmt->execute(['appointment_id' => $appointment_id, 'content' => $json_data]);
-    }
-
-    $_SESSION['message'] = 'Action completed successfully.';
-    $_SESSION['status'] = 'success'; // Use 'error', 'warning', etc., as needed
-
-    header("Location: ../docs/printing_layout.php?appointment_id=$appointment_id");
-} elseif (isset($_POST['submit_doc_changes']) && $_POST['type'] == 'xray') {
-    $form_data = [
-        'date' => date('Y-m-d'),
-        'x_ray_number' => filter_input(INPUT_POST, 'xrayno'), // This assumes $appointment_count_by_services is set earlier
-        'patient_name' => strtoupper($patient['lastname']) . ", " . strtoupper($patient['firstname']),
-        'age_sex' => $patient['age'] . '/' . $patient['sex'],  // Placeholder for age/sex (no input for this in the form)
-        'address' => $patient['city'],
-        'request_by' => filter_input(INPUT_POST, 'request_by'),
-        'examination' => filter_input(INPUT_POST, 'examination'),
-        'findings' => filter_input(INPUT_POST, 'findings'),
-        'impression' => filter_input(INPUT_POST, 'impression'),
-        'doctor_name' => strtoupper($doctor['firstname']) . ' ' . strtoupper($doctor['lastname']),  // Assuming "MD" is the title of the doctor
-        'radiologist_signature' => strtoupper($doctor['firstname']) . ' ' . strtoupper($doctor['lastname']),
-        'radiologist_position' => 'Radiologist',
-        'specialization' => filter_input(INPUT_POST, 'specialization'),
-        'doctor_title' => filter_input(INPUT_POST, 'doctor_title'),
-        'header' => filter_input(INPUT_POST, 'header'),
-
-    ];
-    // Convert the form data to JSON
-    $json_data = json_encode($form_data);
-
-    // Check if the appointment already has a medical record
-    $query = 'SELECT id FROM medical_records WHERE appointment_id = :appointment_id';
-    $stmt = $pdo->prepare($query);
-    $stmt->execute(['appointment_id' => $appointment_id]);
-    $existing_record = $stmt->fetch();
-
-    if ($existing_record) {
-        // If the record exists, update it
-        $update_query = 'UPDATE medical_records SET content = :content WHERE appointment_id = :appointment_id';
-        $stmt = $pdo->prepare($update_query);
-        $stmt->execute(['content' => $json_data, 'appointment_id' => $appointment_id]);
-    } else {
-        // If the record does not exist, insert a new one
-        $insert_query = 'INSERT INTO medical_records (appointment_id, content, record_date) VALUES (:appointment_id, :content, NOW())';
-        $stmt = $pdo->prepare($insert_query);
-        $stmt->execute(['appointment_id' => $appointment_id, 'content' => $json_data]);
-    }
-
-    $_SESSION['message'] = 'Action completed successfully.';
-    $_SESSION['status'] = 'success'; // Use 'error', 'warning', etc., as needed
-    header("Location: ../docs/printing_layout.php?appointment_id=$appointment_id");
-}
 ?>
 
 
@@ -188,9 +89,9 @@ if (isset($_POST['submit_doc_changes']) && $_POST['type'] == 'laboratory') {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
     <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
     <script src="https://unpkg.com/unlazy@0.11.3/dist/unlazy.with-hashing.iife.js" defer init></script>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
     <script type="text/javascript">
         window.tailwind.config = {
             darkMode: ['class'],
@@ -279,14 +180,17 @@ if (isset($_POST['submit_doc_changes']) && $_POST['type'] == 'laboratory') {
     background-color: white;
 }
 
+
+
 .page-container {
-    width: 297mm;      /* A3 width */
-    height: 420mm;     /* A4 height */
+    width: 210mm;      /* A4 width */
+    height: 297mm;     /* A4 height */
     padding: 20mm;     /* Padding inside the page */
     box-sizing: border-box;
     margin: 0 auto;
     position: relative;
 }
+
 
 .document-content {
     position: relative;
@@ -366,9 +270,8 @@ input[type="text"] {
 
     <div class="max-w-2xl mx-auto p-6 bg-white rounded-lg shadow-lg dark:bg-zinc-800" id="">
         <div class="flex items-center mb-2">
-            <img src="../assets/images/triolab_header.png" alt="logo_header" class="h-100 w-100">
+            <img src="../images/triolab_header.png" alt="logo_header" class="h-100 w-100">
         </div>
-
 
         <?php switch ($serviceCategory) {
             case 'Laboratory Services': ?>
@@ -385,15 +288,12 @@ input[type="text"] {
 
                     <!-- on the right -->
                     <div style="margin-right: 10%">
-                        <p><strong>Age/Sex:</strong> <?= $patient['age'] . '/' . $patient['sex'] ?></p>
                         <p><strong>Date:</strong> <?= date('Y-m-d') ?></p>
                     </div>
                 </div>
                 <h5 class="text-lg font-bold text-center mt-4 text-zinc-900 dark:text-zinc-100">LABORATORY REPORT</h5>
                 <h2 class="text-xl font-bold text-center text-zinc-900 dark:text-zinc-100">HEMATOLOGY</h2>
                 <form action="" method="POST" enctype="multipart/form-data">
-                    <input type="hidden" name="type" value="laboratory">
-                    <input type="hidden" name="appointment_id" value="<?= $appointment_id ?>">
                     <div class="flex justify-between mt-2" style="margin-bottom:200px;">
                         <!-- on the left -->
                         <div style="text-align: right;">
@@ -439,16 +339,18 @@ input[type="text"] {
                         <input type="hidden" name="type" value="xray">
                         <input type="hidden" name="appointment_id" value="<?= $appointment_id ?>">
                         <h1 class="text-lg font-bold text-center mt-4 text-zinc-900 dark:text-zinc-100">
-                            <input type="text" class="text-xl w-50 h-100" name="header" value="<?= $header ?>">
+                            <input type="text" style="border: none" style="border:none;" class="text-xl w-50 h-100" name="header" value="<?= $header ?>">
                         </h1>
                         <div class="row mt-2">
                             <div class="col-9">
                                 <!-- Left-side content -->
                             </div>
+
                             <!-- Right-side content -->
                             <div class="col-auto ms-auto">
                                 <p>Date: <?= date('Y-m-d') ?></p>
-                                <p><input type="text" name="xrayno" id="xrayno" value="<?= $xrayno ?>"></p>
+                                <p><input type="text" style="border: none" name="xrayno" id="xrayno" value="<?= $xrayno ?>"></p>
+
                             </div>
                         </div>
                         <div class="row">
@@ -456,51 +358,40 @@ input[type="text"] {
                                 <p>Name: <strong><?= strtoupper($patient['lastname']) . ", " . strtoupper($patient['firstname']) ?></strong></p>
                                 <p><strong>Age/Sex:</strong> <?= $patient['age'] . '/' . $patient['sex'] ?></p>
                                 <p>Address: <?= $patient['city'] ?></p>
-                                <p>Requsted by: <input type="text" name="request_by" value="<?= $request_by ?>"></p>
+                                <p>Requsted by: <input style="border:none;" type="text" name="request_by" value="<?= $request_by ?>"></p>
                                 <br>
-                                <p>Kind of Examination: <input type="text" name="examination" value="<?= $examination ?>"></p>
+                                <p>Kind of Examination: <input style="border:none;" type="text" name="examination" value="<?= $examination ?>"></p>
                                 <p class="mt-3">Findings:</p>
 
-                                <textarea class="mb-3 w-100" name="findings" id="findings"><?= $findings ?></textarea>
+                                <textarea class="mb-3 w-100" style="border:none;" name="findings" id="findings"><?= $findings ?></textarea>
                                 <p class="mb-2">IMPRESSION: </p>
 
-                                <textarea class="w-100" name="impression" id="impression"><?= $impression ?></textarea>
+                                <textarea class="w-100" style="border:none;" name="impression" id="impression"><?= $impression ?></textarea>
                             </div>
                         </div>
                         <div class="row mt-5 mb-5">
                             <div class="col-4"></div>
                             <div class="col-8 d-flex flex-column align-items-center">
-                                <p><strong><ins>
-                                            <?php if (isset($doctor) && $doctor): ?>
-                                                <?= strtoupper($doctor['firstname'] ?? '') . ' ' . strtoupper($doctor['lastname'] ?? ''); ?>,
-                                            <?php else: ?>
-                                                No Doctor Assigned,
-                                            <?php endif; ?>
-                                            <input type="text" style="text-align: left;" name="doctor_title" value="<?= $doctor_title ?? ''; ?>">
-                                        </ins></strong></p>
-                                <p>
-                                    <input type="text" style="width:250px" name="specialization" value="<?= $specialization ?? ''; ?>">
-                                </p>
+                                <p class=""><strong><ins><?= strtoupper($doctor['firstname']) . ' ' . strtoupper($doctor['lastname']) . ', ' ?>
+                                            <input type="text" style="border:none; text-align: left" name="doctor_title" value="<?= $doctor_title ?>"></ins></strong></p>
+                                <p><input type="text" style="border:none; width:250px" name="specialization" value="<?= $specialization ?>"></p>
                             </div>
-
                         </div>
 
                 <?php break;
             default:
-                "No service category found";
-                break;
+                echo 'No service category found.';
         } ?>
 
     </div>
 
+    <!-- Action Buttons -->
+
+
     <!-- Your existing HTML content -->
     <div class="action-buttons noprint">
-        <button type="submit" class="btn btn-success" name="submit_doc_changes">Submit Findings</button>
-        <button type="button" class="btn btn-danger"
-            onclick="if (window.history.length > 1) { window.history.back(); } else { window.location.href = '../medical-records.php'; }">
-            Close
-        </button>
-
+        <button type="submit" class="btn btn-success" onclick="window.print()">Print Medical Record</button>
+        <button type="button" class="btn btn-danger" onclick="window.history.back()">Close</button>
     </div>
     </form>
 

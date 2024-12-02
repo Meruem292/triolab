@@ -41,9 +41,9 @@
                     <li class="nav-item" data-bs-toggle="modal" data-bs-target="#exampleModal">
                         <a class="nav-link" href="javascript:void(0);" id="openModal">Your Appointments</a>
                     </li>
-                    <li class="nav-item"><a href="#about">About Us</a></li>
-                    <li class="nav-item"><a href="#inquiries">Inquiries</a></li>
-                    <li class="nav-item"><a href="#location">Location</a></li>
+                    <li class="nav-item"><a href="index.php">About Us</a></li>
+                    <li class="nav-item"><a href="index.php">Inquiries</a></li>
+                    <li class="nav-item"><a href="index.php">Location</a></li>
                 </ul>
                 <?php
                 if (isset($_SESSION['user_id'])) {

@@ -69,6 +69,7 @@ if (isset($_POST['register'])) {
     <!-- custom Css-->
     <link href="admin/assets/css/custom.min.css" rel="stylesheet" type="text/css" />
     <link rel="stylesheet" href="admin/assets/css/sweetalert.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
         if (window.history.replaceState) {
             window.history.replaceState(null, null, window.location.href);
@@ -168,21 +169,29 @@ if (isset($_POST['register'])) {
                                             </div>
                                         </div>
                                         <div class="row">
-                                            <div class="col-md-3">
-                                                <label for="province" class="form-label">Province<span class="text-danger">*</span></label>
-                                                <input type="text" class="form-control" name="province" id="province" required placeholder="ex. Cavite">
+                                            <div class="col-md-4">
+                                                <div class="form-group">
+                                                    <label for="province">Province:</label>
+                                                    <select class="form-select" id="province" name="province" required>
+                                                        <option value="">Select Province</option>
+                                                    </select>
+                                                </div>
                                             </div>
-                                            <div class="col-md-3">
-                                                <label for="city" class="form-label">City<span class="text-danger">*</span></label>
-                                                <input type="text" class="form-control" name="city" id="city" required placeholder="ex. Dasmariñas">
+                                            <div class="col-md-4">
+                                                <div class="form-group">
+                                                    <label for="city">City/Municipality:</label>
+                                                    <select class="form-select" id="city" name="city" required>
+                                                        <option value="">Select City/Municipality</option>
+                                                    </select>
+                                                </div>
                                             </div>
-                                            <div class="col-md-3">
-                                                <label for="barangay" class="form-label">Barangay<span class="text-danger">*</span></label>
-                                                <input type="text" class="form-control" name="barangay" id="barangay" required placeholder="ex. San Luis 1">
-                                            </div>
-                                            <div class="col-md-3">
-                                                <label for="street" class="form-label">Street<span class="text-danger">*</span></label>
-                                                <input type="text" class="form-control" name="street" id="street" required placeholder="ex. Blk A-1 Lot 1">
+                                            <div class="col-md-4">
+                                                <div class="form-group">
+                                                    <label for="barangay">Barangay:</label>
+                                                    <select class="form-select" id="barangay" name="barangay" required>
+                                                        <option value="">Select Barangay</option>
+                                                    </select>
+                                                </div>
                                             </div>
                                         </div>
                                         <div class="row mt-2">
@@ -269,6 +278,105 @@ if (isset($_POST['register'])) {
     <script src="admin/assets/js/pages/passowrd-create.init.js"></script>
     <script src="admin/assets/js/sweetalert.js"></script>
 
+    <script>
+        // Function to fetch cities based on the selected province
+        function fetchCities(provinceCode) {
+            $.getJSON(`https://psgc.gitlab.io/api/provinces/${provinceCode}/cities-municipalities/`, function(data) {
+                console.log(data); // Log the response to see if the cities are returned correctly
+                $('#city').empty(); // Clear existing options
+                $.each(data, function(index, city) {
+                    $('#city').append($('<option>', {
+                        value: city.code,
+                        text: city.name
+                    }));
+                });
+            }).fail(function(jqxhr, textStatus, error) {
+                var err = textStatus + ", " + error;
+                console.log("Request Failed: " + err);
+            });
+        }
+
+        // Function to fetch barangays based on the selected city
+        function fetchBarangays(cityCode) {
+            $.getJSON(`https://psgc.gitlab.io/api/cities-municipalities/${cityCode}/barangays/`, function(data) {
+                $('#barangay').empty(); // Clear existing options
+
+                // Loop through the data and append options to the barangay dropdown
+                $.each(data, function(index, barangay) {
+                    $('#barangay').append($('<option>', {
+                        value: barangay.code,
+                        text: barangay.name
+                    }));
+                });
+
+                // Automatically select the first option if available
+                if (data.length > 0) {
+                    $('#barangay').prop('selectedIndex', 0).change();
+                }
+            }).fail(function(jqxhr, textStatus, error) {
+                var err = textStatus + ", " + error;
+                console.log("Request Failed: " + err);
+            });
+        }
+
+        // Wait for the document to be ready
+        $(document).ready(function() {
+            // Fetch data for provinces and populate the province dropdown
+            $.getJSON('https://psgc.gitlab.io/api/regions/040000000/provinces/', function(data) {
+                // Loop through the data and append options to the province dropdown
+                $.each(data, function(index, province) {
+                    $('#province').append($('<option>', {
+                        value: province.code,
+                        text: province.name
+                    }));
+                });
+
+                // Trigger change event for the province dropdown to fetch cities for the initially selected province
+                $('#province').change(function() {
+                    var selectedProvinceCode = $(this).val();
+                    fetchCities(selectedProvinceCode);
+                    var selectedProvinceName = $(this).find('option:selected').text();
+                    $('#provinceName').val(selectedProvinceName);
+                }).change(); // Trigger change event initially
+
+                // Trigger change event for the city dropdown to fetch barangays for the initially selected city
+                $('#city').change(function() {
+                    var selectedCityCode = $(this).val();
+                    fetchBarangays(selectedCityCode);
+                    var selectedCityName = $(this).find('option:selected').text();
+                    $('#cityName').val(selectedCityName);
+                }).change(); // Trigger change event initially
+
+                // Trigger change event for the barangay dropdown to populate the barangay name input
+                $('#barangay').change(function() {
+                    var selectedBarangayName = $(this).find('option:selected').text();
+                    $('#barangayName').val(selectedBarangayName);
+                });
+            }).fail(function(jqxhr, textStatus, error) {
+                var err = textStatus + ", " + error;
+                console.log("Request Failed: " + err);
+            });
+
+            // Handle form submission
+            $('#locationForm').submit(function(event) {
+                event.preventDefault();
+
+                // Collecting values from the form
+                var formData = {
+                    province: $('#province').val(),
+                    provinceName: $('#provinceName').val(),
+                    city: $('#city').val(),
+                    cityName: $('#cityName').val(),
+                    barangay: $('#barangay').val(),
+                    barangayName: $('#barangayName').val()
+                };
+
+                // Displaying the collected data (or sending it to the server)
+                console.log("Form Data Submitted:", formData);
+                alert('Location submitted successfully!');
+            });
+        });
+    </script>
     <?php if (isset($_SESSION['message']) && isset($_SESSION['status'])) { ?>
         <script>
             Swal.fire({

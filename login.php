@@ -21,9 +21,10 @@ if (isset($_POST['login'])) {
             $_SESSION['user_firstname'] = $user['firstname'];
             $_SESSION['user_lastname'] = $user['lastname'];
             $_SESSION['user_phone'] = $user['contact'];
-            
-
-
+        
+            // Redirect to dashboard
+            $_SESSION['message'] = "You have successfully logged in.";
+            $_SESSION['status'] = "error";
             header("Location: index.php");
         } else {
             // Incorrect password

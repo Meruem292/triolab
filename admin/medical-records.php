@@ -264,7 +264,7 @@ $admin_id = $_SESSION['user_id'];
                             <td>${record.treatment}</td>
                             <td>${record.prescription}</td>
                             <td>
-                                <a href="../doctor/docs/document_layout.php?appointmentId=${record.appointment_id}" target="_blank" class="btn btn-sm btn-primary">
+                                <a href="../admin/assets/docs/document_layout.php?appointmentId=${record.appointment_id}" target="_blank" class="btn btn-sm btn-primary">
                                     <i class="ri-printer
                                     "></i> Edit Medical Record
                                 </a>

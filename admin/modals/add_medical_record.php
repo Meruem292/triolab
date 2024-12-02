@@ -22,10 +22,10 @@
                         <label for="prescription" class="form-label">Prescription</label>
                         <textarea class="form-control" id="prescription" name="prescription" required></textarea>
                     </div>
-                    <div class="mb-3">
+                    <!-- <div class="mb-3">
                         <label for="medical_doc" class="form-label">Medical Document</label>
-                        <textarea class="form-control" id="content" name="content" required></textarea>
-                    </div>
+                        <input type="file" name="content" id="content">
+                    </div> -->
                     <div class="mb-3">
                         <label for="record_date" class="form-label">Record Date</label>
                         <input type="date" class="form-control" id="record_date" name="record_date" required>

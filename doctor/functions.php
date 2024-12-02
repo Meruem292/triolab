@@ -632,7 +632,8 @@ function getTotalPendingAppointments($pdo)
     return $result['total_pending_appointments'];
 }
 
-function getCompletedAppointments($pdo){
+function getCompletedAppointments($pdo)
+{
     $sql = "SELECT COUNT(*) AS total_completed_appointments FROM appointment WHERE status = 'Completed'";
     $stmt = $pdo->prepare($sql);
     $stmt->execute();
@@ -918,4 +919,19 @@ function calendarMonthShowsAdmin()
     </script>
 
 <?php
+}
+
+function getDistinctServiceTypes()
+{
+    global $pdo;  // Assuming $pdo is your PDO database connection
+    $stmt = $pdo->query("SELECT DISTINCT type FROM services");
+    return $stmt->fetchAll(PDO::FETCH_COLUMN);  // Returns an array of distinct service types
+}
+
+// Function to fetch distinct services
+function getDistinctServices()
+{
+    global $pdo;  // Assuming $pdo is your PDO database connection
+    $stmt = $pdo->query("SELECT DISTINCT service FROM services");
+    return $stmt->fetchAll(PDO::FETCH_COLUMN);  // Returns an array of distinct services
 }

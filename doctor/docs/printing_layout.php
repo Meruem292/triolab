@@ -2,7 +2,7 @@
 session_start();
 require_once 'db.php';
 
-$appointment_id = $_GET['appointmentId'] ?? null;
+$appointment_id = $_GET['appointment_id'] ?? null;
 
 if (!$appointment_id) {
     die('Invalid appointment ID.');
@@ -349,7 +349,7 @@ input[type="text"] {
                             <!-- Right-side content -->
                             <div class="col-auto ms-auto">
                                 <p>Date: <?= date('Y-m-d') ?></p>
-                                <p>X-ray No.:<input type="text" style="border: none" name="xrayno" id="xrayno" value="<?= $xrayno ?>"></p>
+                                <p><input type="text" style="border: none" name="xrayno" id="xrayno" value="<?= $xrayno ?>"></p>
                                 
                             </div>
                         </div> 
@@ -361,7 +361,7 @@ input[type="text"] {
                                 <p>Requsted by: <input  style="border:none;" type="text" name="request_by" value="<?= $request_by ?>"></p>
                                 <br>
                                 <p>Kind of Examination: <input  style="border:none;" type="text" name="examination" value="<?= $examination ?>"></p>
-                                <p class="mt-3"> Radiographic Findings:</p>
+                                <p class="mt-3">Findings:</p>
 
                                 <textarea class="mb-3 w-100"  style="border:none;" name="findings" id="findings"><?= $findings ?></textarea>
                                 <p class="mb-2">IMPRESSION: </p>

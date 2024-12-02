@@ -366,7 +366,7 @@ input[type="text"] {
 
     <div class="max-w-2xl mx-auto p-6 bg-white rounded-lg shadow-lg dark:bg-zinc-800" id="">
         <div class="flex items-center mb-2">
-            <img src="../assets/images/triolab_header.png" alt="logo_header" class="h-100 w-100">
+            <img src="../images/triolab_header.png" alt="logo_header" class="h-100 w-100">
         </div>
 
 

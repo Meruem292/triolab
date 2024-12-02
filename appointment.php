@@ -98,6 +98,7 @@ if (isset($_POST['add_appointment'])) {
 
                     $_SESSION['message'] = "Appointment booked successfully with payment!";
                     $_SESSION['status'] = "success";
+                    header("Location: appointment_receipt.php?appointment_id=$appointment_id");
                 } else {
                     throw new Exception("Failed to upload the payment receipt.");
                 }
@@ -114,8 +115,10 @@ if (isset($_POST['add_appointment'])) {
             $insertMedical = $pdo->prepare("INSERT INTO `medical_records` (`patient_id`, `appointment_id`, `content`) VALUES (?, ?, ?)");
             $insertMedical->execute([$user_id, $appointment_id, $content]);
 
+
             $_SESSION['message'] = "Appointment booked successfully with cash payment!";
             $_SESSION['status'] = "success";
+            header("Location: appointment_receipt.php?appointment_id=$appointment_id");
         }
     } catch (Exception $e) {
         $_SESSION['message'] = "An error occurred: " . $e->getMessage();
@@ -158,6 +161,16 @@ if (isset($_POST['add_appointment'])) {
     <!--Google Fonts-->
     <link rel="preconnect" href="https://fonts.gstatic.com/">
     <link href="https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,400;0,700;0,900;1,400;1,700;1,900&amp;family=Manrope:wght@300;400;600;800&amp;family=Volkhov:ital,wght@0,400;0,700;1,400;1,700&amp;display=swap" rel="stylesheet">
+
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- Include Timepicker CSS (If using a timepicker plugin like jQuery Timepicker) -->
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/timepicker/1.3.5/jquery.timepicker.min.css">
+
+    <!-- Include Timepicker JS -->
+    <script src="//cdnjs.cloudflare.com/ajax/libs/timepicker/1.3.5/jquery.timepicker.min.js"></script>
+
+
 
     <script>
         if (window.history.replaceState) {
@@ -661,11 +674,52 @@ if (isset($_POST['add_appointment'])) {
                                         <div class="card shadow-sm mt-40">
                                             <div class="card-body">
                                                 <p>2. Enter your preferred time* (8:00 AM to 5:00 PM)</p>
-                                                <div id="error-time" class="bg-danger p-2 text-white my-3" style="display: none;">Please select a time between 8:00 AM and 5:00 PM</div>
-                                                <input type="time" name="selectedTime" id="preferred-time" min="08:00" max="16:30" required class="form-control">
-
+                                                <div id="error-time" class="bg-danger p-2 text-white my-3" style="display: none;">
+                                                    Please select a time between 8:00 AM and 5:00 PM
+                                                </div>
+                                                <input type="time" name="selectedTime" id="preferred-time" required class="form-control" min="08:00" max="17:00" step="1800">
                                                 <button type="button" class="default-btn next-step">Next</button>
                                             </div>
+
+                                            <script>
+                                                // Ensure that only 00 or 30 are selected for the minute portion
+                                                document.getElementById('preferred-time').addEventListener('input', function(event) {
+                                                    let time = event.target.value; // e.g., "08:15"
+                                                    let [hours, minutes] = time.split(':').map(Number);
+
+                                                    // Round minutes to the nearest 30
+                                                    if (minutes < 15) {
+                                                        minutes = 0;
+                                                    } else if (minutes < 45) {
+                                                        minutes = 30;
+                                                    } else {
+                                                        minutes = 0;
+                                                        hours = (hours + 1) % 24; // Increment hours, handle 24-hour wrap
+                                                    }
+
+                                                    // Update the input value
+                                                    event.target.value = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+                                                });
+                                            </script>
+
+
+                                            <!-- <label for="time">Choose a time:</label>
+                                            <input type="text" class="form-cotnrol timepicker" id="time" />
+
+
+                                            <script>
+                                                $('.timepicker').timepicker({
+                                                    timeFormat: 'HH:mm',
+                                                    interval: 30,
+                                                    minTime: '8',
+                                                    maxTime: '4:00pm',
+                                                    defaultTime: '8',
+                                                    startTime: '8',
+                                                    dynamic: false,
+                                                    dropdown: true,
+                                                    scrollbar: false
+                                                });
+                                            </script> -->
                                         </div>
                                     </div>
                                 </div>
@@ -938,27 +992,35 @@ if (isset($_POST['add_appointment'])) {
                         // Fetch time slots via AJAX
                         fetchTimeSlots(info.dateStr);
                     }
+                },
+                dayCellDidMount: function(info) {
+                    // Adjust the date based on local timezone
+                    const localDate = new Date(info.date);
+                    const selectedDate = localDate.toLocaleDateString('en-CA'); // ISO format (YYYY-MM-DD)
+
+                    // Fetch slot availability for the correct date
+                    const serviceId = document.getElementById("serviceId").value;
+                    fetch(`fetch_availability.php?service_id=${serviceId}&month=${info.date.getMonth() + 1}&year=${info.date.getFullYear()}`) // Replace '1' with actual service ID
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data[selectedDate] > 0) {
+                                // Green for available slots
+                                info.el.style.backgroundColor = 'rgba(0, 255, 0, 0.2)';
+                            } else {
+                                // Red for no slots
+                                info.el.style.backgroundColor = 'rgba(255, 0, 0, 0.2)';
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error fetching slot availability:', error);
+                        });
                 }
             });
             calendar.render();
-
-            // Add submit listener for the form
-            var form = document.getElementById("appointmentForm"); // Adjust this to your actual form ID
-            form.addEventListener('submit', function(event) {
-                var selectedSchedule = document.querySelector('input[name="selectedSchedule"]:checked');
-
-                // Check if a time slot is selected and if the select field is valid
-                if (!selectedSchedule) {
-                    event.preventDefault(); // Prevent form submission
-                    Swal.fire({
-                        title: 'Error!',
-                        text: 'Please select a time slot.',
-                        icon: 'error',
-                        confirmButtonText: 'OK'
-                    });
-                }
-            });
         });
+
+
+
 
         function fetchTimeSlots(selectedDate) {
             // Make an AJAX request to fetch time slots based on the selected date
@@ -1077,7 +1139,7 @@ if (isset($_POST['add_appointment'])) {
             preferredTimeInput.addEventListener('change', function() {
                 const selectedTime = new Date(`2000-01-01T${this.value}`);
                 const minTime = new Date(`2000-01-01T08:00`);
-                const maxTime = new Date(`2000-01-01T16:30`);
+                const maxTime = new Date(`2000-01-01T16:00`);
                 if (selectedTime < minTime || selectedTime > maxTime) {
                     document.getElementById("error-time").style.display = 'block';
                     this.value = ''; // Clear the input value

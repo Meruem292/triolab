@@ -81,7 +81,7 @@ if(!isset($_SESSION['user_id'])){
 
 <body>
 
-    <?php require "header.php"; ?>
+    <?php require "header_services.php"; ?>
 
     <div class="page-header">
         <div class="container">
