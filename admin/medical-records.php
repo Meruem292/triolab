@@ -126,11 +126,11 @@ $admin_id = $_SESSION['user_id'];
                                                                     <i class="ri-more-fill align-middle"></i>
                                                                 </button>
                                                                 <ul class="dropdown-menu dropdown-menu-end">
-                                                                    <li>
-                                                                        <a href="#" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#addMedicalRecordModal" data-patient-id="<?= htmlspecialchars($row['id']); ?>">
+                                                                    <!-- <li>
+                                                                        <a href="#" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#addMedicalRecordModal" data-patient-id=" ?= htmlspecialchars($row['id']); ?>">
                                                                             <i class="ri-edit-fill align-bottom me-2 text-muted"></i> Add Medical Record
                                                                         </a>
-                                                                    </li>
+                                                                    </li> -->
 
                                                                     <li>
                                                                         <a href="#" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#viewMedicalRecordModal" data-patient-id="<?= htmlspecialchars($row['id']); ?>">

@@ -81,9 +81,9 @@ $admin_id = $_SESSION['user_id'];
                             <div class="card">
 
                                 <div class="card-body">
-                                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addPatientModal">
+                                    <!-- <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addPatientModal">
                                         + Add New Patient
-                                    </button>
+                                    </button> -->
                                     <div class="d-flex justify-content-sm-start">
                                         <div class="search-box ms-2 mt-3 mb-3">
                                             <input type="text" id="searchInput" class="form-control" placeholder="Search for patients..." onkeyup="searchTable()">
