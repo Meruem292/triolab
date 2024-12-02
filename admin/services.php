@@ -543,7 +543,7 @@ if (isset($_POST['archive_service'])) {
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Department <span class="text-danger">*</span></label>
-                        <select name="name" class="form-select" required>
+                        <select name="department" class="form-select" required>
                             <option value="" disabled selected>Select a department</option>
                             <?php foreach ($departments as $department): ?>
                                 <option value="<?= htmlspecialchars($department['id']) ?>">
