@@ -31,6 +31,27 @@
                         <label class="form-label">Date of Birth</label>
                         <input type="date" name="dob" class="form-control" required>
                     </div>
+                    <!-- <div class="col-md-4">
+                        <div class="form-group">
+                            <label>Province <span class="text-danger">*</span></label>
+                            <select id="province" class="form-control" required></select>
+                            <input type="hidden" id="provinceName" class="form-control" name="province" placeholder="Province Name" readonly>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label>City <span class="text-danger">*</span></label>
+                            <select id="city" class="form-control" required></select>
+                            <input type="hidden" id="cityName" class="form-control" name="city" placeholder="City Name" readonly>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label>Barangay <span class="text-danger">*</span></label>
+                            <select id="barangay" class="form-control" required></select>
+                            <input type="hidden" id="barangayName" class="form-control" name="barangay" placeholder="Barangay Name" readonly required>
+                        </div>
+                    </div> -->
                     <!-- Address Fields -->
                     <div class="col-md-12 mb-3">
                         <label class="form-label">Province</label>

@@ -671,7 +671,7 @@ if (isset($_POST['add_appointment'])) {
 
                                             </div>
                                         </div>
-                                        <div class="card shadow-sm mt-40">
+                                        <div class="card shadow-sm mt-40" id="timeSelectionCard" style="display: none;">
                                             <div class="card-body">
                                                 <p>2. Enter your preferred time* (8:00 AM to 5:00 PM)</p>
                                                 <div id="error-time" class="bg-danger p-2 text-white my-3" style="display: none;">
@@ -721,6 +721,7 @@ if (isset($_POST['add_appointment'])) {
                                                 });
                                             </script> -->
                                         </div>
+
                                     </div>
                                 </div>
                             </div>
@@ -884,9 +885,9 @@ if (isset($_POST['add_appointment'])) {
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
+
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Get all tab panels and "Next" buttons
             const tabs = document.querySelectorAll('.tab-pane');
             const nextButtons = document.querySelectorAll('.next-step');
 
@@ -909,7 +910,7 @@ if (isset($_POST['add_appointment'])) {
 
             // Add validation for "Next" buttons
             nextButtons.forEach((button, index) => {
-                button.addEventListener('click', function() {
+                button.addEventListener('click', function(e) {
                     const currentTab = tabs[index];
 
                     // Validate the current tab
@@ -928,6 +929,7 @@ if (isset($_POST['add_appointment'])) {
                             icon: 'error',
                             confirmButtonText: 'OK'
                         });
+                        e.preventDefault(); // Prevent moving to the next tab
                     }
                 });
             });
@@ -954,7 +956,25 @@ if (isset($_POST['add_appointment'])) {
                     button.setAttribute('disabled', 'true');
                 }
             });
+
+            // Show time selection when a schedule is selected
+            document.getElementById('scheduleSelect').addEventListener('change', function() {
+                const scheduleValue = this.value;
+
+                if (scheduleValue) {
+                    // If a schedule is selected, show the time selection card
+                    document.getElementById('timeSelectionCard').style.display = 'block';
+
+                    // Clear the "Please select a schedule first" message
+                    document.getElementById('timeSlotsContainer').innerHTML = `You selected: ${scheduleValue}. Please select a time below.`;
+                } else {
+                    // If no schedule is selected, hide the time selection card
+                    document.getElementById('timeSelectionCard').style.display = 'none';
+                }
+            });
         });
+    </script>
+
     </script>
     <script>
         function handlePaymentChange(input) {
@@ -1019,9 +1039,6 @@ if (isset($_POST['add_appointment'])) {
             calendar.render();
         });
 
-
-
-
         function fetchTimeSlots(selectedDate) {
             // Make an AJAX request to fetch time slots based on the selected date
             var xhttp = new XMLHttpRequest();
@@ -1047,10 +1064,10 @@ if (isset($_POST['add_appointment'])) {
                             slotDiv.className = `toggle-block morning`;
 
                             slotDiv.innerHTML = `
-                            <input type="radio" name="selectedSchedule" value="${slotData['id']}">
-                            <strong>${slotData['schedule']} (${slotData['slot']} slots available)</strong><br>
-                            Doctor: ${slotData['doctor_name']}
-                        `;
+                        <input type="radio" name="selectedSchedule" value="${slotData['id']}">
+                        <strong>${slotData['schedule']} (${slotData['slot']} slots available)</strong><br>
+                        Doctor: ${slotData['doctor_name']}
+                    `;
                             timeSlotsContainer.appendChild(slotDiv);
 
                             // Attach event listener to the newly created slot
@@ -1066,6 +1083,9 @@ if (isset($_POST['add_appointment'])) {
                                 if (radio) {
                                     radio.checked = true;
                                 }
+
+                                // Show the time selection card once a schedule is selected
+                                document.getElementById('timeSelectionCard').style.display = 'block';
                             });
                         });
                     } else {
@@ -1080,13 +1100,12 @@ if (isset($_POST['add_appointment'])) {
                     }
                 }
             };
+
             const serviceId = document.getElementById("serviceId").value; // Assuming there's an input or element with the service ID
             xhttp.open("GET", "fetch_time_slots.php?selectedDate=" + selectedDate + "&service_id=" + serviceId, true);
             xhttp.send();
         }
     </script>
-
-
 
     <script>
         // ------------step-wizard-------------
@@ -1132,6 +1151,8 @@ if (isset($_POST['add_appointment'])) {
             $(this).addClass('active');
         });
     </script>
+
+
 
     <script>
         document.addEventListener("DOMContentLoaded", function() {

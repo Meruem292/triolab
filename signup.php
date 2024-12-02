@@ -171,35 +171,36 @@ if (isset($_POST['register'])) {
                                         <div class="row">
                                             <div class="col-md-4">
                                                 <div class="form-group">
-                                                    <label for="province">Province:</label>
-                                                    <select class="form-select" id="province" name="province" required>
-                                                        <option value="">Select Province</option>
-                                                    </select>
+                                                    <label>Province <span class="text-danger">*</span></label>
+                                                    <select id="province" class="form-control" required></select>
+                                                    <input type="hidden" id="provinceName" class="form-control" name="province" placeholder="Province Name" readonly>
                                                 </div>
                                             </div>
                                             <div class="col-md-4">
                                                 <div class="form-group">
-                                                    <label for="city">City/Municipality:</label>
-                                                    <select class="form-select" id="city" name="city" required>
-                                                        <option value="">Select City/Municipality</option>
-                                                    </select>
+                                                    <label>City <span class="text-danger">*</span></label>
+                                                    <select id="city" class="form-control" required></select>
+                                                    <input type="hidden" id="cityName" class="form-control" name="city" placeholder="City Name" readonly>
                                                 </div>
                                             </div>
                                             <div class="col-md-4">
                                                 <div class="form-group">
-                                                    <label for="barangay">Barangay:</label>
-                                                    <select class="form-select" id="barangay" name="barangay" required>
-                                                        <option value="">Select Barangay</option>
-                                                    </select>
+                                                    <label>Barangay <span class="text-danger">*</span></label>
+                                                    <select id="barangay" class="form-control" required></select>
+                                                    <input type="hidden" id="barangayName" class="form-control" name="barangay" placeholder="Barangay Name" readonly required>
                                                 </div>
                                             </div>
                                         </div>
                                         <div class="row mt-2">
-                                            <div class="col-md-6">
+                                            <div class="col-md-4">
+                                                <label for="street" class="form-label">Street<span class="text-danger">*</span></label>
+                                                <input type="text" class="form-control" name="street" id="street" required placeholder="ex. Blk 1 Lot 1">
+                                            </div>
+                                            <div class="col-md-4">
                                                 <label for="birthplace" class="form-label">Birthplace<span class="text-danger">*</span></label>
                                                 <input type="text" class="form-control" name="birthplace" id="birthplace" required placeholder="ex. Dasmariñas">
                                             </div>
-                                            <div class="col-md-6">
+                                            <div class="col-md-4">
                                                 <label for="contact" class="form-label">Contact<span class="text-danger">*</span></label>
                                                 <input type="number" class="form-control" name="contact" id="contact" required placeholder="ex. 09123456789">
                                             </div>

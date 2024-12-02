@@ -257,7 +257,7 @@ if ($doctorDepartmentId) {
         <div class="background-image" style="background-image: url('assets/images/logo.png'); background-position: center; background-repeat: no-repeat; background-size: contain; opacity: 0.3;"></div>
 
         <div class="flex items-center">
-            <img src="../assets/images/triolab_header.png" alt="Clinic Logo" />
+            <img src="./assets/images/triolab_header.png" alt="Clinic Logo" />
         </div>
 
         <h4 class="text-xl font-bold text-center mt-4 text-zinc-900 dark:text-zinc-100">APPOINTMENT RECEIPT</h4>
