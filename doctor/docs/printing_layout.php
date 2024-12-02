@@ -391,7 +391,7 @@ input[type="text"] {
     <!-- Your existing HTML content -->
     <div class="action-buttons noprint">
         <button type="submit" class="btn btn-success" onclick="window.print()">Print Medical Record</button>
-        <button type="button" class="btn btn-danger" onclick="window.history.back()">Close</button>
+        <!-- <button type="button" class="btn btn-danger" onclick="window.history.back()">Close</button> -->
     </div>
     </form>
 

@@ -496,10 +496,10 @@ input[type="text"] {
     <!-- Your existing HTML content -->
     <div class="action-buttons noprint">
         <button type="submit" class="btn btn-success" name="submit_doc_changes">Submit Findings</button>
-        <button type="button" class="btn btn-danger"
+        <!-- <button type="button" class="btn btn-danger"
             onclick="if (window.history.length > 1) { window.history.back(); } else { window.location.href = '../medical-records.php'; }">
             Close
-        </button>
+        </button> -->
 
     </div>
     </form>
