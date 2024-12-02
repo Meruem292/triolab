@@ -12,10 +12,16 @@ if (isset($_POST['unarchive'])) {
     $table = $_POST['table'];
 
     // Call the unarchiveData function to unarchive the record
-    $result = unArchiveData($pdo, $table, $id);
+    if($table == 'doctor'){
+        $result = unArchiveDataDoctor($pdo, $table, $id);
+    }else{
+        $result = unArchiveData($pdo, $table, $id);
+    }
+    
 
     // Set session message and status based on result
     if ($result) {
+        
         $_SESSION['message'] = "Record successfully unarchived.";
         $_SESSION['status'] = "success"; // Success icon
     } else {

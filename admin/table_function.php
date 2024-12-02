@@ -26,6 +26,33 @@ function unArchiveData($pdo, $table, $id)
     }
 }
 
+function unArchiveDataDoctor($pdo, $table, $id)
+{
+    try {
+        // Check if the table exists
+        $stmt = $pdo->prepare("SHOW TABLES LIKE :table");
+        $stmt->execute([':table' => $table]);
+
+        if ($stmt->rowCount() == 0) {
+            return "Error: Table '$table' does not exist.";
+        }
+
+        $sql = "UPDATE $table SET is_archive = 0 WHERE employee_id = :id";
+        $stmt = $pdo->prepare($sql);
+        // Bind the parameters
+        $stmt->bindParam(':id', $id, PDO::PARAM_INT);
+
+        // Execute the statement
+        if ($stmt->execute()) {
+            return "Record unarchived successfully.";
+        } else {
+            return "Error: Unable to unarchive record.";
+        }
+    } catch (PDOException $e) {
+        return "Error: " . $e->getMessage();
+    }
+}
+
 function delateData($pdo, $table, $id)
 {
     try {
