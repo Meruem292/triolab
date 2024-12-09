@@ -1,26 +1,15 @@
 <?php
+require 'db.php';
 
-require "db.php";
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $type = $_POST['type'] ?? '';
 
-if(isset($_POST['searchValue'])) {
-    // Sanitize search value
-    $searchValue = trim($_POST['searchValue']);
-
-    // Prepare SQL statement to fetch keywords
-    $stmt = $pdo->prepare("SELECT * FROM services WHERE is_archive = 0 AND service LIKE CONCAT('%', :searchValue, '%')");
-    $stmt->bindValue(':searchValue', $searchValue, PDO::PARAM_STR);
-    
-    // Execute SQL statement
-    $stmt->execute();
-
-    // Fetch results
-    $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-    // Return results as JSON
-    echo json_encode($results);
-} else {
-    // If search value is not provided, return an empty array
-    echo json_encode([]);
+    try {
+        $stmt = $pdo->prepare("SELECT id, service FROM services WHERE type = :type AND is_archive = 0");
+        $stmt->execute([':type' => $type]);
+        $services = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        echo json_encode($services);
+    } catch (Exception $e) {
+        echo json_encode([]);
+    }
 }
-
-?>
