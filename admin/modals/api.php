@@ -27,6 +27,108 @@ if (isset($_POST['add_appointment'])) {
     exit();
 }
 
+if (isset($_POST['edit_appointment'])) {
+    // Extract form inputs
+    $appointmentId = $_POST['appointmentId'];  // Appointment ID
+    $paymentStatus = $_POST['paymentStatus'];  // Payment Status (Pending, Approved, Disapproved)
+    $status = $_POST['appointmentStatus'];     // Appointment Status (Pending, Completed)
+    $doctor = $_POST['doctor'];                // Doctor ID
+    $amount = $_POST['amount'];              // Payment amount
+    $medicalStatus = $_POST['medicalStatus'];  // Medical Status (Pending, Approved)
+
+
+    if ($status === "Completed" && ($medicalStatus !== "Approved" || $paymentStatus !== "Approved")) {
+        $_SESSION['message'] = "Cannot mark as Completed. Both Medical Status and Payment Status must be Approved.";
+        $_SESSION['status'] = "error";
+        header('Location: ../admin/appointment.php');
+        exit();
+    }
+
+    try {
+        // Begin transaction
+        $pdo->beginTransaction();
+
+        // Get the department ID of the selected doctor
+        $queryDoctorDepartment = $pdo->prepare("SELECT department_id FROM doctor WHERE employee_id = ?");
+        $queryDoctorDepartment->execute([$doctor]);
+        $doctorDepartment = $queryDoctorDepartment->fetch(PDO::FETCH_ASSOC);
+
+        if (!$doctorDepartment) {
+            throw new Exception("Invalid doctor selected.");
+        }
+
+        $doctorDepartmentId = $doctorDepartment['department_id'];
+
+        // Update `appointment` table
+        $updateAppointment = $pdo->prepare(
+            "UPDATE appointment 
+             SET status = ?, paid = ?, doctor_id = ?, department_id = ? 
+             WHERE id = ?"
+        );
+        $updateAppointment->execute([$status, $paymentStatus, $doctor, $doctorDepartmentId, $appointmentId]);
+
+        // Check if a payment receipt already exists for the appointment
+        $checkReceipt = $pdo->prepare("SELECT id FROM payment_receipts WHERE appointment_id = ?");
+        $checkReceipt->execute([$appointmentId]);
+        $existingReceipt = $checkReceipt->fetch(PDO::FETCH_ASSOC);
+
+        if ($existingReceipt) {
+            // Update the amount in `payment_receipts` if it exists
+            $updateReceipt = $pdo->prepare("UPDATE payment_receipts SET amount = ?, status = ? WHERE appointment_id = ?");
+            $updateReceipt->execute([$amount, $paymentStatus, $appointmentId]);
+        } else {
+            // Insert a new payment receipt if it doesn't exist
+            $insertReceipt = $pdo->prepare(
+                "INSERT INTO payment_receipts (appointment_id, payment_receipt_path, date, payment_mode_id, amount, status) 
+                 VALUES (?, ?, NOW(), 3, ?, ?)"
+            );
+            $insertReceipt->execute([$appointmentId, '', $amount, 'Pending']); // Default values for missing fields
+        }
+
+        // Check if a medical record already exists for the appointment
+        $checkMedicalRecord = $pdo->prepare("SELECT id FROM medical_records WHERE appointment_id = ?");
+        $checkMedicalRecord->execute([$appointmentId]);
+        $existingMedicalRecord = $checkMedicalRecord->fetch(PDO::FETCH_ASSOC);
+
+        if ($existingMedicalRecord) {
+            // Update the medical record if it exists
+            $updateMedicalRecord = $pdo->prepare(
+                "UPDATE medical_records 
+                 SET doctor_id = ?, updated_at = NOW() 
+                 WHERE appointment_id = ?"
+            );
+            $updateMedicalRecord->execute([$doctor, $appointmentId]);
+        } else {
+            // Insert a new medical record if it doesn't exist
+            $insertMedicalRecord = $pdo->prepare(
+                "INSERT INTO medical_records (patient_id, appointment_id, doctor_id, status, record_date, created_at) 
+                 SELECT patient_id, id, ?, 'Pending', NOW(), NOW() 
+                 FROM appointment 
+                 WHERE id = ?"
+            );
+            $insertMedicalRecord->execute([$doctor, $appointmentId]);
+        }
+
+        // Commit transaction
+        $pdo->commit();
+
+        // Set success message
+        $_SESSION['message'] = "Appointment, payment, and medical record details updated successfully!";
+        $_SESSION['status'] = "success";
+    } catch (Exception $e) {
+        // Rollback transaction in case of error
+        $pdo->rollBack();
+
+        // Set error message
+        $_SESSION['message'] = "Error updating appointment details: " . $e->getMessage();
+        $_SESSION['status'] = "error";
+    }
+
+    // Redirect to the appointment page
+    header('Location: ../admin/appointment.php');
+    exit();
+}
+
 // DOCTOR
 if (isset($_POST['add_doctor'])) {
     $employee_id = $_POST['employee_id'];

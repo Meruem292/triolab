@@ -38,9 +38,6 @@ require 'db.php'; // Database connection
                 ?>
             </select>
         </div>
-
-        <p><?php echo $_SESSION['user_id'] ?></p>
-
         <div class="mb-3">
             <label for="type-select" class="form-label">Select Type:</label>
             <select id="type-select" class="form-select" disabled>

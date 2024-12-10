@@ -1,8 +1,11 @@
 <?php
 session_start();
 require 'db.php';
+require 'functions.php';
 
-$user_id = $_SESSION['user_id'] ?? 10; // Replace with actual session-based user ID logic
+$app_id = generatAppointmentId();
+
+$user_id = $_SESSION['user_id']; // Replace with actual session-based user ID logic
 
 // Check if appointments data is provided
 if (isset($_POST['appointments']) && !empty($_POST['appointments'])) {
@@ -31,8 +34,8 @@ if (isset($_POST['appointments']) && !empty($_POST['appointments'])) {
 
         // Prepare the SQL statement for inserting appointments
         $stmtInsertAppointment = $pdo->prepare(
-            "INSERT INTO appointment (service_id, patient_id, appointment_date, appointment_time, doctor_id, department_id, appointment_slot_id, status, date_added)
-            VALUES (:service_id, :patient_id, :appointment_date, :appointment_time, :doctor_id, :department_id, :appointment_slot_id, 'pending', NOW())"
+            "INSERT INTO appointment (app_id, service_id, patient_id, appointment_date, appointment_time, doctor_id, department_id, appointment_slot_id, status, date_added)
+            VALUES (:app_id ,:service_id, :patient_id, :appointment_date, :appointment_time, :doctor_id, :department_id, :appointment_slot_id, 'pending', NOW())"
         );
 
         // Prepare the SQL statement for inserting medical records
@@ -44,6 +47,7 @@ if (isset($_POST['appointments']) && !empty($_POST['appointments'])) {
         foreach ($appointments as $appointment) {
             // Insert appointment details
             $stmtInsertAppointment->execute([
+                ':app_id' => $app_id,
                 ':service_id' => $appointment['serviceId'],
                 ':patient_id' => $user_id, // Assuming user_id from session
                 ':appointment_date' => $appointment['date'],
