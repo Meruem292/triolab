@@ -25,14 +25,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             exit;
         }
 
-        // Fetch appointment slots only for doctors in the selected department
+        $department_id = $department['department_id'];
+
+        // Fetch appointment slots for doctors in the selected department and within the given date range
         $query = "
             SELECT 
-                appointment_slots.id, 
+                appointment_slots.id AS appointment_slot_id, 
                 appointment_slots.date, 
                 appointment_slots.slot, 
-                doctor.firstname AS doctor_name, 
-                doctor.lastname AS doctor_lastname, 
+                doctor.employee_id AS doctor_id,
+                CONCAT(doctor.firstname, ' ', doctor.lastname) AS doctor_name,
+                doctor.department_id,
                 departments.name AS department_name
             FROM 
                 appointment_slots
@@ -46,18 +49,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 AND doctor.department_id = :department_id
         ";
 
+        // Execute query with the provided dates and department ID
         $stmt = $pdo->prepare($query);
         $stmt->execute([
             ':start_date' => $start_date,
             ':end_date' => $end_date,
-            ':department_id' => $department['department_id']
+            ':department_id' => $department_id
         ]);
-
+        
+        // Fetch the appointment slots and return them as JSON
         $slots = $stmt->fetchAll(PDO::FETCH_ASSOC);
         echo json_encode($slots);
 
     } catch (Exception $e) {
-        echo json_encode(['error' => $e->getMessage()]);
+        echo json_encode([]); // Return empty array in case of any error
+        error_log($e->getMessage()); // Log the error for debugging
     }
 }
-?>

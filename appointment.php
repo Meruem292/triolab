@@ -11,10 +11,10 @@ require 'db.php'; // Database connection
     <title>Dynamic FullCalendar with Appointment Cart</title>
     <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/main.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 </head>
 
 <body>
@@ -39,6 +39,8 @@ require 'db.php'; // Database connection
             </select>
         </div>
 
+        <p><?php echo $_SESSION['user_id'] ?></p>
+
         <div class="mb-3">
             <label for="type-select" class="form-label">Select Type:</label>
             <select id="type-select" class="form-select" disabled>
@@ -60,6 +62,7 @@ require 'db.php'; // Database connection
             <ul id="appointment-cart" class="list-group list-group-flush">
                 <li class="list-group-item">No appointments added yet.</li>
             </ul>
+            <button id="proceed-to-appointment" class="btn btn-primary">Proceed to Appointment</button>
         </div>
     </div>
 
@@ -92,6 +95,7 @@ require 'db.php'; // Database connection
             let selectedDate = null;
             let cart = [];
 
+            // FullCalendar initialization
             const calendar = new FullCalendar.Calendar(calendarEl, {
                 initialView: 'dayGridMonth',
                 events: function(info, successCallback, failureCallback) {
@@ -114,15 +118,17 @@ require 'db.php'; // Database connection
                             try {
                                 const slots = JSON.parse(response);
                                 const events = slots.map(slot => ({
-                                    id: slot.id,
+                                    id: slot.appointment_slot_id,
                                     title: `${slot.doctor_name} - ${slot.department_name}`,
                                     start: slot.date,
                                     extendedProps: {
-                                        slotId: slot.id,
+                                        slotId: slot.appointment_slot_id,
                                         slot: slot.slot,
                                         date: slot.date,
                                         doctorName: slot.doctor_name,
-                                        departmentName: slot.department_name
+                                        departmentName: slot.department_name,
+                                        doctorId: slot.doctor_id,
+                                        departmentId: slot.department_id
                                     }
                                 }));
                                 successCallback(events);
@@ -137,23 +143,34 @@ require 'db.php'; // Database connection
                         }
                     });
                 },
+
                 eventClick: function(info) {
                     const {
+                        slotId,
                         slot,
                         date,
                         doctorName,
-                        departmentName
+                        departmentName,
+                        doctorId, // Doctor's ID
+                        departmentId // Department's ID
                     } = info.event.extendedProps;
 
-                    // Format the date to yyyy-mm-dd
                     const formattedDate = new Date(date).toISOString().split('T')[0];
 
+                    // Update modal with doctor's ID and department ID
                     $('#modal-details').html(`
-                    <p><strong>Doctor:</strong> ${doctorName}</p>
-                    <p><strong>Department:</strong> ${departmentName}</p>
-                    <p><strong>Slot:</strong> ${slot}</p>
-                    <p><strong>Date:</strong> ${formattedDate}</p>
-                `);
+                        
+                        <p><strong>Doctor:</strong> ${doctorName}</p>
+                        <p><strong>Department:</strong> ${departmentName}</p>
+                        <p><strong>Slot:</strong> ${slot}</p>
+                        <p><strong>Date:</strong> ${formattedDate}</p>
+                    `);
+
+                    // Store the doctorId and departmentId for later use
+                    $('#appointment-modal').data('slotId', slotId);
+                    $('#appointment-modal').data('doctorId', doctorId);
+                    $('#appointment-modal').data('departmentId', departmentId);
+
                     selectedDate = formattedDate;
                     $('#appointment-modal').modal('show');
                 }
@@ -161,7 +178,7 @@ require 'db.php'; // Database connection
 
             calendar.render();
 
-            // Handle category selection
+            // Category selection
             $('#category-select').on('change', function() {
                 const category = $(this).val();
                 $('#type-select').prop('disabled', !category).html('<option value="">Select a type</option>');
@@ -189,7 +206,7 @@ require 'db.php'; // Database connection
                 }
             });
 
-            // Handle type selection
+            // Type selection
             $('#type-select').on('change', function() {
                 const type = $(this).val();
                 $('#service-select').prop('disabled', !type).html('<option value="">Select a service</option>');
@@ -216,7 +233,7 @@ require 'db.php'; // Database connection
                 }
             });
 
-            // Initialize flatpickr for time selection
+            // Flatpickr initialization
             flatpickr("#flatpickr", {
                 enableTime: true,
                 noCalendar: true,
@@ -228,17 +245,21 @@ require 'db.php'; // Database connection
                 calendar.refetchEvents();
             });
 
-            // Handle adding the selected slot to the cart
             $('#add-to-cart').on('click', function() {
                 const selectedServiceId = $('#service-select').val();
                 const selectedTime = $('#flatpickr').val();
+
+                // Retrieve doctorId and departmentId from modal data
+
+                const slotId = $('#appointment-modal').data('slotId');
+                const doctorId = $('#appointment-modal').data('doctorId');
+                const departmentId = $('#appointment-modal').data('departmentId');
 
                 if (!selectedDate) {
                     alert('No appointment slot selected!');
                     return;
                 }
 
-                // Check if the time is selected
                 if (!selectedTime) {
                     alert('Please select a time for the appointment!');
                     return;
@@ -249,17 +270,23 @@ require 'db.php'; // Database connection
                     return;
                 }
 
+                // Add the selected appointment to the cart
                 cart.push({
                     serviceId: selectedServiceId,
                     date: selectedDate,
-                    time: selectedTime
+                    time: selectedTime,
+                    doctorId: doctorId, // Store doctor ID
+                    departmentId: departmentId, // Store department ID
+                    slotId: slotId // Store slot ID
                 });
+
+
 
                 updateCart();
                 $('#appointment-modal').modal('hide');
             });
 
-            // Function to update the cart display
+
             function updateCart() {
                 const cartList = $('#appointment-cart');
                 cartList.empty();
@@ -267,15 +294,52 @@ require 'db.php'; // Database connection
                 if (cart.length === 0) {
                     cartList.append('<li class="list-group-item">No appointments added yet.</li>');
                 } else {
-                    cart.forEach(item => {
-                        cartList.append(`<li class="list-group-item">Date: ${item.date}, Time: ${item.time}, Service ID: ${item.serviceId}</li>`);
+                    cart.forEach((item, index) => {
+                        cartList.append(`
+                            <li class="list-group-item">
+                                Date: ${item.date}, Time: ${item.time}, Service ID: ${item.serviceId}, 
+                                Doctor ID: ${item.doctorId}, Department ID: ${item.departmentId}
+                                <button class="btn btn-danger btn-sm float-right remove-from-cart" data-index="${index}">Remove</button>
+                            </li>
+                        `);
                     });
                 }
             }
+
+            $(document).on('click', '.remove-from-cart', function() {
+                const index = $(this).data('index');
+                cart.splice(index, 1);
+                updateCart();
+            });
+
+            // Proceed to appointment
+            $('#proceed-to-appointment').on('click', function() {
+                if (cart.length === 0) {
+                    alert('Please add at least one appointment to proceed.');
+                    return;
+                }
+
+                // Handle the submission of appointments
+                $.ajax({
+                    url: 'submit_appointments.php',
+                    type: 'POST',
+                    data: {
+                        appointments: JSON.stringify(cart)
+                    }, // Send cart data as JSON
+                    success: function(response) {
+                        console.log(response); // Check if the success message is returned from PHP
+                        alert('Appointments submitted successfully!');
+                        cart = [];
+                        updateCart();
+                    },
+                    error: function(xhr, status, error) {
+                        alert('Error submitting appointments: ' + error);
+                    }
+                });
+
+            });
         });
     </script>
-
-
 </body>
 
 </html>
