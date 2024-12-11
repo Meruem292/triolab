@@ -1,47 +1,32 @@
 <?php
-// Get the JSON data sent from the client
-$data = json_decode(file_get_contents('php://input'), true);
+// Assuming you are using PDO for database connection
+include 'db.php';
 
-// Extract individual data points from the request
-$appId = $data['appId'];
-$patientName = $data['patientName'];
-$appointmentDate = $data['appointmentDate'];
-$status = $data['status'];
-$totalCost = $data['totalCost'];
-$services = $data['services']; // Array of service IDs to be updated
+$data = json_decode(file_get_contents("php://input"));
 
-// Connect to the database (PDO connection)
-include('db.php'); // Assuming you have a db_conn.php file for the PDO connection
+$appId = $data->appointmentId;
+$patientName = $data->patientName;
+$appointmentDate = $data->appointmentDate;
+$services = $data->services;
 
-try {
-    // Start a transaction to ensure atomicity
-    $pdo->beginTransaction();
+// Update main appointment status (if needed)
+$stmt = $pdo->prepare("UPDATE appointment SET status = :status, paid = :paid, appointment_date = :appointmentDate WHERE app_id = :appId");
+$stmt->execute([
+    'status' => '', // Change this to whatever status you'd like to set
+    'paid' => '', // Change this to whatever status you'd like to set
+    'appointmentDate' => $appointmentDate,
+    'appId' => $appId
+]);
 
-    // Step 1: Update the `appointment` table
-    $stmt = $pdo->prepare("UPDATE appointment SET appointment_date = ?, status = ?, total_cost = ? WHERE id = ?");
-    $stmt->execute([$appointmentDate, $status, $totalCost, $appId]);
-
-    // Step 2: Update or insert the services (depending on your needs)
-    // Assuming you're updating the services list for this appointment
-    // You might need to delete old services and insert new ones or update existing ones
-    // This is just an example, adjust as necessary for your table structure
-    $stmt = $pdo->prepare("DELETE FROM appointment_services WHERE appointment_id = ?");
-    $stmt->execute([$appId]);
-
-    // Insert updated services
-    foreach ($services as $serviceId) {
-        $stmt = $pdo->prepare("INSERT INTO appointment_services (appointment_id, service_id) VALUES (?, ?)");
-        $stmt->execute([$appId, $serviceId]);
-    }
-
-    // Commit the transaction if all steps were successful
-    $pdo->commit();
-
-    // Return success response
-    echo json_encode(['success' => true]);
-} catch (Exception $e) {
-    // Rollback the transaction in case of error
-    $pdo->rollBack();
-    echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+// Update each service status based on service ID
+foreach ($services as $service) {
+    $stmt = $pdo->prepare("UPDATE appointment SET status = :status,  paid = :paid WHERE id = :serviceId");
+    $stmt->execute([
+        'status' => $service->status,
+        'paid' => $service->paid,
+        'serviceId' => $service->serviceId
+    ]);
 }
+
+echo json_encode(['success' => true, 'message' => 'Appointment updated successfully!']);
 ?>

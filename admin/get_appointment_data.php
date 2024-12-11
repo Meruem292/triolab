@@ -6,12 +6,15 @@ if (isset($_GET['app_id'])) {
     $app_id = $_GET['app_id'];
 
     $query = "
-        SELECT 
+        SELECT
+            appointment.id AS id,
             appointment.app_id,
+            appointment.paid,
             patient.firstname AS patient_firstname,
             patient.lastname AS patient_lastname,
             services.service AS service_name,
             services.cost AS service_cost,
+            doctor.employee_id AS doctor_id,
             doctor.firstname AS doctor_firstname,
             doctor.lastname AS doctor_lastname,
             appointment.appointment_time,

@@ -164,6 +164,7 @@ if (isset($_POST['archive_appointment'])) {
                                                             <?php
                                                             $query = "
                                                                     SELECT 
+                                                                        appointment.id AS id,
                                                                         appointment.app_id,
                                                                         patient.firstname AS patient_firstname,
                                                                         patient.lastname AS patient_lastname,
@@ -367,128 +368,122 @@ if (isset($_POST['archive_appointment'])) {
             const editButtons = document.querySelectorAll('.edit-btn');
             editButtons.forEach(button => {
                 button.addEventListener('click', function() {
-                    // Extract the app_id from the data attribute of the clicked button
-                    const appId = this.getAttribute('data-app-id');
+                    const appId = this.getAttribute('data-app-id'); // Extract app_id
 
-                    // Fetch appointment data based on app_id using AJAX
                     fetch(`get_appointment_data.php?app_id=${appId}`)
                         .then(response => response.json())
                         .then(data => {
-                            // Clear the modal fields before populating them
-                            document.getElementById('appointmentId').value = '';
-                            document.getElementById('patientName').value = '';
-                            document.getElementById('appointmentDate').value = '';
-                            document.getElementById('status').value = '';
                             document.getElementById('servicesList').innerHTML = ''; // Clear table
-                            document.getElementById('doctorInfo').value = '';
-                            document.getElementById('totalCost').value = ''; // Clear total cost
+                            let totalCost = 0; // To hold total cost
 
-                            // Loop through data and append appointment details and services to the modal
-                            if (data.length > 0) {
-                                const appointment = data[0]; // Assuming only one main appointment per app_id
+                            // Main Appointment Data
+                            const appointment = data[0]; // Main appointment info
+                            document.getElementById('id').value = appointment.id;
+                            document.getElementById('appointmentId').value = appointment.app_id;
+                            document.getElementById('patientName').value = `${appointment.patient_firstname} ${appointment.patient_lastname}`;
+                            document.getElementById('appointmentDate').value = `${appointment.appointment_date} ${appointment.appointment_time}`;
+                            document.getElementById('status').value = appointment.status;
+                            document.getElementById('paid').value = appointment.paid;
 
-                                // Populate appointment details
-                                document.getElementById('appointmentId').value = appointment.app_id;
-                                document.getElementById('patientName').value = appointment.patient_firstname + ' ' + appointment.patient_lastname;
-                                document.getElementById('appointmentDate').value = appointment.appointment_date + ' ' + appointment.appointment_time;
-                                document.getElementById('status').value = appointment.status;
+                            // Services Table
+                            data.forEach(service => {
+                                const row = document.createElement('tr');
+                                row.setAttribute('data-service-id', service.id);
+                                row.innerHTML = `
+                            <td>${service.id}</td>
+                            <td>${service.service_name}</td>
+                            <td>${service.service_cost}</td>
+                            <td>Dr. ${service.doctor_firstname} ${service.doctor_lastname}</td>
+                            <td>
+                                <select name="paid" id="newpaid-${service.id}" class="form-control">
+                                    <option value="Pending" ${service.paid === 'Pending' ? 'selected' : ''}>Pending</option>
+                                    <option value="Completed" ${service.paid === 'Completed' ? 'selected' : ''}>Completed</option>
+                                    <option value="Cancelled" ${service.paid === 'Cancelled' ? 'selected' : ''}>Cancelled</option>
+                                </select>
+                            </td>
+                            <td>
+                                <select name="status" id="newstatus-${service.id}" class="form-control">
+                                    <option value="Pending" ${service.status === 'Pending' ? 'selected' : ''}>Pending</option>
+                                    <option value="Completed" ${service.status === 'Completed' ? 'selected' : ''}>Completed</option>
+                                    <option value="Cancelled" ${service.status === 'Cancelled' ? 'selected' : ''}>Cancelled</option>
+                                </select>
+                            </td>
+                            <td><button type="button" class="btn btn-danger remove-service-btn">Remove</button></td>
+                        `;
+                                document.getElementById('servicesList').appendChild(row);
+                                totalCost += parseFloat(service.service_cost);
+                            });
 
-                                let totalCost = 0; // Variable to hold the total cost
-
-                                // Populate services table and calculate total cost
-                                data.forEach(service => {
-                                    const row = document.createElement('tr');
-                                    row.innerHTML = `
-                                    <td>${service.service_name}</td>
-                                    <td>${service.service_cost}</td>
-                                    <td>Dr. ${service.doctor_firstname} ${service.doctor_lastname}</td>
-                                    <td>
-                                        <button type="button" class="btn btn-danger remove-service-btn">Remove</button>
-                                    </td>
-                                `;
-                                    document.getElementById('servicesList').appendChild(row);
-
-                                    // Add the service cost to total cost
-                                    totalCost += parseFloat(service.service_cost);
-                                });
-
-                                // Update the total cost field in the modal
-                                document.getElementById('totalCost').value = totalCost.toFixed(2);
-
-                                // Populate doctor info (assuming all services share the same doctor)
-                                document.getElementById('doctorInfo').value = "Dr. " + appointment.doctor_firstname + " " + appointment.doctor_lastname;
-                            }
+                            document.getElementById('totalCost').value = totalCost.toFixed(2);
                         })
                         .catch(error => console.error('Error fetching appointment data:', error));
                 });
             });
 
-            // Event listener for removing services and updating total cost
+            // Removing services and updating total cost
             document.getElementById('servicesList').addEventListener('click', function(e) {
                 if (e.target.classList.contains('remove-service-btn')) {
                     const row = e.target.closest('tr');
-                    const serviceCost = parseFloat(row.children[1].innerText); // Get service cost from table
-
-                    // Remove the row
-                    row.remove();
+                    const serviceCost = parseFloat(row.children[2].innerText); // Get cost
+                    row.remove(); // Remove the row
 
                     // Recalculate total cost
                     let totalCost = 0;
                     document.querySelectorAll('#servicesList tr').forEach(row => {
-                        totalCost += parseFloat(row.children[1].innerText);
+                        totalCost += parseFloat(row.children[2].innerText);
                     });
-
-                    // Update the total cost field
-                    document.getElementById('totalCost').value = totalCost.toFixed(2);
+                    document.getElementById('totalCost').value = totalCost.toFixed(2); // Update total cost field
                 }
             });
 
-            // Save changes button functionality
+            // Save changes
             document.getElementById('saveChangesBtn').addEventListener('click', function() {
-                const appId = document.getElementById('appointmentId').value;
+                const appointmentId = document.getElementById('appointmentId').value;
                 const patientName = document.getElementById('patientName').value;
                 const appointmentDate = document.getElementById('appointmentDate').value;
-                const status = document.getElementById('status').value;
                 const totalCost = document.getElementById('totalCost').value;
-                const services = []; // Collect the updated services info
+                const services = []; // Collect updated services info
 
-                // Gather service data from the table (this assumes the services are dynamically added to the table)
                 document.querySelectorAll('#servicesList tr').forEach(row => {
                     const serviceId = row.getAttribute('data-service-id');
-                    services.push(serviceId);
+                    const status = document.getElementById(`newstatus-${serviceId}`).value; // Get status for each service
+                    const paid = document.getElementById(`newpaid-${serviceId}`).value; // Get status for each service
+                    services.push({
+                        serviceId,
+                        status,
+                        paid
+                    });
                 });
 
-                // Create the data object to send to the server
-                const data = {
-                    appId: appId,
+                const updatedData = {
+                    appointmentId: appointmentId, // Main appointment ID
                     patientName: patientName,
                     appointmentDate: appointmentDate,
-                    status: status,
-                    totalCost: totalCost,
                     services: services
                 };
 
-                // Make an AJAX request to update the appointment
+                // Send update request
                 fetch('update_appointment.php', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json'
                         },
-                        body: JSON.stringify(data)
+                        body: JSON.stringify(updatedData),
                     })
                     .then(response => response.json())
                     .then(data => {
                         if (data.success) {
-                            alert('Appointment updated successfully!');
-                            // Optionally close the modal or reset the form here
+                            alert(data.message); // Success
                         } else {
-                            alert('Failed to update appointment.');
+                            alert(`Error: ${data.message}`); // Error
                         }
                     })
-                    .catch(error => console.error('Error:', error));
+                    .catch(error => console.error('Request failed:', error));
             });
         });
     </script>
+
+
 
 
 
