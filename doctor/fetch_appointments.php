@@ -40,8 +40,10 @@ LEFT JOIN
     medical_records mr ON a.id = mr.appointment_id
 WHERE 
     a.is_archive = 0 
-    AND a.doctor_id = ?; -- Filter by doctor ID
+    AND a.doctor_id = ?
+    AND appointment_status != 'Cancelled'
 
+    ; 
     ";
 
     // Execute the query

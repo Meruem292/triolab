@@ -10,6 +10,7 @@ if (isset($_GET['app_id'])) {
             appointment.id AS id,
             appointment.app_id,
             appointment.paid,
+            appointment.medical,
             patient.firstname AS patient_firstname,
             patient.lastname AS patient_lastname,
             services.service AS service_name,

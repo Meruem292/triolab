@@ -405,6 +405,7 @@ function calendarMonthShowsAdmin()
                     <p><strong>Assigned Doctor:</strong> <span id="doctorId"></span></p>
                     <p><strong>Status:</strong> <span id="appointmentStatus"></span></p>
                     <p><strong>Appointment Time:</strong> <span id="appointmentTime"></span></p>
+                    <p><strong>Department:</strong> <span id="departmentName"></span></p>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
@@ -419,16 +420,7 @@ function calendarMonthShowsAdmin()
             var calendar = new FullCalendar.Calendar(calendarEl, {
                 initialView: 'dayGridMonth',
                 selectable: true,
-                events: function(info, successCallback, failureCallback) {
-                    fetch('fetch_appointments.php') // Endpoint to fetch event data
-                        .then(response => response.json())
-                        .then(data => {
-                            successCallback(data);
-                        })
-                        .catch(error => {
-                            failureCallback(error);
-                        });
-                },
+                events: 'fetch_appointments.php', // Fetch appointments dynamically
                 eventClick: function(info) {
                     var appointment = info.event.extendedProps;
 
@@ -438,63 +430,56 @@ function calendarMonthShowsAdmin()
                         document.getElementById('doctorId').innerText = appointment.doctor_name || 'N/A';
                         document.getElementById('appointmentStatus').innerText = appointment.status || 'N/A';
                         document.getElementById('appointmentTime').innerText = new Date(info.event.start).toLocaleString() || 'N/A';
+                        document.getElementById('departmentName').innerText = appointment.department_name || 'N/A';
 
                         var myModal = new bootstrap.Modal(document.getElementById('appointmentModalMonth'));
                         myModal.show();
-                    } else {
-                        console.error('Extended properties are missing for this event.');
                     }
                 },
-
                 eventContent: function(arg) {
-                    // Modify event rendering to show only time and service name
                     var time = document.createElement('div');
-                    time.style.paddingLeft = "5px";
-                    time.style.fontWeight = 'bold';
-                    time.style.fontSize = '0.9em';
-                    time.innerText = new Date(arg.event.start).toLocaleTimeString(); // Display time
+                    time.innerText = new Date(arg.event.start).toLocaleTimeString();
 
                     var service = document.createElement('div');
-                    service.style.fontSize = '0.9em';
-                    service.style.fontWeight = 'bold';
-                    service.innerText = arg.event.extendedProps.service_name; // Correct property name for service
+                    service.innerText = arg.event.extendedProps.service_name;
 
                     return {
-                        domNodes: [service, time]
+                        domNodes: [time, service]
                     };
                 },
                 eventDidMount: function(info) {
-                    // Assign colors based on status directly
                     var status = info.event.extendedProps.status;
                     if (status === 'Completed') {
                         info.el.style.backgroundColor = '#8FD14F';
                     } else if (status === 'Pending') {
                         var appointmentTime = new Date(info.event.start);
                         var now = new Date();
-
                         if (appointmentTime < now) {
-                            info.el.style.backgroundColor = '#FF6600'; // Expired
+                            info.el.style.backgroundColor = '#FF6600';
                         } else {
-                            info.el.style.backgroundColor = 'blue'; // Pending and not expired
+                            info.el.style.backgroundColor = 'blue';
                         }
                     } else if (status === 'Cancelled') {
                         info.el.style.backgroundColor = 'gray';
                     }
-                },
-                eventOverlap: true, // Allow events to overlap
-                displayEventEnd: true, // Display event end time if needed
-                eventDisplay: 'block', // Make sure each event is rendered as a block element
-                eventOrder: "start,title", // Order events by start time and title for clarity
+                }
             });
 
             calendar.render();
         });
     </script>
-
 <?php
 }
 
 
+function getTotalServices(){
+    global $pdo;
+    $sql = "SELECT COUNT(*) AS total_services FROM services";
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute();
+    $result = $stmt->fetch(PDO::FETCH_ASSOC);
+    return $result['total_services'];
+}
 // Function to get total sales
 function getTotalSales($pdo)
 {

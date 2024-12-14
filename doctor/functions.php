@@ -674,7 +674,7 @@ function calendarWeekShowsAdmin()
               LEFT JOIN patient p ON a.patient_id = p.id
               LEFT JOIN doctor d ON a.doctor_id = d.employee_id
               LEFT JOIN departments dept ON a.department_id = dept.id
-              WHERE a.is_archive = 0";
+              WHERE a.is_archive = 0 AND a.status != 'Cancelled' ";
         $stmt = $pdo->prepare($query);
         $stmt->execute();
         $appointments = $stmt->fetchAll(PDO::FETCH_ASSOC);

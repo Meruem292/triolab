@@ -8,116 +8,14 @@ if (!isset($_SESSION['user_id'])) {
     header('Location: signin.php');
 };
 
-if (isset($_POST['edit_appointment'])) {
-    // Extract form inputs
-    $appointmentId = $_POST['appointmentId'];  // Appointment ID
-    $paymentStatus = $_POST['paymentStatus'];  // Payment Status (Pending, Approved, Disapproved)
-    $status = $_POST['appointmentStatus'];     // Appointment Status (Pending, Completed)
-    $doctor = $_POST['doctor'];                // Doctor ID
-    $amount = $_POST['amount'];              // Payment amount
-    $medicalStatus = $_POST['medicalStatus'];  // Medical Status (Pending, Approved)
-
-
-    if ($status === "Completed" && ($medicalStatus !== "Approved" || $paymentStatus !== "Approved")) {
-        $_SESSION['message'] = "Cannot mark as Completed. Both Medical Status and Payment Status must be Approved.";
-        $_SESSION['status'] = "error";
-        header('Location: ../admin/appointment.php');
-        exit();
-    }
-
-    try {
-        // Begin transaction
-        $pdo->beginTransaction();
-
-        // Get the department ID of the selected doctor
-        $queryDoctorDepartment = $pdo->prepare("SELECT department_id FROM doctor WHERE employee_id = ?");
-        $queryDoctorDepartment->execute([$doctor]);
-        $doctorDepartment = $queryDoctorDepartment->fetch(PDO::FETCH_ASSOC);
-
-        if (!$doctorDepartment) {
-            throw new Exception("Invalid doctor selected.");
-        }
-
-        $doctorDepartmentId = $doctorDepartment['department_id'];
-
-        // Update `appointment` table
-        $updateAppointment = $pdo->prepare(
-            "UPDATE appointment 
-             SET status = ?, paid = ?, doctor_id = ?, department_id = ? 
-             WHERE id = ?"
-        );
-        $updateAppointment->execute([$status, $paymentStatus, $doctor, $doctorDepartmentId, $appointmentId]);
-
-        // Check if a payment receipt already exists for the appointment
-        $checkReceipt = $pdo->prepare("SELECT id FROM payment_receipts WHERE appointment_id = ?");
-        $checkReceipt->execute([$appointmentId]);
-        $existingReceipt = $checkReceipt->fetch(PDO::FETCH_ASSOC);
-
-        if ($existingReceipt) {
-            // Update the amount in `payment_receipts` if it exists
-            $updateReceipt = $pdo->prepare("UPDATE payment_receipts SET amount = ?, status = ? WHERE appointment_id = ?");
-            $updateReceipt->execute([$amount, $paymentStatus, $appointmentId]);
-        } else {
-            // Insert a new payment receipt if it doesn't exist
-            $insertReceipt = $pdo->prepare(
-                "INSERT INTO payment_receipts (appointment_id, payment_receipt_path, date, payment_mode_id, amount, status) 
-                 VALUES (?, ?, NOW(), 3, ?, ?)"
-            );
-            $insertReceipt->execute([$appointmentId, '', $amount, 'Pending']); // Default values for missing fields
-        }
-
-        // Check if a medical record already exists for the appointment
-        $checkMedicalRecord = $pdo->prepare("SELECT id FROM medical_records WHERE appointment_id = ?");
-        $checkMedicalRecord->execute([$appointmentId]);
-        $existingMedicalRecord = $checkMedicalRecord->fetch(PDO::FETCH_ASSOC);
-
-        if ($existingMedicalRecord) {
-            // Update the medical record if it exists
-            $updateMedicalRecord = $pdo->prepare(
-                "UPDATE medical_records 
-                 SET doctor_id = ?, updated_at = NOW() 
-                 WHERE appointment_id = ?"
-            );
-            $updateMedicalRecord->execute([$doctor, $appointmentId]);
-        } else {
-            // Insert a new medical record if it doesn't exist
-            $insertMedicalRecord = $pdo->prepare(
-                "INSERT INTO medical_records (patient_id, appointment_id, doctor_id, status, record_date, created_at) 
-                 SELECT patient_id, id, ?, 'Pending', NOW(), NOW() 
-                 FROM appointment 
-                 WHERE id = ?"
-            );
-            $insertMedicalRecord->execute([$doctor, $appointmentId]);
-        }
-
-        // Commit transaction
-        $pdo->commit();
-
-        // Set success message
-        $_SESSION['message'] = "Appointment, payment, and medical record details updated successfully!";
-        $_SESSION['status'] = "success";
-    } catch (Exception $e) {
-        // Rollback transaction in case of error
-        $pdo->rollBack();
-
-        // Set error message
-        $_SESSION['message'] = "Error updating appointment details: " . $e->getMessage();
-        $_SESSION['status'] = "error";
-    }
-
-    // Redirect to the appointment page
-    header('Location: ../admin/appointment.php');
-    exit();
-}
-
 if (isset($_POST['archive_appointment'])) {
     $appointmentIdDelete = $_POST['appointmentIdDelete'];
     $archive = '1';
 
     // Update the service information in the database
-    $archiveQuery = $pdo->prepare("UPDATE appointment SET is_archive = :archive WHERE id = :id");
+    $archiveQuery = $pdo->prepare("UPDATE appointment SET is_archive = :archive WHERE app_id = :app_id");
     $archiveQuery->bindParam(':archive', $archive);
-    $archiveQuery->bindParam(':id', $appointmentIdDelete);
+    $archiveQuery->bindParam(':app_id', $appointmentIdDelete);
 
     if ($archiveQuery->execute()) {
         $_SESSION['message'] = "Appointment archived successfully.";
@@ -134,7 +32,6 @@ if (isset($_POST['archive_appointment'])) {
 <html lang="en" data-layout="vertical" data-topbar="light" data-sidebar="light" data-sidebar-size="lg" data-sidebar-image="none" data-preloader="disable" data-theme="default" data-theme-colors="green">
 
 <head>
-
     <meta charset="utf-8" />
     <title>Triolab - Online Healthcare Management System</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -157,7 +54,6 @@ if (isset($_POST['archive_appointment'])) {
             window.history.replaceState(null, null, window.location.href);
         }
     </script>
-
 </head>
 
 <body style="background-color: #F2FFF1">
@@ -220,7 +116,6 @@ if (isset($_POST['archive_appointment'])) {
                                             </a>
                                         </li>
                                     </ul>
-
                                     <!-- Tab panes -->
                                     <div class="tab-content text-muted">
                                         <div class="tab-pane active" id="calendarTab" role="tabpanel">
@@ -267,25 +162,29 @@ if (isset($_POST['archive_appointment'])) {
                                                         <tbody class="list">
                                                             <?php
                                                             $query = "
-        SELECT 
-            appointment.app_id,
-            patient.firstname AS patient_firstname,
-            patient.lastname AS patient_lastname,
-            GROUP_CONCAT(services.service SEPARATOR ', ') AS services,
-            doctor.firstname AS doctor_firstname,
-            doctor.lastname AS doctor_lastname,
-            appointment.appointment_time,
-            appointment.appointment_date,
-            appointment.status,
-            appointment.paid
-        FROM appointment
-        INNER JOIN patient ON appointment.patient_id = patient.id
-        INNER JOIN services ON appointment.service_id = services.id
-        LEFT JOIN doctor ON appointment.doctor_id = doctor.employee_id
-        WHERE appointment.is_archive = 0
-        GROUP BY appointment.app_id
-        ORDER BY appointment.date_added ASC;
-        ";
+                                                                    SELECT 
+                                                                        appointment.id AS id,
+                                                                        appointment.app_id,
+                                                                        patient.firstname AS patient_firstname,
+                                                                        patient.lastname AS patient_lastname,
+                                                                        GROUP_CONCAT(services.service SEPARATOR ', ') AS services,
+                                                                        doctor.firstname AS doctor_firstname,
+                                                                        doctor.lastname AS doctor_lastname,
+                                                                        appointment.appointment_time,
+                                                                        appointment.appointment_date,
+                                                                        appointment.medical,
+                                                                        appointment.status,
+                                                                        appointment.paid,
+                                                                        SUM(services.cost) AS total_service_cost  -- Sum of service costs for the services linked to the appointment
+                                                                    FROM appointment
+                                                                    INNER JOIN patient ON appointment.patient_id = patient.id
+                                                                    INNER JOIN services ON appointment.service_id = services.id
+                                                                    LEFT JOIN doctor ON appointment.doctor_id = doctor.employee_id
+                                                                    WHERE appointment.is_archive = 0
+                                                                    AND appointment.status = 'Pending'
+                                                                    GROUP BY appointment.app_id
+                                                                    ORDER BY appointment.date_added ASC;
+                                                                ";
 
                                                             $appointments = $pdo->query($query);
 
@@ -325,17 +224,16 @@ if (isset($_POST['archive_appointment'])) {
                                                                         <td class="payment_status">
                                                                             <span class="badge <?= $paymentStatusClass; ?>"><?= htmlspecialchars($row['paid']); ?></span>
                                                                         </td>
+
                                                                         <td>
                                                                             <a href="#" class="btn btn-light btn-sm edit-btn"
                                                                                 data-bs-toggle="modal"
                                                                                 data-bs-target="#editAppointment"
-                                                                                data-appointment-id="<?= htmlspecialchars($row['app_id']); ?>"
-                                                                                data-service="<?= htmlspecialchars($services); ?>"
-                                                                                data-patient-name="<?= htmlspecialchars($patientName); ?>"
-                                                                                data-appointment-date="<?= htmlspecialchars($formatted_date); ?>"
-                                                                                data-appointment-time="<?= htmlspecialchars($formatted_time); ?>">
+                                                                                data-app-id="<?php echo $row['app_id']; ?>"
+                                                                                data-service-cost="<?php echo $row['total_service_cost']; ?>"> <!-- Corrected data-service-cost -->
                                                                                 <i class="ri-edit-fill align-bottom me-2 text-muted"></i> Update
                                                                             </a>
+
                                                                             <a href="#" class="btn btn-danger btn-sm archive-btn"
                                                                                 data-bs-toggle="modal"
                                                                                 data-bs-target="#archiveAppointment"
@@ -388,8 +286,8 @@ if (isset($_POST['archive_appointment'])) {
                                         <div class="tab-pane" id="completed" role="tabpanel">
                                             <div class="d-flex align-items-center gap-3">
                                                 <div class="d-flex justify-content-sm-start">
-                                                    <div class="search-box ms-2">
-                                                        <input type="text" class="form-control search" placeholder="Search...">
+                                                    <div class="search-box ms-2 mt-3 mb-3">
+                                                        <input type="text" id="searchInput" class="form-control" placeholder="Search for patients..." onkeyup="searchTable()">
                                                         <i class="ri-search-line search-icon"></i>
                                                     </div>
                                                 </div>
@@ -410,108 +308,90 @@ if (isset($_POST['archive_appointment'])) {
                                                                 <th>Patient Name</th>
                                                                 <th>Service</th>
                                                                 <th>Doctor</th>
-                                                                <th>Payment Status</th> <!-- New Column -->
+                                                                <th>Service Status</th>
+                                                                <th>Payment Status</th>
                                                                 <th>Action</th>
                                                             </tr>
                                                         </thead>
                                                         <tbody class="list">
                                                             <?php
-                                                            $selectAppointment = $pdo->query("
-            SELECT 
-    appointment.id AS appointment_id, 
-    patient.firstname AS patient_firstname, 
-    patient.lastname AS patient_lastname, 
-    doctor.firstname AS doctor_firstname, 
-    doctor.lastname AS doctor_lastname, 
-    services.service, 
-    services.type, 
-    services.cost, 
-    appointment.appointment_time, 
-    appointment.appointment_date, 
-    appointment.doctor_id, 
-    appointment.selectedPayment, 
-    appointment.status, 
-    appointment.paid,  -- Include the payment status
-    payment_receipts.amount AS payment_amount,  -- Amount from payment_receipts
-    payment_receipts.status AS payment_status,  -- Payment status
-    payment_receipts.date AS payment_date  -- Payment receipt date
-FROM appointment 
-INNER JOIN patient ON appointment.patient_id = patient.id 
-INNER JOIN services ON appointment.service_id = services.id 
-LEFT JOIN doctor ON appointment.doctor_id = doctor.employee_id 
-LEFT JOIN payment_receipts ON appointment.id = payment_receipts.appointment_id  -- Join payment_receipts
-WHERE appointment.is_archive = 0
+                                                            $query = "
+                                                                    SELECT 
+                                                                        appointment.id AS id,
+                                                                        appointment.app_id,
+                                                                        patient.firstname AS patient_firstname,
+                                                                        patient.lastname AS patient_lastname,
+                                                                        GROUP_CONCAT(services.service SEPARATOR ', ') AS services,
+                                                                        doctor.firstname AS doctor_firstname,
+                                                                        doctor.lastname AS doctor_lastname,
+                                                                        appointment.appointment_time,
+                                                                        appointment.appointment_date,
+                                                                        appointment.status,
+                                                                        appointment.paid,
+                                                                        SUM(services.cost) AS total_service_cost  -- Sum of service costs for the services linked to the appointment
+                                                                    FROM appointment
+                                                                    INNER JOIN patient ON appointment.patient_id = patient.id
+                                                                    INNER JOIN services ON appointment.service_id = services.id
+                                                                    LEFT JOIN doctor ON appointment.doctor_id = doctor.employee_id
+                                                                    WHERE appointment.is_archive = 0
+                                                                    AND appointment.status = 'Completed'
+                                                                    GROUP BY appointment.app_id
+                                                                    ORDER BY appointment.date_added ASC;
+                                                                ";
 
-    AND appointment.status = 'Completed' 
-    AND appointment.paid = 'Approved'
-ORDER BY appointment.date_added ASC;
+                                                            $appointments = $pdo->query($query);
 
-        ");
-
-                                                            if ($selectAppointment->rowCount() > 0) {
-                                                                while ($row = $selectAppointment->fetch(PDO::FETCH_ASSOC)) {
-                                                                    // Format time and date
+                                                            if ($appointments->rowCount() > 0) {
+                                                                while ($row = $appointments->fetch(PDO::FETCH_ASSOC)) {
                                                                     $formatted_time = date("g:i A", strtotime($row['appointment_time']));
                                                                     $formatted_date = date("F j, Y", strtotime($row['appointment_date']));
 
-                                                                    // Combine names
-                                                                    $fullnamePatient = $row['patient_firstname'] . " " . $row['patient_lastname'];
-                                                                    $fullnameDoctor = $row['doctor_id']
+                                                                    $patientName = $row['patient_firstname'] . " " . $row['patient_lastname'];
+                                                                    $doctorName = $row['doctor_firstname'] && $row['doctor_lastname']
                                                                         ? "Dr. " . $row['doctor_firstname'] . " " . $row['doctor_lastname']
                                                                         : "N/A";
 
-                                                                    // Service details
-                                                                    $serviceName = $row['service'] . " (" . $row['type'] . ")";
+                                                                    $services = $row['services'] ?: "N/A";
+                                                                    $serviceStatusClass = match ($row['status']) {
+                                                                        'Pending' => 'bg-warning text-dark',
+                                                                        'Approved' => 'bg-success text-white',
+                                                                        default => 'bg-secondary text-white',
+                                                                    };
 
-                                                                    // Determine the Bootstrap class based on the payment status
-                                                                    $paymentStatus = $row['paid']; // Reflect the actual payment status
-                                                                    $statusClass = '';
-
-                                                                    switch ($paymentStatus) {
-                                                                        case 'Pending':
-                                                                            $statusClass = 'bg-warning text-dark'; // Yellow background with dark text for Pending
-                                                                            break;
-                                                                        case 'Approved':
-                                                                            $statusClass = 'bg-success text-white'; // Green background with white text for Approved
-                                                                            break;
-                                                                        case 'Disapproved':
-                                                                            $statusClass = 'bg-danger text-white'; // Red background with white text for Disapproved
-                                                                            break;
-                                                                        default:
-                                                                            $statusClass = 'bg-secondary text-white'; // Default grey background for other statuses
-                                                                    }
-
+                                                                    $paymentStatusClass = match ($row['paid']) {
+                                                                        'Pending' => 'bg-warning text-dark',
+                                                                        'Approved' => 'bg-success text-white',
+                                                                        'Disapproved' => 'bg-danger text-white',
+                                                                        default => 'bg-secondary text-white',
+                                                                    };
                                                             ?>
                                                                     <tr>
                                                                         <td class="time"><?= htmlspecialchars($formatted_time); ?></td>
                                                                         <td class="date"><?= htmlspecialchars($formatted_date); ?></td>
-                                                                        <td class="patient_name"><?= htmlspecialchars($fullnamePatient); ?></td>
-                                                                        <td class="service"><?= htmlspecialchars($serviceName); ?></td>
-                                                                        <td class="doctor"><?= htmlspecialchars($fullnameDoctor); ?></td>
+                                                                        <td class="patient_name"><?= htmlspecialchars($patientName); ?></td>
+                                                                        <td class="service"><?= htmlspecialchars($services); ?></td>
+                                                                        <td class="doctor"><?= htmlspecialchars($doctorName); ?></td>
+                                                                        <td class="service_status">
+                                                                            <span class="badge <?= $serviceStatusClass; ?>"><?= htmlspecialchars($row['status']); ?></span>
+                                                                        </td>
                                                                         <td class="payment_status">
-                                                                            <span class="badge <?= $statusClass; ?>"><?= htmlspecialchars($paymentStatus); ?></span>
-                                                                        </td> <!-- New Column -->
+                                                                            <span class="badge <?= $paymentStatusClass; ?>"><?= htmlspecialchars($row['paid']); ?></span>
+                                                                        </td>
+
                                                                         <td>
-                                                                            <a href="#" class="btn btn-light btn-sm edit-btn" data-bs-toggle="modal" data-bs-target="#editAppointment"
-                                                                                data-appointment-id="<?= htmlspecialchars($row['appointment_id']); ?>"
-                                                                                data-patient-name="<?= htmlspecialchars($fullnamePatient); ?>"
-                                                                                data-doctor-name="<?= htmlspecialchars($fullnameDoctor); ?>"
-                                                                                data-service="<?= htmlspecialchars($row['service']); ?>"
-                                                                                data-cost="<?= htmlspecialchars($row['cost']); ?>"
-                                                                                data-payment-amount="<?= htmlspecialchars($row['payment_amount']); ?>"
-                                                                                data-payment-method="<?= htmlspecialchars(getPaymentMode($pdo, $row['selectedPayment'])); ?>"
-                                                                                data-appointment-date="<?= htmlspecialchars($row['appointment_date']); ?>"
-                                                                                data-appointment-time="<?= htmlspecialchars($row['appointment_time']); ?>"
-                                                                                data-payment-status="<?= htmlspecialchars($paymentStatus); ?>"
-                                                                                data-status="<?= htmlspecialchars($row['status']); ?>">
+                                                                            <a href="#" class="btn btn-light btn-sm edit-btn"
+                                                                                data-bs-toggle="modal"
+                                                                                data-bs-target="#editAppointment"
+                                                                                data-app-id="<?php echo $row['app_id']; ?>"
+                                                                                data-service-cost="<?php echo $row['total_service_cost']; ?>"> <!-- Corrected data-service-cost -->
                                                                                 <i class="ri-edit-fill align-bottom me-2 text-muted"></i> Update
                                                                             </a>
-                                                                            <a href="#" class="btn btn-danger btn-sm archive-btn" data-bs-toggle="modal" data-bs-target="#archiveAppointment"
-                                                                                data-appointment-id="<?= htmlspecialchars($row['appointment_id']); ?>">
+
+                                                                            <a href="#" class="btn btn-danger btn-sm archive-btn"
+                                                                                data-bs-toggle="modal"
+                                                                                data-bs-target="#archiveAppointment"
+                                                                                data-appointment-id="<?= htmlspecialchars($row['app_id']); ?>">
                                                                                 <i class="ri-delete-bin-fill align-bottom me-2"></i> Archive
-                                                                            </a>
-                                                                            <a href="../admin/assets/docs/printing_layout.php?appointmentId=<?= $row['appointment_id']; ?>" class="btn btn-info btn-sm">
-                                                                                <i class="ri-printer-fill align-bottom me-2"></i> Print Medical Record
                                                                             </a>
                                                                         </td>
                                                                     </tr>
@@ -520,17 +400,15 @@ ORDER BY appointment.date_added ASC;
                                                             } else {
                                                                 ?>
                                                                 <tr>
-                                                                    <td colspan="6">
-                                                                        <div class="noresult">
-                                                                            <div class="text-center">
-                                                                                <lord-icon src="https://cdn.lordicon.com/msoeawqm.json"
-                                                                                    trigger="loop"
-                                                                                    colors="primary:#121331,secondary:#08a88a"
-                                                                                    style="width:75px;height:75px">
-                                                                                </lord-icon>
-                                                                                <h5 class="mt-2">Sorry! No Result Found</h5>
-                                                                                <p class="text-muted mb-0">We've searched in our database but did not find any data yet!</p>
-                                                                            </div>
+                                                                    <td colspan="8">
+                                                                        <div class="noresult text-center">
+                                                                            <lord-icon src="https://cdn.lordicon.com/msoeawqm.json"
+                                                                                trigger="loop"
+                                                                                colors="primary:#121331,secondary:#08a88a"
+                                                                                style="width:75px;height:75px">
+                                                                            </lord-icon>
+                                                                            <h5 class="mt-2">Sorry! No Result Found</h5>
+                                                                            <p class="text-muted mb-0">We've searched in our database but did not find any data yet!</p>
                                                                         </div>
                                                                     </td>
                                                                 </tr>
@@ -573,84 +451,7 @@ ORDER BY appointment.date_added ASC;
         </div>
     </div>
 
-    <div id="editAppointment" class="modal fade" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered modal-lg">
-            <form method="POST" class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Update Appointment Information</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="row">
-                        <!-- Hidden Appointment ID -->
-                        <div class="col-md-12 mb-2">
-                            <input type="hidden" name="appointmentId" id="appointmentId">
-                        </div>
-
-                        <!-- Patient Name -->
-                        <div class="col-md-12 mb-2">
-                            <p><b>Patient Name: </b> <span id="appointmentPatient"></span></p>
-                        </div>
-
-                        <!-- List of Services -->
-                        <div class="col-md-12 mb-2">
-                            <label class="form-label"><b>Services</b></label>
-                            <div id="appointmentServices">
-                                <!-- Dynamically populated service rows -->
-                            </div>
-                        </div>
-
-                        <!-- Assigned Doctor -->
-                        <div class="col-md-12 mb-2">
-                            <label class="form-label"><b>Assigned Doctor</b></label>
-                            <!-- Doctor Select -->
-                        </div>
-
-                        <!-- Appointment Date -->
-                        <div class="col-md-12 mb-2">
-                            <p><b>Appointment Date: </b> <span id="appointmentDate"></span></p>
-                        </div>
-
-                        <!-- Appointment Time -->
-                        <div class="col-md-12 mb-2">
-                            <p><b>Appointment Time: </b> <span id="appointmentTime"></span></p>
-                        </div>
-
-                        <!-- Total Bill -->
-                        <div class="col-md-12 mb-2">
-                            <label class="form-label">Total Bill <span class="text-danger">*</span></label>
-                            <input type="float" step="0.01" name="amount" class="form-control" placeholder="Enter total amount" required>
-                        </div>
-
-                        <!-- Payment Status -->
-                        <div class="col-md-12 mb-2">
-                            <label class="form-label">Payment Status <span class="text-danger">*</span></label>
-                            <select name="paymentStatus" id="paymentStatus" class="form-select" required>
-                                <option value="Pending">Pending</option>
-                                <option value="Approved">Approved</option>
-                                <option value="Disapproved">Disapproved</option>
-                            </select>
-                        </div>
-
-                        <!-- Appointment Status -->
-                        <div class="col-md-12 mb-2">
-                            <label class="form-label">Appointment Status <span class="text-danger">*</span></label>
-                            <select name="appointmentStatus" id="appointmentStatus" class="form-select" required>
-                                <option value="Pending">Pending</option>
-                                <option value="Completed">Mark as Complete</option>
-                                <option value="Cancelled">Cancelled</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
-                    <button type="submit" name="edit_appointment" class="btn btn-primary">Save Changes</button>
-                </div>
-            </form>
-        </div>
-    </div>
+    <?php include "modals/edit_appointment.php"; ?>
 
     <!-- ARCHIVE APPOINTMENT -->
     <div id="archiveAppointment" class="modal fade" tabindex="-1" aria-hidden="true">
@@ -715,6 +516,145 @@ ORDER BY appointment.date_added ASC;
             };
         }
     </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Functionality for the Edit button
+            const editButtons = document.querySelectorAll('.edit-btn');
+            editButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const appId = this.getAttribute('data-app-id'); // Get the appointment ID
+
+                    fetch(`get_appointment_data.php?app_id=${appId}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            // Clear the services table
+                            document.getElementById('servicesList').innerHTML = '';
+                            let totalCost = 0; // Initialize total cost
+
+                            // Populate main appointment details
+                            const appointment = data[0];
+                            document.getElementById('id').value = appointment.id;
+                            document.getElementById('appointmentId').value = appointment.app_id;
+                            document.getElementById('patientName').value = `${appointment.patient_firstname} ${appointment.patient_lastname}`;
+                            document.getElementById('appointmentDate').value = appointment.appointment_date;
+                            document.getElementById('medical').value = appointment.medical;
+                            document.getElementById('status').value = appointment.status;
+                            document.getElementById('paid').value = appointment.paid;
+
+                            // Populate services table and calculate total cost
+                            data.forEach(service => {
+                                const row = document.createElement('tr');
+                                row.setAttribute('data-service-id', service.id);
+
+                                row.innerHTML = `
+                                <td>${service.id}</td>
+                                <td>${service.service_name}</td>
+                                <td>${service.service_cost}</td>
+                                <td>Dr. ${service.doctor_firstname} ${service.doctor_lastname}</td>
+                                <td>
+                                    <select name="medical" id="newmedical-${service.id}" class="form-control">
+                                        <option value="Pending" ${service.medical === 'Pending' ? 'selected' : ''}>Pending</option>
+                                        <option value="Completed" ${service.medical === 'Completed' ? 'selected' : ''}>Completed</option>
+                                        <option value="Cancelled" ${service.medical === 'Cancelled' ? 'selected' : ''}>Cancelled</option>
+                                        <option value="" ${service.medical === '' ? 'selected' : ''}></option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <select name="paid" id="newpaid-${service.id}" class="form-control">
+                                        <option value="Pending" ${service.paid === 'Pending' ? 'selected' : ''}>Pending</option>
+                                        <option value="Completed" ${service.paid === 'Completed' ? 'selected' : ''}>Completed</option>
+                                        <option value="Cancelled" ${service.paid === 'Cancelled' ? 'selected' : ''}>Cancelled</option>
+                                        <option value="" ${service.paid === '' ? 'selected' : ''}></option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <select name="status" id="newstatus-${service.id}" class="form-control">
+                                        <option value="Pending" ${service.status === 'Pending' ? 'selected' : ''}>Pending</option>
+                                        <option value="Completed" ${service.status === 'Completed' ? 'selected' : ''}>Completed</option>
+                                        <option value="Cancelled" ${service.status === 'Cancelled' ? 'selected' : ''}>Cancelled</option>
+                                        <option value="" ${service.status === '' ? 'selected' : ''}></option>
+                                    </select>
+                                </td>
+                                
+                            `;
+
+                                document.getElementById('servicesList').appendChild(row);
+
+                                // Include in total cost calculation only if status and paid are valid
+                                if (service.status !== '' && service.paid !== '' && service.status !== 'Cancelled' && service.paid !== 'Cancelled') {
+                                    totalCost += parseFloat(service.service_cost);
+                                }
+                            });
+
+                            // Update total cost field
+                            document.getElementById('totalCost').value = totalCost.toFixed(2);
+                        })
+                        .catch(error => console.error('Error fetching appointment data:', error));
+                });
+            });
+
+            // Save changes functionality
+            document.getElementById('saveChangesBtn').addEventListener('click', function() {
+                const appointmentId = document.getElementById('appointmentId').value;
+                const patientName = document.getElementById('patientName').value;
+                const appointmentDate = document.getElementById('appointmentDate').value;
+                let totalCost = 0; // Recalculate total cost dynamically
+                const services = []; // Collect updated services information
+
+                // Iterate over each row in the services list
+                document.querySelectorAll('#servicesList tr').forEach(row => {
+                    const serviceId = row.getAttribute('data-service-id');
+                    const medical = document.getElementById(`newmedical-${serviceId}`).value;
+                    const status = document.getElementById(`newstatus-${serviceId}`).value;
+                    const paid = document.getElementById(`newpaid-${serviceId}`).value;
+                    const cost = parseFloat(row.querySelector('td:nth-child(3)').textContent); // Get service cost
+
+                    // Push the updated service data to the array
+                    services.push({
+                        serviceId: serviceId,
+                        status: status,
+                        medical: medical,
+                        paid: paid
+                    });
+
+                    // Include in total cost calculation only if status and paid are valid
+                    if (status !== '' && paid !== '' && status !== 'Cancelled' && paid !== 'Cancelled') {
+                        totalCost += cost;
+                    }
+                });
+
+                // Update total cost field
+                document.getElementById('totalCost').value = totalCost.toFixed(2);
+
+                // Prepare the data to be sent
+                const updatedData = {
+                    appointmentId: appointmentId,
+                    patientName: patientName,
+                    appointmentDate: appointmentDate,
+                    totalCost: totalCost.toFixed(2), // Include recalculated total cost
+                    services: services
+                };
+
+                // Send update request to the server
+                fetch('update_appointment.php', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(updatedData)
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert(data.message); // Display success message
+                        } else {
+                            alert(`Error: ${data.message}`); // Display error message
+                        }
+                    })
+                    .catch(error => console.error('Request failed:', error));
+            });
+        });
+    </script>
 
 
     <script>
@@ -732,80 +672,9 @@ ORDER BY appointment.date_added ASC;
                 }
             }
         });
-
         // Trigger change event to apply initial restrictions on page load
         paymentStatus.dispatchEvent(new Event('change'));
     </script>
-
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const editButtons = document.querySelectorAll('.edit-btn');
-            editButtons.forEach(button => {
-                button.addEventListener('click', function() {
-                    // Extract data attributes from the clicked button
-                    const appointmentId = this.getAttribute('data-appointment-id');
-                    const patientName = this.getAttribute('data-patient-name');
-                    const doctorName = this.getAttribute('data-doctor-name');
-                    const services = JSON.parse(this.getAttribute('data-services')); // Expecting JSON array of services
-                    const paymentAmount = this.getAttribute('data-payment-amount');
-                    const paymentMethod = this.getAttribute('data-payment-method');
-                    const appointmentDate = this.getAttribute('data-appointment-date');
-                    const appointmentTime = this.getAttribute('data-appointment-time');
-                    const status = this.getAttribute('data-status');
-                    const medicalStatus = this.getAttribute('data-medical-status');
-                    const paymentStatus = this.getAttribute('data-payment-status');
-
-                    // Clear any existing services from the previous modal view
-                    const servicesContainer = document.getElementById('appointmentServices');
-                    servicesContainer.innerHTML = '';
-
-                    // Initialize total cost
-                    let totalCost = 0;
-
-                    // Populate services dynamically and calculate total cost
-                    services.forEach(service => {
-                        const serviceRow = `
-                        <p><b>Service:</b> ${service.name} (${service.type}) - Cost: ${service.cost}</p>
-                    `;
-                        servicesContainer.insertAdjacentHTML('beforeend', serviceRow);
-
-                        // Add service cost to total
-                        totalCost += parseFloat(service.cost);
-                    });
-
-                    // Populate the rest of the form fields
-                    document.getElementById('appointmentId').value = appointmentId;
-                    document.getElementById('appointmentPatient').textContent = patientName;
-                    document.getElementById('appointmentDoctor').textContent = doctorName;
-                    document.getElementById('appointmentPaymentAmount').textContent = paymentAmount;
-                    document.getElementById('appointmentPayment').textContent = paymentMethod;
-                    document.getElementById('appointmentDate').textContent = appointmentDate;
-                    document.getElementById('appointmentTime').textContent = appointmentTime;
-                    document.getElementById('appointmentStatus').value = status;
-                    document.getElementById('medicalStatus').value = medicalStatus;
-                    document.getElementById('paymentStatus').value = paymentStatus;
-
-                    // Set the payment amount to the first service payment amount (if applicable)
-                    document.querySelector('input[name="amount"]').value = paymentAmount;
-
-                    // Display the total cost of all services
-                    document.getElementById('appointmentTotalCost').textContent = `Total Cost: ${totalCost.toFixed(2)}`;
-
-                    // Handle enabling/disabling the 'Completed' option based on conditions
-                    const appointmentStatus = document.getElementById('appointmentStatus');
-                    const completeOption = Array.from(appointmentStatus.options).find(option => option.value === "Completed");
-
-                    if (medicalStatus !== "Approved" || paymentStatus !== "Approved") {
-                        completeOption.disabled = true;
-                    } else {
-                        completeOption.disabled = false;
-                    }
-                });
-            });
-        });
-    </script>
-
-
 
     <script>
         flatpickr("#datePicker");

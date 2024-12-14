@@ -41,6 +41,7 @@ $totalDoctors = getTotalDoctors($pdo);
 $totalComepletedAppointments = getCompletedAppointments($pdo);
 $totalAppointmentSlots = getTotalAppointmentSlots($pdo);
 $totalPendingAppointments = getTotalPendingAppointments($pdo);
+$totalServices = getTotalServices($pdo);
 
 ?>
 
@@ -72,12 +73,7 @@ $totalPendingAppointments = getTotalPendingAppointments($pdo);
             window.history.replaceState(null, null, window.location.href);
         }
     </script>
-    <style>
-        body {
-            overflow: hidden;
-            /* Hides any overflowing content */
-        }
-    </style>
+
 </head>
 
 <body style="background-color: #F2FFF1">
@@ -108,10 +104,17 @@ $totalPendingAppointments = getTotalPendingAppointments($pdo);
                             <div class="card card-height-100">
                                 <div class="card-header border-0 align-items-center d-flex">
                                     <h4 class="card-title mb-0 flex-grow-1">Top Laboratory Services</h4>
+                                    <select id="timelineSelect" class="form-select w-auto ms-3">
+                                        <option value="daily">Daily</option>
+                                        <option value="weekly">Weekly</option>
+                                        <option value="monthly">Monthly</option>
+                                        <option value="yearly">Yearly</option>
+                                    </select>
                                 </div><!-- end cardheader -->
                                 <div class="card-body">
                                     <canvas id="doughnutChart" width="400" height="400"></canvas>
                                 </div>
+
                             </div>
                         </div>
 
@@ -149,8 +152,8 @@ $totalPendingAppointments = getTotalPendingAppointments($pdo);
                                                     </div>
                                                     <!-- Text Content -->
                                                     <div class="flex-grow-1 ms-4 text-end">
-                                                        <p class="text-uppercase fw-semibold fs-16 text mb-1">TOTAL APPOINTMENTS</p>
-                                                        <h4 class="mb-0"><span class="counter-value" data-target="<?= $totalAppointments; ?>">0</span></h4>
+                                                        <p class="text-uppercase fw-semibold fs-16 text mb-1">TOTAL SERVICES</p>
+                                                        <h4 class="mb-0"><span class="counter-value" data-target="<?= $totalServices; ?>">0</span></h4>
                                                     </div>
                                                 </div>
                                             </div>
@@ -308,60 +311,121 @@ $totalPendingAppointments = getTotalPendingAppointments($pdo);
     <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
 
     <script>
-        // Prepare chart data
-        const data = {
-            labels: <?php echo json_encode($labels); ?>,
-            datasets: [{
-                label: 'Appointment Count',
-                data: <?php echo json_encode($values); ?>,
-                backgroundColor: [
-                    'rgba(255, 99, 132, 0.7)',
-                    'rgba(54, 162, 235, 0.7)',
-                    'rgba(255, 206, 86, 0.7)',
-                    'rgba(75, 192, 192, 0.7)',
-                    'rgba(153, 102, 255, 0.7)',
-                    'rgba(255, 159, 64, 0.7)'
-                ],
-                borderColor: [
-                    'rgba(255, 99, 132, 1)',
-                    'rgba(54, 162, 235, 1)',
-                    'rgba(255, 206, 86, 1)',
-                    'rgba(75, 192, 192, 1)',
-                    'rgba(153, 102, 255, 1)',
-                    'rgba(255, 159, 64, 1)'
-                ],
-                borderWidth: 1
-            }]
-        };
-
-        // Render doughnut chart
-        const config = {
-            type: 'doughnut',
-            data: data,
-            options: {
-                responsive: true,
-                plugins: {
-                    tooltip: {
-                        callbacks: {
-                            label: function(tooltipItem) {
-                                const value = tooltipItem.raw; // Appointment count
-                                const total = <?php echo $total; ?>; // Total appointments
-                                const percentage = ((value / total) * 100).toFixed(2); // Calculate percentage
-                                return `${tooltipItem.label}: ${value} (${percentage}%)`;
-                            }
-                        }
-                    },
-                    legend: {
-                        position: 'top',
-                    },
-                }
-            },
-        };
-
-        // Initialize Chart.js
+        // Initialize the chart globally
         const ctx = document.getElementById('doughnutChart').getContext('2d');
-        new Chart(ctx, config);
+        if (!window.chart) {
+            window.chart = null; // Prevent re-declaration
+        }
+
+        // Function to fetch chart data
+        async function fetchChartData(timeline) {
+            try {
+                const response = await fetch(`getData.php?timeline=${timeline}`);
+                if (!response.ok) throw new Error("Failed to fetch chart data");
+                const data = await response.json();
+                return data;
+            } catch (error) {
+                console.error("Error fetching chart data:", error);
+                return null;
+            }
+        }
+
+        // Function to update the chart
+        async function updateChart(timeline) {
+            const chartData = await fetchChartData(timeline);
+            if (chartData) {
+                const {
+                    labels,
+                    values,
+                    total
+                } = chartData;
+
+                window.chart.data.labels = labels;
+                window.chart.data.datasets[0].data = values;
+                window.chart.options.plugins.tooltip.callbacks.label = function(tooltipItem) {
+                    const value = tooltipItem.raw;
+                    const percentage = ((value / total) * 100).toFixed(2);
+                    return `${tooltipItem.label}: ${value} (${percentage}%)`;
+                };
+
+                window.chart.update();
+            }
+        }
+
+        // Function to initialize the chart
+        async function initChart() {
+            const initialData = await fetchChartData('daily');
+            if (initialData) {
+                const {
+                    labels,
+                    values,
+                    total
+                } = initialData;
+
+                const data = {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Appointment Count',
+                        data: values,
+                        backgroundColor: [
+                            'rgba(255, 99, 132, 0.7)',
+                            'rgba(54, 162, 235, 0.7)',
+                            'rgba(255, 206, 86, 0.7)',
+                            'rgba(75, 192, 192, 0.7)',
+                            'rgba(153, 102, 255, 0.7)',
+                            'rgba(255, 159, 64, 0.7)'
+                        ],
+                        borderColor: [
+                            'rgba(255, 99, 132, 1)',
+                            'rgba(54, 162, 235, 1)',
+                            'rgba(255, 206, 86, 1)',
+                            'rgba(75, 192, 192, 1)',
+                            'rgba(153, 102, 255, 1)',
+                            'rgba(255, 159, 64, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                };
+
+                const config = {
+                    type: 'doughnut',
+                    data: data,
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            tooltip: {
+                                callbacks: {
+                                    label: function(tooltipItem) {
+                                        const value = tooltipItem.raw;
+                                        const percentage = ((value / total) * 100).toFixed(2);
+                                        return `${tooltipItem.label}: ${value} (${percentage}%)`;
+                                    }
+                                }
+                            },
+                            legend: {
+                                position: 'top',
+                            },
+                        }
+                    }
+                };
+
+                // Create or reuse the chart instance
+                if (!window.chart) {
+                    window.chart = new Chart(ctx, config);
+                }
+            }
+        }
+
+        // Event listener for timeline changes
+        document.getElementById('timelineSelect').addEventListener('change', (e) => {
+            updateChart(e.target.value);
+        });
+
+        // Initialize the chart on page load
+        initChart();
     </script>
+
+
 
 
 </body>

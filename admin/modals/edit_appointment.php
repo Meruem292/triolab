@@ -10,6 +10,7 @@
                     <input type="text" name="appointmentId" id="appointmentId" class="form-control" hidden>
                     <input type="text" name="id" id="id" class="form-control" hidden>
                     <input type="text" name="doctorInfo" id="doctorInfo" class="form-control" hidden>
+                    <select name="medical" id="medical" class="form-control" hidden></select>
                     <select name="status" id="status" class="form-control" hidden></select>
                     <select name="paid" id="paid" class="form-control" hidden></select>
                 </div>
@@ -21,7 +22,7 @@
 
                 <div class="col-md-12 mb-2">
                     <label for="appointmentDate" class="form-label">Appointment Date</label>
-                    <input type="datetime-local" name="appointmentDate" id="appointmentDate" class="form-control">
+                    <input type="date" name="appointmentDate" id="appointmentDate" class="form-control">
                 </div>
 
                 <div class="col-md-12 mb-2">
@@ -33,8 +34,9 @@
                                 <th>Service Name</th>
                                 <th>Cost</th>
                                 <th>Doctor</th>
-                                <th>Payment Status</th>
                                 <th>Service Status</th>
+                                <th>Payment Status</th>
+                                <th>Appointment Status</th>
                             </tr>
                         </thead>
                         <tbody id="servicesList"></tbody>
