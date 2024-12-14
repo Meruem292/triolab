@@ -30,8 +30,6 @@ $sql = "
         appointment a ON s.id = a.service_id
     WHERE 
         $timeCondition
-    AND 
-        a.status = 'Completed'
     GROUP BY 
         s.id
     ORDER BY 

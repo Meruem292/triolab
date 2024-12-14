@@ -920,6 +920,15 @@ function calendarMonthShowsAdmin()
 
 <?php
 }
+function getTotalServices()
+{
+    global $pdo;
+    $sql = "SELECT COUNT(*) AS total_services FROM services";
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute();
+    $result = $stmt->fetch(PDO::FETCH_ASSOC);
+    return $result['total_services'];
+}
 
 function getDistinctServiceTypes()
 {
