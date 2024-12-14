@@ -21,7 +21,7 @@ if ($timeline === 'weekly') {
 
 // SQL query to fetch service appointment counts
 $sql = "
-    SELECT 
+     SELECT 
         s.service AS service_name, 
         COUNT(a.id) AS appointment_count
     FROM 
