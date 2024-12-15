@@ -35,13 +35,13 @@ if (isset($_POST['appointments']) && !empty($_POST['appointments'])) {
         // Prepare the SQL statement for inserting appointments
         $stmtInsertAppointment = $pdo->prepare(
             "INSERT INTO appointment (app_id, service_id, patient_id, appointment_date, appointment_time, doctor_id, department_id, appointment_slot_id, status, date_added)
-            VALUES (:app_id ,:service_id, :patient_id, :appointment_date, :appointment_time, :doctor_id, :department_id, :appointment_slot_id, 'pending', NOW())"
+            VALUES (:app_id ,:service_id, :patient_id, :appointment_date, :appointment_time, :doctor_id, :department_id, :appointment_slot_id, 'Pending', NOW())"
         );
 
         // Prepare the SQL statement for inserting medical records
         $stmtInsertMedicalRecord = $pdo->prepare(
-            "INSERT INTO medical_records (patient_id, doctor_id, diagnosis, treatment, record_date, created_at)
-            VALUES (:patient_id, :doctor_id, NULL, NULL, NOW(), NOW())"
+            "INSERT INTO medical_records (appointment_id, patient_id, doctor_id, diagnosis, treatment, record_date, created_at)
+            VALUES (:appointment_id, :patient_id, :doctor_id, NULL, NULL, NOW(), NOW())"
         );
 
         foreach ($appointments as $appointment) {
@@ -59,6 +59,7 @@ if (isset($_POST['appointments']) && !empty($_POST['appointments'])) {
 
             // Insert related medical record (optional, depending on your use case)
             $stmtInsertMedicalRecord->execute([
+                ':appointment_id' => $pdo->lastInsertId(),
                 ':patient_id' => $user_id,
                 ':doctor_id' => $appointment['doctorId'],
             ]);

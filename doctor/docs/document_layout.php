@@ -362,6 +362,7 @@ input[type="text"] {
     </style>
 </head>
 
+
 <body>
 
     <div class="max-w-2xl mx-auto p-6 bg-white rounded-lg shadow-lg dark:bg-zinc-800" id="">
@@ -496,10 +497,10 @@ input[type="text"] {
     <!-- Your existing HTML content -->
     <div class="action-buttons noprint">
         <button type="submit" class="btn btn-success" name="submit_doc_changes">Submit Findings</button>
-        <!-- <button type="button" class="btn btn-danger"
-            onclick="if (window.history.length > 1) { window.history.back(); } else { window.location.href = '../medical-records.php'; }">
+        <button type="button" class="btn btn-danger"
+            onclick="window.location.href = '../medical-records.php';">
             Close
-        </button> -->
+        </button>
 
     </div>
     </form>
@@ -510,8 +511,10 @@ input[type="text"] {
         function Popup(data) {
             var mywindow = window.open('', 'my div', 'height=400,width=600');
             var printButton = document.getElementById("printpagebutton");
+            var closeBtn = document.getElementById("backButton");
             // Set the print button visibility to 'hidden'
             printButton.style.visibility = 'hidden';
+            closeBtn.style.visibility = 'hidden';
             mywindow.document.write(data);
             mywindow.document.close(); // necessary for IE >= 10
             mywindow.focus(); // necessary for IE >= 10
@@ -519,6 +522,7 @@ input[type="text"] {
             mywindow.print();
 
             printButton.style.visibility = 'visible';
+            closeBtn.style.visibility = 'visible';
             mywindow.close();
 
             return true;

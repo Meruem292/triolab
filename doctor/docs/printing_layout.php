@@ -265,6 +265,7 @@ input[type="text"] {
     </style>
 </head>
 
+
 <body>
 
     <div class="max-w-2xl mx-auto p-6 bg-white rounded-lg shadow-lg dark:bg-zinc-800" id="">
@@ -339,7 +340,7 @@ input[type="text"] {
                         <input type="hidden" name="type" value="xray">
                         <input type="hidden" name="appointment_id" value="<?= $appointment_id ?>">
                         <h1 class="text-lg font-bold text-center mt-4 text-zinc-900 dark:text-zinc-100">
-                            <input type="text" style="border: none"  style="border:none;" class="text-xl w-50 h-100" name="header" value="<?= $header ?>">
+                            <input type="text" style="border: none" style="border:none;" class="text-xl w-50 h-100" name="header" value="<?= $header ?>">
                         </h1>
                         <div class="row mt-2">
                             <div class="col-9">
@@ -350,30 +351,30 @@ input[type="text"] {
                             <div class="col-auto ms-auto">
                                 <p>Date: <?= date('Y-m-d') ?></p>
                                 <p><input type="text" style="border: none" name="xrayno" id="xrayno" value="<?= $xrayno ?>"></p>
-                                
+
                             </div>
-                        </div> 
+                        </div>
                         <div class="row">
                             <div class="col-12">
                                 <p>Name: <strong><?= strtoupper($patient['lastname']) . ", " . strtoupper($patient['firstname']) ?></strong></p>
                                 <p><strong>Age/Sex:</strong> <?= $patient['age'] . '/' . $patient['sex'] ?></p>
                                 <p>Address: <?= $patient['city'] ?></p>
-                                <p>Requsted by: <input  style="border:none;" type="text" name="request_by" value="<?= $request_by ?>"></p>
+                                <p>Requsted by: <input style="border:none;" type="text" name="request_by" value="<?= $request_by ?>"></p>
                                 <br>
-                                <p>Kind of Examination: <input  style="border:none;" type="text" name="examination" value="<?= $examination ?>"></p>
+                                <p>Kind of Examination: <input style="border:none;" type="text" name="examination" value="<?= $examination ?>"></p>
                                 <p class="mt-3">Findings:</p>
 
-                                <textarea class="mb-3 w-100"  style="border:none;" name="findings" id="findings"><?= $findings ?></textarea>
+                                <textarea class="mb-3 w-100" style="border:none;" name="findings" id="findings"><?= $findings ?></textarea>
                                 <p class="mb-2">IMPRESSION: </p>
 
-                                <textarea class="w-100"  style="border:none;" name="impression" id="impression"><?= $impression ?></textarea>
+                                <textarea class="w-100" style="border:none;" name="impression" id="impression"><?= $impression ?></textarea>
                             </div>
                         </div>
                         <div class="row mt-5 mb-5">
                             <div class="col-4"></div>
                             <div class="col-8 d-flex flex-column align-items-center">
                                 <p class=""><strong><ins><?= strtoupper($doctor['firstname']) . ' ' . strtoupper($doctor['lastname']) . ', ' ?>
-                                            <input type="text" style="border:none; text-align: left"  name="doctor_title" value="<?= $doctor_title ?>"></ins></strong></p>
+                                            <input type="text" style="border:none; text-align: left" name="doctor_title" value="<?= $doctor_title ?>"></ins></strong></p>
                                 <p><input type="text" style="border:none; width:250px" name="specialization" value="<?= $specialization ?>"></p>
                             </div>
                         </div>
@@ -391,7 +392,10 @@ input[type="text"] {
     <!-- Your existing HTML content -->
     <div class="action-buttons noprint">
         <button type="submit" class="btn btn-success" onclick="window.print()">Print Medical Record</button>
-        <!-- <button type="button" class="btn btn-danger" onclick="window.history.back()">Close</button> -->
+        <button type="button" class="btn btn-danger"
+            onclick="window.location.href = '../medical-records.php';">
+            Close
+        </button>
     </div>
     </form>
 
@@ -401,8 +405,10 @@ input[type="text"] {
         function Popup(data) {
             var mywindow = window.open('', 'my div', 'height=400,width=600');
             var printButton = document.getElementById("printpagebutton");
+            var closeBtn = document.getElementById("backButton");
             // Set the print button visibility to 'hidden'
             printButton.style.visibility = 'hidden';
+            closeBtn.style.visibility = 'hidden';
             mywindow.document.write(data);
             mywindow.document.close(); // necessary for IE >= 10
             mywindow.focus(); // necessary for IE >= 10
@@ -410,6 +416,7 @@ input[type="text"] {
             mywindow.print();
 
             printButton.style.visibility = 'visible';
+            closeBtn.style.visibility = 'visible';
             mywindow.close();
 
             return true;

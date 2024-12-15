@@ -1,7 +1,7 @@
 <?php
 session_start();
 require "db.php";
- include "functions.php";
+include "functions.php";
 include "logAction.php";
 
 $user_id = $_SESSION['user_id'];
@@ -25,8 +25,8 @@ if (isset($_POST['edit_appointment'])) {
         $existingMedicalRecord = $checkMedicalRecord->fetch(PDO::FETCH_ASSOC);
 
         $updateMedical = $pdo->prepare("UPDATE appointment SET medical = ? WHERE id = ?");
-        $updateMedical->execute([$medicalStatus,$appointmentId]);
-        
+        $updateMedical->execute([$medicalStatus, $appointmentId]);
+
 
         if ($existingMedicalRecord) {
             // Update the medical record if it exists
@@ -129,7 +129,7 @@ if (isset($_POST['archive_appointment'])) {
 
         <!-- SIDEBAR -->
         <?php require "sidebar.php" ?>
-        
+
         <div class="vertical-overlay"></div>
 
         <div class="main-content">
@@ -202,6 +202,34 @@ if (isset($_POST['archive_appointment'])) {
                                                         <span class="mdi mdi-calendar search-widget-icon"></span>
                                                     </div>
                                                 </div>
+                                                <script>
+                                                    document.addEventListener('DOMContentLoaded', function() {
+                                                        flatpickr("#datePicker", {
+                                                            dateFormat: "F j, Y", // Ensure this matches the format in the table
+                                                            onChange: function(selectedDates, dateStr, instance) {
+                                                                filterByDate(dateStr);
+                                                            }
+                                                        });
+                                                    });
+
+                                                    function filterByDate(dateStr) {
+                                                        var table, tr, td, i, txtValue;
+                                                        table = document.getElementById("customerTable");
+                                                        tr = table.getElementsByTagName("tr");
+
+                                                        for (i = 0; i < tr.length; i++) {
+                                                            td = tr[i].getElementsByTagName("td")[1]; // Assuming the date is in the second column
+                                                            if (td) {
+                                                                txtValue = td.textContent || td.innerText;
+                                                                if (txtValue.indexOf(dateStr) > -1) {
+                                                                    tr[i].style.display = "";
+                                                                } else {
+                                                                    tr[i].style.display = "none";
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                </script>
                                             </div>
                                             <div class="listjs-table" id="customerList">
                                                 <div class="table-responsive table-card mt-3 mb-1">
@@ -219,9 +247,18 @@ if (isset($_POST['archive_appointment'])) {
                                                         </thead>
                                                         <tbody class="list">
                                                             <?php
+                                                            $limit = 10; // Number of entries to show in a page.
+                                                            if (isset($_GET["page"])) {
+                                                                $page  = $_GET["page"];
+                                                            } else {
+                                                                $page = 1;
+                                                            };
+                                                            $start_from = ($page - 1) * $limit;
+
                                                             $selectAppointment = $pdo->query("
            SELECT 
     appointment.id AS appointment_id, 
+    appointment.medical,
     patient.firstname AS patient_firstname, 
     patient.lastname AS patient_lastname, 
     doctor.firstname AS doctor_firstname, 
@@ -252,7 +289,8 @@ LEFT JOIN medical_records ON appointment.id = medical_records.appointment_id  --
 WHERE appointment.is_archive = 0 
     AND appointment.medical = 'Pending'
     AND appointment.doctor_id = '$user_id'
-ORDER BY appointment.date_added ASC;
+ORDER BY appointment.date_added ASC
+LIMIT $start_from, $limit;
         ");
 
                                                             if ($selectAppointment->rowCount() > 0) {
@@ -270,7 +308,7 @@ ORDER BY appointment.date_added ASC;
                                                                     // Service details
                                                                     $serviceName = $row['service'] . " (" . $row['type'] . ")";
 
-                                                                    $medicalStatus = $row['medical_status']; // Reflect the actual medical status
+                                                                    $medicalStatus = $row['medical']; // Reflect the actual medical status
                                                                     $medicalStatusClass = '';
 
                                                                     switch ($medicalStatus) {
@@ -314,7 +352,7 @@ ORDER BY appointment.date_added ASC;
                                                                         <td class="service_status">
                                                                             <span class="badge <?= $medicalStatusClass; ?>"><?= htmlspecialchars($medicalStatus); ?></span>
                                                                         </td> <!-- New Column -->
-                                                                        
+
                                                                         <td>
                                                                             <a href="#" class="btn btn-light btn-sm edit-btn" data-bs-toggle="modal" data-bs-target="#editAppointment"
                                                                                 data-appointment-id="<?= htmlspecialchars($row['appointment_id']); ?>"
@@ -362,6 +400,46 @@ ORDER BY appointment.date_added ASC;
                                                             ?>
                                                         </tbody>
                                                     </table>
+                                                    <?php
+                                                    $result_db = $pdo->query("
+                                                        SELECT COUNT(*) FROM appointment 
+                                                        WHERE is_archive = 0 
+                                                        AND medical = 'Pending'
+                                                        AND doctor_id = '$user_id'
+                                                    ");
+                                                    $row_db = $result_db->fetch(PDO::FETCH_ASSOC);
+                                                    $total_records = $row_db['COUNT(*)'];
+                                                    $total_pages = ceil($total_records / $limit);
+                                                    ?>
+                                                    <div class="d-flex justify-content-end">
+                                                        <div class="pagination-wrap hstack gap-2" style="display: flex;">
+                                                            <?php if ($page > 1) { ?>
+                                                                <a class="page-item pagination-prev" href="?page=<?= $page - 1; ?>">
+                                                                    Previous
+                                                                </a>
+                                                            <?php } else { ?>
+                                                                <a class="page-item pagination-prev disabled" href="javascript:void(0);">
+                                                                    Previous
+                                                                </a>
+                                                            <?php } ?>
+                                                            <ul class="pagination listjs-pagination mb-0">
+                                                                <?php for ($i = 1; $i <= $total_pages; $i++) { ?>
+                                                                    <li class="<?= ($i == $page) ? 'active' : ''; ?>">
+                                                                        <a class="btn btn-sm <?= ($i == $page) ? 'btn-primary' : ''; ?>" href="?page=<?= $i; ?>"><?= $i; ?></a>
+                                                                    </li>
+                                                                <?php } ?>
+                                                            </ul>
+                                                            <?php if ($page < $total_pages) { ?>
+                                                                <a class="page-item pagination-next" href="?page=<?= $page + 1; ?>">
+                                                                    Next
+                                                                </a>
+                                                            <?php } else { ?>
+                                                                <a class="page-item pagination-next disabled" href="javascript:void(0);">
+                                                                    Next
+                                                                </a>
+                                                            <?php } ?>
+                                                        </div>
+                                                    </div>
 
                                                 </div>
 
@@ -396,6 +474,34 @@ ORDER BY appointment.date_added ASC;
                                                         <span class="mdi mdi-calendar search-widget-icon"></span>
                                                     </div>
                                                 </div>
+                                                <script>
+                                                    document.addEventListener('DOMContentLoaded', function() {
+                                                        flatpickr("#datePicker", {
+                                                            dateFormat: "F j, Y", // Ensure this matches the format in the table
+                                                            onChange: function(selectedDates, dateStr, instance) {
+                                                                filterByDate(dateStr);
+                                                            }
+                                                        });
+                                                    });
+
+                                                    function filterByDate(dateStr) {
+                                                        var table, tr, td, i, txtValue;
+                                                        table = document.getElementById("customerTable");
+                                                        tr = table.getElementsByTagName("tr");
+
+                                                        for (i = 0; i < tr.length; i++) {
+                                                            td = tr[i].getElementsByTagName("td")[1]; // Assuming the date is in the second column
+                                                            if (td) {
+                                                                txtValue = td.textContent || td.innerText;
+                                                                if (txtValue.indexOf(dateStr) > -1) {
+                                                                    tr[i].style.display = "";
+                                                                } else {
+                                                                    tr[i].style.display = "none";
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                </script>
                                             </div>
                                             <div class="listjs-table" id="customerList">
                                                 <div class="table-responsive table-card mt-3 mb-1">
@@ -413,9 +519,18 @@ ORDER BY appointment.date_added ASC;
                                                         </thead>
                                                         <tbody class="list">
                                                             <?php
+                                                            $limit = 10; // Number of entries to show in a page.
+                                                            if (isset($_GET["page"])) {
+                                                                $page  = $_GET["page"];
+                                                            } else {
+                                                                $page = 1;
+                                                            };
+                                                            $start_from = ($page - 1) * $limit;
+
                                                             $selectAppointment = $pdo->query("
            SELECT 
     appointment.id AS appointment_id, 
+    appointment.medical,
     patient.firstname AS patient_firstname, 
     patient.lastname AS patient_lastname, 
     doctor.firstname AS doctor_firstname, 
@@ -446,7 +561,8 @@ LEFT JOIN medical_records ON appointment.id = medical_records.appointment_id  --
 WHERE appointment.is_archive = 0 
     AND appointment.medical = 'Completed'
     AND appointment.doctor_id = '$user_id'
-ORDER BY appointment.date_added ASC;
+ORDER BY appointment.date_added ASC
+LIMIT $start_from, $limit;
         ");
 
                                                             if ($selectAppointment->rowCount() > 0) {
@@ -464,7 +580,7 @@ ORDER BY appointment.date_added ASC;
                                                                     // Service details
                                                                     $serviceName = $row['service'] . " (" . $row['type'] . ")";
 
-                                                                    $medicalStatus = $row['medical_status']; // Reflect the actual medical status
+                                                                    $medicalStatus = $row['medical']; // Reflect the actual medical status
                                                                     $medicalStatusClass = '';
 
                                                                     switch ($medicalStatus) {
@@ -508,7 +624,7 @@ ORDER BY appointment.date_added ASC;
                                                                         <td class="service_status">
                                                                             <span class="badge <?= $medicalStatusClass; ?>"><?= htmlspecialchars($medicalStatus); ?></span>
                                                                         </td> <!-- New Column -->
-                                                                        
+
                                                                         <td>
                                                                             <a href="#" class="btn btn-light btn-sm edit-btn" data-bs-toggle="modal" data-bs-target="#editAppointment"
                                                                                 data-appointment-id="<?= htmlspecialchars($row['appointment_id']); ?>"
@@ -556,6 +672,46 @@ ORDER BY appointment.date_added ASC;
                                                             ?>
                                                         </tbody>
                                                     </table>
+                                                    <?php
+                                                    $result_db = $pdo->query("
+                                                        SELECT COUNT(*) FROM appointment 
+                                                        WHERE is_archive = 0 
+                                                        AND medical = 'Completed'
+                                                        AND doctor_id = '$user_id'
+                                                    ");
+                                                    $row_db = $result_db->fetch(PDO::FETCH_ASSOC);
+                                                    $total_records = $row_db['COUNT(*)'];
+                                                    $total_pages = ceil($total_records / $limit);
+                                                    ?>
+                                                    <div class="d-flex justify-content-end">
+                                                        <div class="pagination-wrap hstack gap-2" style="display: flex;">
+                                                            <?php if ($page > 1) { ?>
+                                                                <a class="page-item pagination-prev" href="?page=<?= $page - 1; ?>">
+                                                                    Previous
+                                                                </a>
+                                                            <?php } else { ?>
+                                                                <a class="page-item pagination-prev disabled" href="javascript:void(0);">
+                                                                    Previous
+                                                                </a>
+                                                            <?php } ?>
+                                                            <ul class="pagination listjs-pagination mb-0">
+                                                                <?php for ($i = 1; $i <= $total_pages; $i++) { ?>
+                                                                    <li class="<?= ($i == $page) ? 'active' : ''; ?>">
+                                                                        <a class="btn btn-sm <?= ($i == $page) ? 'btn-primary' : ''; ?>" href="?page=<?= $i; ?>"><?= $i; ?></a>
+                                                                    </li>
+                                                                <?php } ?>
+                                                            </ul>
+                                                            <?php if ($page < $total_pages) { ?>
+                                                                <a class="page-item pagination-next" href="?page=<?= $page + 1; ?>">
+                                                                    Next
+                                                                </a>
+                                                            <?php } else { ?>
+                                                                <a class="page-item pagination-next disabled" href="javascript:void(0);">
+                                                                    Next
+                                                                </a>
+                                                            <?php } ?>
+                                                        </div>
+                                                    </div>
                                                 </div>
                                                 <div class="d-flex justify-content-end">
                                                     <div class="pagination-wrap hstack gap-2" style="display: flex;">

@@ -69,7 +69,7 @@ if (!$appointment_id) {
     }
 }
 
-$medical_data = json_decode($medical_record['content'], true);
+$medical_data = json_decode($medical_record['content'], true); 
 
 $hemoglobin = $medical_data['hemoglobin'] ?? '';
 $hematocrit = $medical_data['hematocrit'] ?? '';

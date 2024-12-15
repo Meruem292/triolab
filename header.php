@@ -37,7 +37,7 @@
             <div class="navbar-collapse collapse" id="main-navigation">
                 <ul class="navbar-nav">
                     <li class="nav-item"><a href="index.php">Home</a></li>
-                    <li class="nav-item"><a href="services.php">Services</a></li>
+                    <li class="nav-item"><a href="appointment.php">Services</a></li>
                     <li class="nav-item" data-bs-toggle="modal" data-bs-target="#exampleModal">
                         <a class="nav-link" href="javascript:void(0);" id="openModal">Your Appointments</a>
                     </li>
@@ -61,7 +61,7 @@
     if (isset($_SESSION['user_id'])) {
         try {
             // Fetch all appointment records for the logged-in user
-            $query = "SELECT * FROM appointment WHERE patient_id = :patient_id";
+            $query = "SELECT DISTINCT app_id, appointment.* FROM appointment WHERE patient_id = :patient_id AND status != 'cancelled' ORDER BY appointment_date DESC";
             $stmt = $pdo->prepare($query);
             $stmt->execute(['patient_id' => $_SESSION['user_id']]);
             $appointments = $stmt->fetchAll();
@@ -104,7 +104,7 @@
                                 <th>Service</th>
                                 <th>Appointment Date</th>
                                 <th>Doctor</th>
-                                <th>Selected Payment</th>
+                                <!-- <th>Selected Payment</th> -->
                                 <th>Note</th>
                                 <th>Paid</th>
                                 <th>Appointment Receipt</th>
@@ -113,10 +113,11 @@
                         <tbody>
                             <?php foreach ($appointments as $appointment) {
                                 $appointmentId = $appointment['id'];
+                                $app_id = $appointment['app_id'];
                                 $serviceName = htmlspecialchars($services[$appointment['service_id']]);
                                 $appointmentDate = htmlspecialchars($appointment['appointment_date']);
                                 $appointmentTime = htmlspecialchars($appointment['appointment_time']);
-                                $appointmentPayment = htmlspecialchars($paymentModes[$appointment['selectedPayment']]);
+                                // $appointmentPayment = htmlspecialchars($paymentModes[$appointment['selectedPayment']]);
                                 $doctorId = $appointment['doctor_id'];
                                 $doctorName = htmlspecialchars($doctors[$doctorId] ?? 'No doctor has been assigned');
 
@@ -127,11 +128,11 @@
                                     <td><?= $serviceName ?></td>
                                     <td><?= $appointmentDate . " (" . $appointmentTime . ")" ?></td>
                                     <td><?= $doctorName ?></td>
-                                    <td><?= $appointmentPayment ?></td>
+
                                     <td><?= $appointmentNote ?></td>
                                     <td><?= $appointmentPaid ?></td>
                                     <td>
-                                        <a href="assets/docs/appointment_receipt.php?appointment_id=<?= $appointmentId ?>" class="btn btn-primary">Download Receipt</a>
+                                        <a href="assets/docs/appointment_receipt.php?appointment_id=<?= $appointmentId ?>&app_id=<?= $app_id ?>" class="btn btn-primary">Download Receipt</a>
                                     </td>
                                 </tr>
                             <?php } ?>
@@ -152,7 +153,19 @@
     <script src="https://cdn.datatables.net/1.13.5/js/jquery.dataTables.min.js"></script>
     <script>
         $(document).ready(function() {
-            $('#appointmentTable').DataTable();
+            $('#appointmentTable').DataTable({
+                // Custom configuration for DataTables
+                pageLength: 5, // Number of rows per page
+                lengthMenu: [5, 10, 20, 50], // Options for rows per page
+                language: {
+                    paginate: {
+                        next: 'Next &raquo;', // Customize the 'Next' button text
+                        previous: '&laquo; Previous' // Customize the 'Previous' button text
+                    },
+                    lengthMenu: "Show _MENU_ appointments per page",
+                    info: "Showing _START_ to _END_ of _TOTAL_ appointments",
+                }
+            });
         });
 
         // Open modal programmatically
@@ -160,5 +173,5 @@
             var myModal = new bootstrap.Modal(document.getElementById("exampleModal"));
             myModal.show();
         });
-    </script>
+    </script>s
 </header>

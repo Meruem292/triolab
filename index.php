@@ -27,6 +27,7 @@ session_start();
     <!-- Stylesheets -->
     <link href="assets/css/vendors.min.css" type="text/css" rel="stylesheet">
     <link href="assets/css/style.min.css" type="text/css" rel="stylesheet" id="style">
+    <link href="https://cdn.datatables.net/2.1.8/css/dataTables.dataTables.css" rel="stylesheet">
     <link href="assets/css/components.min.css" type="text/css" rel="stylesheet" id="components">
 
     <!--Google Fonts-->
@@ -51,7 +52,7 @@ session_start();
                     <h4 class="heading text-white font-bold mb-10">Triolab Diagnostics & Medical Clinic</h4>
                     <h3 class="heading font-20 text-white text-lh-4 font-bold mb-20">Your Health <br> is Our Priority </h3>
                     <p class="text-white h5 mb-0">Best healthcare for you and your family.</p>
-                    <a href="services.php" class="btn btn-success btn-lg mt-20 mt-lg-40">Make Appointment</a>
+                    <a href="appointment.php" class="btn btn-success btn-lg mt-20 mt-lg-40">Make Appointment</a>
                     <a href="contact.php" class="btn btn-outline-light btn-lg mt-20 mt-lg-40 ml-lg-10">Inquire Now
                         <i class="ion-arrow-forward-sharp icon-right"></i>
                     </a>
@@ -139,7 +140,7 @@ session_start();
             </div>
         </div>
         <div class="row no-gutters">
-            <div class="col-lg-3 mt-20">
+            <div class="col-lg-4 mt-20">
                 <div class="process-box-1 first">
                     <div class="process-box-header">
                         <i class="ion-add-circle-outline icon"></i>
@@ -150,7 +151,7 @@ session_start();
                     </div>
                 </div>
             </div>
-            <div class="col-lg-3 mt-20">
+            <div class="col-lg-4 mt-20">
                 <div class="process-box-1">
                     <div class="process-box-header">
                         <i class="ion-calendar-outline icon"></i>
@@ -161,25 +162,15 @@ session_start();
                     </div>
                 </div>
             </div>
-            <div class="col-lg-3 mt-20">
-                <div class="process-box-1">
-                    <div class="process-box-header">
-                        <i class="ion-wallet-outline icon"></i>
-                    </div>
-                    <div class="process-box-body">
-                        <h5 class="heading font-bold">Make Payment</h5>
-                        <p class="mb-0">Securely pay for your appointment online using your preferred payment method.</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-lg-3 mt-20">
+
+            <div class="col-lg-4 mt-20">
                 <div class="process-box-1 last">
                     <div class="process-box-header">
                         <i class="ion-time-outline icon"></i>
                     </div>
                     <div class="process-box-body">
                         <h5 class="heading font-bold">Wait for approval</h5>
-                        <p class="mb-0">Receive a confirmation email of your appointment through your account.</p>
+                        <p class="mb-0">Receive a confirmation instantly, View Your Appointments tab then print your appointment receipt.</p>
                     </div>
                 </div>
             </div>
@@ -315,7 +306,8 @@ session_start();
                         </div>
                         <div id="a2body4" class="accordion-body collapse" data-parent="#a2" role="tabpanel" aria-labelledby="a2heading3">
                             <div class="accordion-data">
-                                The turnaround time for results varies depending on the specific test. Our staff will provide you with an estimated timeframe when you book your appointment or submit your samples.
+                                For any further inquiries, please don't hesitate to contact our clinic directly. You can reach us through our contact information provided on our website or by visiting our clinic.
+
                             </div>
                         </div>
                     </div>

@@ -4,6 +4,8 @@ include 'db.php';
 
 // Retrieve data from URL
 $appointmentId = $_GET['appointment_id'] ?? '';
+$app_id = $_GET['app_id'] ?? '';
+
 $queryAppointment = "SELECT * FROM appointment WHERE id = ?";
 $stmtAppointment = $pdo->prepare($queryAppointment);
 $stmtAppointment->execute([$appointmentId]);
@@ -281,7 +283,8 @@ if ($doctorDepartmentId) {
 
         <div class="row mt-5">
             <div class="col-12 d-flex justify-content-center align-items-center">
-                <h1 class="font-bold text-zinc-900 dark:text-zinc-100">Appointment ID: <?= $appointmentId ?></h1>
+                <h1 class="font-bold text-zinc-900 dark:text-zinc-100">Appointment ID: <?= $app_id ?></h1>
+                <h1 class="font-bold text-zinc-900 dark:text-zinc-100">Appointment ID: <?= $app_id ?></h1>
             </div>
         </div>
 

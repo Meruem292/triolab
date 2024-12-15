@@ -156,6 +156,7 @@ if (isset($_POST['archive_appointment'])) {
                                                                 <th>Doctor</th>
                                                                 <th>Service Status</th>
                                                                 <th>Payment Status</th>
+                                                                <th>Appointment Status</th>
                                                                 <th>Action</th>
                                                             </tr>
                                                         </thead>
@@ -198,6 +199,13 @@ if (isset($_POST['archive_appointment'])) {
                                                                         ? "Dr. " . $row['doctor_firstname'] . " " . $row['doctor_lastname']
                                                                         : "N/A";
 
+                                                                    $medical = $row['medical'] ?: "N/A";
+                                                                    $medicalStatusClass = match ($row['medical']) {
+                                                                        'Pending' => 'bg-warning text-dark',
+                                                                        'Approved' => 'bg-success text-white',
+                                                                        default => 'bg-secondary text-white',
+                                                                    };
+
                                                                     $services = $row['services'] ?: "N/A";
                                                                     $serviceStatusClass = match ($row['status']) {
                                                                         'Pending' => 'bg-warning text-dark',
@@ -218,12 +226,16 @@ if (isset($_POST['archive_appointment'])) {
                                                                         <td class="patient_name"><?= htmlspecialchars($patientName); ?></td>
                                                                         <td class="service"><?= htmlspecialchars($services); ?></td>
                                                                         <td class="doctor"><?= htmlspecialchars($doctorName); ?></td>
-                                                                        <td class="service_status">
-                                                                            <span class="badge <?= $serviceStatusClass; ?>"><?= htmlspecialchars($row['status']); ?></span>
+                                                                        <td class="medical">
+                                                                            <span class="badge <?= $medicalStatusClass; ?>"><?= htmlspecialchars($row['medical']); ?></span>
                                                                         </td>
                                                                         <td class="payment_status">
                                                                             <span class="badge <?= $paymentStatusClass; ?>"><?= htmlspecialchars($row['paid']); ?></span>
                                                                         </td>
+                                                                        <td class="service_status">
+                                                                            <span class="badge <?= $serviceStatusClass; ?>"><?= htmlspecialchars($row['status']); ?></span>
+                                                                        </td>
+
 
                                                                         <td>
                                                                             <a href="#" class="btn btn-light btn-sm edit-btn"
@@ -310,6 +322,7 @@ if (isset($_POST['archive_appointment'])) {
                                                                 <th>Doctor</th>
                                                                 <th>Service Status</th>
                                                                 <th>Payment Status</th>
+                                                                <th>Appointment Status</th>
                                                                 <th>Action</th>
                                                             </tr>
                                                         </thead>
@@ -326,6 +339,7 @@ if (isset($_POST['archive_appointment'])) {
                                                                         doctor.lastname AS doctor_lastname,
                                                                         appointment.appointment_time,
                                                                         appointment.appointment_date,
+                                                                        appointment.medical,
                                                                         appointment.status,
                                                                         appointment.paid,
                                                                         SUM(services.cost) AS total_service_cost  -- Sum of service costs for the services linked to the appointment
@@ -351,6 +365,13 @@ if (isset($_POST['archive_appointment'])) {
                                                                         ? "Dr. " . $row['doctor_firstname'] . " " . $row['doctor_lastname']
                                                                         : "N/A";
 
+                                                                    $medical = $row['medical'] ?: "N/A";
+                                                                    $medicalStatusClass = match ($row['medical']) {
+                                                                        'Pending' => 'bg-warning text-dark',
+                                                                        'Approved' => 'bg-success text-white',
+                                                                        default => 'bg-secondary text-white',
+                                                                    };
+
                                                                     $services = $row['services'] ?: "N/A";
                                                                     $serviceStatusClass = match ($row['status']) {
                                                                         'Pending' => 'bg-warning text-dark',
@@ -371,12 +392,16 @@ if (isset($_POST['archive_appointment'])) {
                                                                         <td class="patient_name"><?= htmlspecialchars($patientName); ?></td>
                                                                         <td class="service"><?= htmlspecialchars($services); ?></td>
                                                                         <td class="doctor"><?= htmlspecialchars($doctorName); ?></td>
-                                                                        <td class="service_status">
-                                                                            <span class="badge <?= $serviceStatusClass; ?>"><?= htmlspecialchars($row['status']); ?></span>
+                                                                        <td class="medical">
+                                                                            <span class="badge <?= $medicalStatusClass; ?>"><?= htmlspecialchars($row['medical']); ?></span>
                                                                         </td>
                                                                         <td class="payment_status">
                                                                             <span class="badge <?= $paymentStatusClass; ?>"><?= htmlspecialchars($row['paid']); ?></span>
                                                                         </td>
+                                                                        <td class="service_status">
+                                                                            <span class="badge <?= $serviceStatusClass; ?>"><?= htmlspecialchars($row['status']); ?></span>
+                                                                        </td>
+
 
                                                                         <td>
                                                                             <a href="#" class="btn btn-light btn-sm edit-btn"

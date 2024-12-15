@@ -4,16 +4,20 @@ include 'db.php';
 
 // Retrieve data from URL
 $appointmentId = $_GET['appointment_id'] ?? '';
-$queryAppointment = "SELECT * FROM appointment WHERE id = ?";
-$stmtAppointment = $pdo->prepare($queryAppointment);
-$stmtAppointment->execute([$appointmentId]);
-$appointment = $stmtAppointment->fetch(PDO::FETCH_ASSOC);
+$app_id = $_GET['app_id'] ?? '';
 
-if (!$appointment) {
-    die('Appointment not found.');
+// Fetch all appointments with the same app_id
+$queryAppointment = "SELECT * FROM appointment WHERE app_id = ?";
+$stmtAppointment = $pdo->prepare($queryAppointment);
+$stmtAppointment->execute([$app_id]);
+$appointments = $stmtAppointment->fetchAll(PDO::FETCH_ASSOC);
+
+if (!$appointments) {
+    die('Appointments not found.');
 }
 
-$patientId = $appointment['patient_id'];
+// Aggregate patient details (assuming they are the same for all records)
+$patientId = $appointments[0]['patient_id'];
 $queryPatient = "SELECT * FROM patient WHERE id = ?";
 $stmtPatient = $pdo->prepare($queryPatient);
 $stmtPatient->execute([$patientId]);
@@ -25,46 +29,60 @@ $lname = $patient['lastname'];
 $age = $patient['age'];
 $sex = $patient['sex'];
 
+// Static appointment details
+$appointmentDate = $appointments[0]['appointment_date'];
+$appointmentTime = $appointments[0]['appointment_time'];
+$appointmentNote = $appointments[0]['medical'];
 
-$appointmentDate = $appointment['appointment_date'];
-$appointmentTime = $appointment['appointment_time'];
-$appointmentNote = $appointment['medical'];
-$serviceName = $pdo->query("SELECT type FROM services WHERE id = " . $appointment['service_id'])->fetchColumn();
-$doctorId = $appointment['doctor_id'];
+// Initialize aggregations
+$services = [];
+$doctors = [];
+$departments = [];
 
-// Use prepared statements to safely get the doctor's data
-$queryDoctor = "SELECT * FROM doctor WHERE employee_id = ?";
-$stmtDoctor = $pdo->prepare($queryDoctor);
-$stmtDoctor->execute([$doctorId]);
-$doctor = $stmtDoctor->fetch(PDO::FETCH_ASSOC);
+// Process each appointment
+foreach ($appointments as $appointment) {
+    // Fetch service type
+    $serviceName = $pdo->query("SELECT type FROM services WHERE id = " . $appointment['service_id'])->fetchColumn();
+    if ($serviceName && !in_array($serviceName, $services)) {
+        $services[] = $serviceName;
+    }
 
-$doctorName = '';
-$doctorDepartment = '';
-$doctorDepartmentId = null;
-if ($doctor) {
-    $doctorName = $doctor['firstname'] . ' ' . $doctor['lastname']; // Combine first and last name
-    $doctorDepartmentId = $doctor['department_id'];
-} else {
-    $doctorName = 'No Doctor Assigned';
-}
+    // Fetch doctor details
+    $doctorId = $appointment['doctor_id'];
+    $queryDoctor = "SELECT * FROM doctor WHERE employee_id = ?";
+    $stmtDoctor = $pdo->prepare($queryDoctor);
+    $stmtDoctor->execute([$doctorId]);
+    $doctor = $stmtDoctor->fetch(PDO::FETCH_ASSOC);
 
-// Check if doctor department ID is valid
-if ($doctorDepartmentId) {
-    // Use prepared statement for department query
-    $queryDepartment = "SELECT name FROM departments WHERE id = ?";
-    $stmtDepartment = $pdo->prepare($queryDepartment);
-    $stmtDepartment->execute([$doctorDepartmentId]);
-    $doctorDepartment = $stmtDepartment->fetchColumn();
+    if ($doctor) {
+        $doctorName = $doctor['firstname'] . ' ' . $doctor['lastname'];
+        $doctorDepartmentId = $doctor['department_id'];
 
+        if (!in_array($doctorName, $doctors)) {
+            $doctors[] = $doctorName;
+        }
 
-    if (!$doctorDepartment) {
-        $doctorDepartment = 'Unknown Department';
+        // Fetch department details
+        if ($doctorDepartmentId) {
+            $queryDepartment = "SELECT name FROM departments WHERE id = ?";
+            $stmtDepartment = $pdo->prepare($queryDepartment);
+            $stmtDepartment->execute([$doctorDepartmentId]);
+            $departmentName = $stmtDepartment->fetchColumn();
+
+            if ($departmentName && !in_array($departmentName, $departments)) {
+                $departments[] = $departmentName;
+            }
+        }
     }
 }
 
-
+// Convert arrays to comma-separated strings
+$servicesList = implode(', ', $services);
+$doctorsList = implode(', ', $doctors);
+$departmentsList = implode(', ', $departments);
 
 ?>
+
 
 <!DOCTYPE html>
 <html lang="en" id="clearance">
@@ -250,47 +268,41 @@ if ($doctorDepartmentId) {
         <div class="mt-2">
             <p class="font-bold text-zinc-900 dark:text-zinc-100">Patiend ID: <span class="font-normal text-zinc-800 dark:text-zinc-300">
                     <?php echo $patientId; ?>
-            </span></p>
+                </span></p>
             <p class="font-bold text-zinc-900 dark:text-zinc-100">Name: <span class="font-normal text-zinc-800 dark:text-zinc-300"><?php echo strtoupper($lname) . ', ' . ucfirst($fname); ?></span></p>
             <p class="font-bold text-zinc-900 dark:text-zinc-100">Age/Sex: <span class="font-normal text-zinc-800 dark:text-zinc-300">
                     <?php echo $age . '/' . $sex; ?>
-            </span></p> <!-- You can dynamically change age/sex if available -->
+                </span></p> <!-- You can dynamically change age/sex if available -->
             <p class="font-bold text-zinc-900 dark:text-zinc-100">Address: <span class="font-normal text-zinc-800 dark:text-zinc-300"><?php echo $email; ?></span></p>
-            <p class="font-bold text-zinc-900 dark:text-zinc-100">Requested Service: <span class="font-normal text-zinc-800 dark:text-zinc-300"><?php echo $serviceName; ?></span></p>
+            <p class="font-bold text-zinc-900 dark:text-zinc-100">Requested Services: <span class="font-normal text-zinc-800 dark:text-zinc-300"><?php echo $servicesList; ?></span></p>
             <p class="font-bold text-zinc-900 dark:text-zinc-100 mt-4">Note: <span class="font-normal text-zinc-800 dark:text-zinc-300"><?php echo $appointmentNote; ?></span></p>
         </div>
 
         <div class="row mt-5">
             <div class="col-12 d-flex justify-content-center align-items-center">
-                <h1 class="font-bold text-zinc-900 dark:text-zinc-100">Appointment ID: <?= $appointmentId ?></h1>
+                <h1 class="font-bold text-zinc-900 dark:text-zinc-100">Appointment ID: <?= $app_id ?></h1>
             </div>
         </div>
 
 
-        <div class="row">
-            <div class="col-8">
-
-            </div>
+        <div class="row h-100 flex items-center justify-center mt-5" >
             <div class="col-auto">
-                <div class="mt-6" style="margin: 150px 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;">
-                    <p class="text-zinc-900 dark:text-zinc-100"><ins><?php echo $doctorName ?></ins></p>
-                    <p class="text-zinc-900 dark:text-zinc-100"><?= $doctorDepartment ?></p>
+                <div class="flex flex-col items-center justify-center text-center"  style="margin:100px 0;">
+                    <p class="text-zinc-900 dark:text-zinc-100">
+                        <ins><?php echo $doctorsList ?></ins>
+                    </p>
+                    <p class="text-zinc-900 dark:text-zinc-100">
+                        <?= $departmentsList ?>
+                    </p>
                 </div>
             </div>
         </div>
-
-
-
     </div>
-
-
     <!-- Action Buttons -->
     <div class="action-buttons noprint">
         <button type="button" class="btn btn-success" onclick="window.print()">Print</button>
         <button type="button" class="btn btn-danger" onclick="window.history.back()">Close</button>
     </div>
-
-
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
     <script>

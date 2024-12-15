@@ -101,77 +101,77 @@
 
 <!-- Modal -->
 <div class="modal fade" id="privacyModal" tabindex="-1" aria-labelledby="privacyModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-xl">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="privacyModalLabel">Privacy Policy</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        <p>Triolab is committed to protecting the privacy and security of your personal information. This Privacy Policy outlines how we collect, use, disclose, and safeguard your personal information in accordance with the Data Privacy Act of 2012 (DPA) of the Philippines.</p>
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="privacyModalLabel">Privacy Policy</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Triolab is committed to protecting the privacy and security of your personal information. This Privacy Policy outlines how we collect, use, disclose, and safeguard your personal information in accordance with the Data Privacy Act of 2012 (DPA) of the Philippines.</p>
 
-        <p><strong>INFORMATION WE COLLECT</strong><br>
-        We may collect the following personal information from you:</p>
+                <p><strong><em>INFORMATION WE COLLECT</em></strong><br>
+                    We may collect the following personal information from you:</p>
 
-        <ul>
-          <li><strong>Personal Information:</strong> Name, address, contact information, date of birth, gender, and other relevant demographic information.</li>
-          <li><strong>Health Information:</strong> Medical history, diagnosis, treatment plans, medication records, laboratory results, and other health-related information.</li>
-          <li><strong>Financial Information:</strong> Payment information, insurance details, and billing history.</li>
-        </ul>
+                <ul>
+                    <li><strong><em>Personal Information:</em></strong> Name, address, contact information, date of birth, gender, and other relevant demographic information.</li>
+                    <li><strong><em>Health Information:</em></strong> Medical history, diagnosis, treatment plans, medication records, laboratory results, and other health-related information.</li>
+                    <li><strong><em>Financial Information:</em></strong> Payment information, insurance details, and billing history.</li>
+                </ul>
 
-        <p><strong>How We Use Your Information</strong><br>
-        We use your personal information for the following purposes:</p>
+                <p><strong><em>How We Use Your Information</em></strong><br>
+                    We use your personal information for the following purposes:</p>
 
-        <ul>
-          <li><strong>Providing Healthcare Services:</strong> To deliver quality healthcare services, including diagnosis, treatment, and follow-up care.</li>
-          <li><strong>Billing and Insurance:</strong> To process claims, bill for services, and manage insurance reimbursements.</li>
-          <li><strong>Appointment Scheduling:</strong> To schedule and manage appointments.</li>
-          <li><strong>Communication:</strong> To communicate with you regarding appointments, test results, treatment plans, and other important matters.</li>
-          <li><strong>Research and Development:</strong> To conduct research and improve our healthcare services.</li>
-          <li><strong>Compliance with Legal Obligations:</strong> To comply with legal requirements, such as reporting to health authorities.</li>
-        </ul>
+                <ul>
+                    <li><strong><em>Providing Healthcare Services:</em></strong> To deliver quality healthcare services, including diagnosis, treatment, and follow-up care.</li>
+                    <li><strong><em>Billing and Insurance:</em></strong> To process claims, bill for services, and manage insurance reimbursements.</li>
+                    <li><strong><em>Appointment Scheduling:</em></strong> To schedule and manage appointments.</li>
+                    <li><strong><em>Communication:</em></strong> To communicate with you regarding appointments, test results, treatment plans, and other important matters.</li>
+                    <li><strong><em>Research and Development:</em></strong> To conduct research and improve our healthcare services.</li>
+                    <li><strong><em>Compliance with Legal Obligations:</em></strong> To comply with legal requirements, such as reporting to health authorities.</li>
+                </ul>
 
-        <p><strong>SHARING YOUR INFORMATION</strong><br>
-        We may share your personal information with the following entities:</p>
+                <p><strong><em>SHARING YOUR INFORMATION</em></strong><br>
+                    We may share your personal information with the following entities:</p>
 
-        <ul>
-          <li><strong>Healthcare Providers:</strong> Other healthcare providers involved in your care.</li>
-          <li><strong>Insurance Companies:</strong> To process claims and obtain reimbursement.</li>
-          <li><strong>Laboratories:</strong> To conduct tests and analyze results.</li>
-          <li><strong>Government Agencies:</strong> As required by law or regulation.</li>
-        </ul>
+                <ul>
+                    <li><strong><em>Healthcare Providers:</em></strong> Other healthcare providers involved in your care.</li>
+                    <li><strong><em>Insurance Companies:</em></strong> To process claims and obtain reimbursement.</li>
+                    <li><strong><em>Laboratories:</em></strong> To conduct tests and analyze results.</li>
+                    <li><strong><em>Government Agencies:</em></strong> As required by law or regulation.</li>
+                </ul>
 
-        <p><strong>DATA SECURITY</strong><br>
-        We implement appropriate security measures to protect your personal information from unauthorized access, disclosure, alteration, or destruction. These measures include:</p>
+                <p><strong><em>DATA SECURITY</em></strong><br>
+                    We implement appropriate security measures to protect your personal information from unauthorized access, disclosure, alteration, or destruction. These measures include:</p>
 
-        <ul>
-          <li><strong>Physical Security:</strong> Secure storage of paper records and electronic devices.</li>
-          <li><strong>Technical Security:</strong> Encryption, firewalls, and access controls.</li>
-          <li><strong>Organizational Security:</strong> Regular training of staff on data privacy and security.</li>
-        </ul>
+                <ul>
+                    <li><strong><em>Physical Security:</em></strong> Secure storage of paper records and electronic devices.</li>
+                    <li><strong><em>Technical Security:</em></strong> Encryption, firewalls, and access controls.</li>
+                    <li><strong><em>Organizational Security:</em></strong> Regular training of staff on data privacy and security.</li>
+                </ul>
 
-        <p><strong>YOUR RIGHTS</strong><br>
-        You have the following rights under the DPA:</p>
+                <p><strong><em>YOUR RIGHTS</em></strong><br>
+                    You have the following rights under the DPA:</p>
 
-        <ul>
-          <li><strong>Right to be Informed:</strong> To be informed about the collection and processing of your personal data.</li>
-          <li><strong>Right of Access:</strong> To access your personal data.</li>
-          <li><strong>Right to Rectification:</strong> To request the correction of inaccurate or incomplete personal data.</li>
-          <li><strong>Right to Erasure or Blocking:</strong> To request the deletion or blocking of your personal data.</li>
-          <li><strong>Right to Object:</strong> To object to the processing of your personal data.</li>
-          <li><strong>Right to Data Portability:</strong> To receive your personal data in a structured, commonly used, and machine-readable format.</li>
-          <li><strong>Right to Damages:</strong> To seek compensation for damages caused by the unlawful processing of your personal data.</li>
-        </ul>
+                <ul>
+                    <li><strong><em>Right to be Informed:</em></strong> To be informed about the collection and processing of your personal data.</li>
+                    <li><strong><em>Right of Access:</em></strong> To access your personal data.</li>
+                    <li><strong><em>Right to Rectification:</em></strong> To request the correction of inaccurate or incomplete personal data.</li>
+                    <li><strong><em>Right to Erasure or Blocking:</em></strong> To request the deletion or blocking of your personal data.</li>
+                    <li><strong><em>Right to Object:</em></strong> To object to the processing of your personal data.</li>
+                    <li><strong><em>Right to Data Portability:</em></strong> To receive your personal data in a structured, commonly used, and machine-readable format.</li>
+                    <li><strong><em>Right to Damages:</em></strong> To seek compensation for damages caused by the unlawful processing of your personal data.</li>
+                </ul>
 
-        <p><strong>CHANGES TO PRIVACY POLICY</strong><br>
-        Periodically, we may modify or update our Privacy Notice, Privacy Policy, and related practices to meet government and regulatory standards, embrace new technologies and protocols, align with industry norms, or for other valid reasons.</p>
+                <p><strong><em>CHANGES TO PRIVACY POLICY</em></strong><br>
+                    Periodically, we may modify or update our Privacy Notice, Privacy Policy, and related practices to meet government and regulatory standards, embrace new technologies and protocols, align with industry norms, or for other valid reasons.</p>
 
-        <p><strong>HOW TO CONTACT US</strong><br>
-        For any queries, clarifications or requests on any aspect of this Data Privacy Statement, the exercise of your rights or to provide any feedback that you may have about our processing of personal information, please visit any of our clinic or get in touch with us at (046) 894 3619 | 0938 453 8273, you may also email us at triolabgly2023@gmail.com.</p>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-      </div>
+                <p><strong><em>HOW TO CONTACT US</em></strong><br>
+                    For any queries, clarifications or requests on any aspect of this Data Privacy Statement, the exercise of your rights or to provide any feedback that you may have about our processing of personal information, please visit any of our clinic or get in touch with us at (046) 894 3619 | 0938 453 8273, you may also email us at triolabgly2023@gmail.com.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
     </div>
-  </div>
 </div>

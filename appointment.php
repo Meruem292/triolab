@@ -1,6 +1,9 @@
 <?php
 session_start();
 require 'db.php'; // Database connection
+if (!isset($_SESSION['user_id'])) {
+    header('Location: login.php');
+};
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -15,51 +18,60 @@ require 'db.php'; // Database connection
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 </head>
 
 <body>
     <div class="container mt-4">
-        <h1 class="mb-4">Dynamic Appointment Calendar with Cart</h1>
-
-        <div class="mb-3">
-            <label for="category-select" class="form-label">Select Category:</label>
-            <select id="category-select" class="form-select">
-                <option value="">Select a category</option>
-                <?php
-                try {
-                    $stmt = $pdo->prepare("SELECT DISTINCT category FROM services WHERE is_archive = 0");
-                    $stmt->execute();
-                    while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-                        echo "<option value='{$row['category']}'>{$row['category']}</option>";
+        <a href="index.php"><button class="btn btn-secondary mt-2">Back</button></a>
+        <h1 class="mb-4">Set Appointment</h1>
+        <div class="row">
+            <div class="col-4 mb-3">
+                <label for="category-select" class="form-label">Select Category:</label>
+                <select id="category-select" class="form-select">
+                    <option value="">Select a category</option>
+                    <?php
+                    try {
+                        $stmt = $pdo->prepare("SELECT DISTINCT category FROM services WHERE is_archive = 0");
+                        $stmt->execute();
+                        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+                            echo "<option value='{$row['category']}'>{$row['category']}</option>";
+                        }
+                    } catch (Exception $e) {
+                        echo "<option value=''>Error loading categories</option>";
                     }
-                } catch (Exception $e) {
-                    echo "<option value=''>Error loading categories</option>";
-                }
-                ?>
-            </select>
-        </div>
-        <div class="mb-3">
-            <label for="type-select" class="form-label">Select Type:</label>
-            <select id="type-select" class="form-select" disabled>
-                <option value="">Select a type</option>
-            </select>
-        </div>
+                    ?>
+                </select>
+            </div>
+            <div class="col-4 mb-3">
+                <label for="type-select" class="form-label">Select Type:</label>
+                <select id="type-select" class="form-select" disabled>
+                    <option value="">Select a type</option>
+                </select>
+            </div>
 
-        <div class="mb-3">
-            <label for="service-select" class="form-label">Select Service:</label>
-            <select id="service-select" class="form-select" disabled>
-                <option value="">Select a service</option>
-            </select>
+            <div class="col-4 mb-3">
+                <label for="service-select" class="form-label">Select Service:</label>
+                <select id="service-select" class="form-select" disabled>
+                    <option value="">Select a service</option>
+                </select>
+            </div>
         </div>
 
-        <div id="calendar" class="mb-4"></div>
-
-        <div id="cart" class="card">
-            <div class="card-header">Appointment Cart</div>
-            <ul id="appointment-cart" class="list-group list-group-flush">
-                <li class="list-group-item">No appointments added yet.</li>
-            </ul>
-            <button id="proceed-to-appointment" class="btn btn-primary">Proceed to Appointment</button>
+        <div class="row">
+            <div class="col-8 ">
+                <div id="calendar" class="mb-4"></div>
+            </div>
+            <div class="col-4">
+                <div id="cart" class="card">
+                    <div class="card-header">Appointment Cart</div>
+                    <ul id="appointment-cart" class="list-group list-group-flush">
+                        <li class="list-group-item">No appointments added yet.</li>
+                    </ul>
+                    <button id="proceed-to-appointment" class="btn btn-success">Proceed to Appointment</button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -325,18 +337,43 @@ require 'db.php'; // Database connection
                     }, // Send cart data as JSON
                     success: function(response) {
                         console.log(response); // Check if the success message is returned from PHP
-                        alert('Appointments submitted successfully!');
+                        Swal.fire({
+                            title: 'Success!',
+                            text: 'Appointments submitted successfully!',
+                            icon: 'success',
+                            confirmButtonText: 'OK'
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                // Redirect to index.php after clicking "OK"
+                                window.location.href = 'index.php';
+                            }
+                        });
                         cart = [];
                         updateCart();
                     },
                     error: function(xhr, status, error) {
-                        alert('Error submitting appointments: ' + error);
+                        Swal.fire({
+                            title: 'Error!',
+                            text: 'Error submitting appointments: ' + error,
+                            icon: 'error',
+                            confirmButtonText: 'OK'
+                        });
                     }
                 });
-
             });
         });
     </script>
+    <?php if (isset($_SESSION['message']) && isset($_SESSION['status'])) { ?>
+        <script>
+            Swal.fire({
+                text: "<?php echo $_SESSION['message']; ?>",
+                icon: "<?php echo $_SESSION['status']; ?>",
+            });
+        </script>
+    <?php
+        unset($_SESSION['message']);
+        unset($_SESSION['status']);
+    } ?>
 </body>
 
 </html>
