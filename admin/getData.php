@@ -2,7 +2,7 @@
 header('Content-Type: application/json');
 
 // Include the database connection file
-require 'db.php'; // Adjust the path if needed
+require 'db.php';
 
 try {
     // Get the timeline parameter and sanitize it
@@ -10,26 +10,35 @@ try {
 
     // Base query for counting appointments grouped by services
     $query = "
-        SELECT s.service AS service_name, COUNT(a.id) AS appointment_count
-        FROM appointment a
-        JOIN services s ON a.service_id = s.id
-        WHERE a.is_archive = 0
+        SELECT 
+            s.service AS service_name, 
+            COUNT(a.id) AS appointment_count
+        FROM 
+            appointment a
+        INNER JOIN 
+            services s ON a.service_id = s.id
+        WHERE 
+            a.is_archive = 0 
+            AND s.is_archive = 0
     ";
 
     // Adjust query based on the timeline
     if ($timeline === 'daily') {
-        $query .= " AND DATE(a.created_at) = CURDATE()";
+        $query .= " AND DATE(a.date_added) = CURDATE()";
     } elseif ($timeline === 'weekly') {
-        $query .= " AND WEEK(a.created_at, 1) = WEEK(CURDATE(), 1)";
+        $query .= " AND a.date_added >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)";
     } elseif ($timeline === 'monthly') {
-        $query .= " AND MONTH(a.created_at) = MONTH(CURDATE())";
+        $query .= " AND MONTH(a.date_added) = MONTH(CURDATE()) AND YEAR(a.date_added) = YEAR(CURDATE())";
     } elseif ($timeline === 'yearly') {
-        $query .= " AND YEAR(a.created_at) = YEAR(CURDATE())";
+        $query .= " AND YEAR(a.date_added) = YEAR(CURDATE())";
     }
-    $query .= " GROUP BY a.service_id";
+    
+
+    $query .= " GROUP BY s.service ORDER BY appointment_count DESC";
 
     // Execute the query
-    $stmt = $pdo->query($query);
+    $stmt = $pdo->prepare($query);
+    $stmt->execute();
     $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     // Prepare chart data
